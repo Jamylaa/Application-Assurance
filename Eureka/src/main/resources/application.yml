@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: eureka
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+server:
+  port: 8761
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+
+  server:
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 60000
+
+logging:
+  level:
+    org.springframework.cloud.netflix.eureka: INFO
+    org.springframework.security: INFO

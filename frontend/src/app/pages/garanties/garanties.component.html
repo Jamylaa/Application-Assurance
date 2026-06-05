@@ -1,0 +1,137 @@
+<div class="page-container">
+  <p-toast position="top-right"></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+
+  <!-- Page Header -->
+  <div class="page-header garanties-header">
+    <div class="page-header-left">
+      <div class="header-icon"><i class="bi bi-shield-fill-check"></i></div>
+      <div>
+        <h1>Gestion des Garanties</h1>
+        <p>Gérez toutes les garanties d'assurance de la plateforme</p>
+      </div>
+    </div>
+    <div class="page-header-actions">
+      <p-button
+        label="Actualiser"
+        icon="pi pi-refresh"
+        [loading]="loading"
+        (click)="loadGaranties()"
+        styleClass="p-button-outlined">
+      </p-button>
+      <p-button
+        label="Ajouter"
+        icon="pi pi-plus"
+        (click)="addGarantie()"
+        styleClass="p-button-primary">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="table-card">
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <div class="table-title">
+          <i class="bi bi-list-ul"></i>
+          <span>Garanties</span>
+          <span class="count-badge">{{ garanties.length }}</span>
+        </div>
+      </div>
+    </div>
+
+    <p-table
+      [value]="garanties"
+      [loading]="loading"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[5,10,20,50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Affichage {first} – {last} sur {totalRecords}"
+      sortMode="single"
+      styleClass="custom-table"
+      responsiveLayout="scroll">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="nomGarantie">Nom <p-sortIcon field="nomGarantie"></p-sortIcon></th>
+          <th pSortableColumn="description">Description <p-sortIcon field="description"></p-sortIcon></th>
+          <th pSortableColumn="type">Type <p-sortIcon field="type"></p-sortIcon></th>
+          <th pSortableColumn="typeMontant">Type montant <p-sortIcon field="typeMontant"></p-sortIcon></th>
+          <th pSortableColumn="typePlafond">Type plafond <p-sortIcon field="typePlafond"></p-sortIcon></th>
+          <th pSortableColumn="tauxRemboursement">Taux <p-sortIcon field="tauxRemboursement"></p-sortIcon></th>
+          <th pSortableColumn="statut">Statut <p-sortIcon field="statut"></p-sortIcon></th>
+          <th style="width:100px;text-align:center;">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-garantie>
+        <tr class="table-row">
+          <td>
+            <div class="pack-cell">
+              <div class="garantie-icon"><i class="bi bi-shield-fill-check"></i></div>
+              <span class="cell-primary">{{ garantie.nomGarantie }}</span>
+            </div>
+          </td>
+          <td><span class="cell-text">{{ garantie.description || '—' }}</span></td>
+          <td>
+            <span class="type-badge">{{ garantie.type || 'N/A' }}</span>
+          </td>
+          <td>
+            <span class="type-badge">{{ garantie.typeMontant || 'N/A' }}</span>
+          </td>
+          <td>
+            <span class="type-badge">{{ garantie.typePlafond || 'N/A' }}</span>
+          </td>
+          <td>
+            <div class="taux-cell">
+              <div class="taux-bar">
+                <div class="taux-fill" [style.width.%]="(garantie.tauxRemboursement ?? 0) * 100"></div>
+              </div>
+              <span class="taux-text">{{ (garantie.tauxRemboursement ?? 0) * 100 | number:'1.0-0' }}%</span>
+            </div>
+          </td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(garantie.statut)">
+              <span class="status-dot"></span>
+              {{ garantie.statut || 'INCONNU' }}
+            </span>
+          </td>
+          <td>
+            <div class="action-btns">
+              <p-button
+                icon="pi pi-eye"
+                pTooltip="Détails"
+                tooltipPosition="top"
+                styleClass="p-button-rounded p-button-text"
+                (click)="viewGarantie(garantie)">
+              </p-button>
+              <p-button
+                icon="pi pi-pencil"
+                pTooltip="Modifier"
+                tooltipPosition="top"
+                styleClass="p-button-rounded p-button-text p-button-info"
+                (click)="editGarantie(garantie)">
+              </p-button>
+              <p-button icon="pi pi-trash" pTooltip="Supprimer" tooltipPosition="top"styleClass="p-button-rounded p-button-text p-button-danger"
+                (click)="deleteGarantie(garantie.idGarantie || '')">
+              </p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">
+              <div class="empty-icon"><i class="bi bi-shield"></i></div>
+              <h3>Aucune garantie trouvée</h3>
+              <p>Commencez par ajouter une garantie</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

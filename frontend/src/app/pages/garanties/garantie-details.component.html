@@ -1,0 +1,128 @@
+<div class="page-container">
+  <p-toast position="top-right"></p-toast>
+  <div class="page-header garanties-header">
+    <div class="page-header-left">
+      <div class="header-icon"><i class="bi bi-shield-fill-check"></i></div>
+      <div>
+        <h1>Détails garantie</h1>
+        <p *ngIf="garantie as g">{{ g.nomGarantie }}</p>
+        <p *ngIf="!garantie">Consultez les informations de la garantie</p>
+      </div>
+    </div>
+    <div class="page-header-actions">
+      <p-button label="Retour" icon="pi pi-arrow-left" styleClass="p-button-outlined" (click)="back()"></p-button>
+      <p-button label="Modifier" icon="pi pi-pencil" [disabled]="!garantieId" (click)="edit()"></p-button>
+    </div>
+  </div>
+
+  <div class="details-card">
+    <p-card>
+      <ng-container *ngIf="loading; else content">
+        <div class="loading">
+          <p-progressSpinner ariaLabel="loading"></p-progressSpinner>
+        </div>
+      </ng-container>
+
+      <ng-template #content>
+        <ng-container *ngIf="garantie as g; else empty">
+          <div class="grid">
+            <div class="row">
+              <div class="label">ID</div>
+              <div class="value">{{ g.idGarantie || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Nom</div>
+              <div class="value">{{ g.nomGarantie || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Description</div>
+              <div class="value">{{ g.description || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Type</div>
+              <div class="value">{{ g.type || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Statut</div>
+              <div class="value">
+                <p-tag [severity]="getStatusSeverity(g.statut)" [value]="g.statut || 'INCONNU'"></p-tag>
+              </div>
+            </div>
+            <div class="row">
+              <div class="label">Taux remboursement</div>
+              <div class="value">{{ ((g.tauxRemboursement || 0) * 100) | number:'1.0-0' }}%</div>
+            </div>
+            <div class="row">
+              <div class="label">Type montant</div>
+              <div class="value">{{ g.typeMontant || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Type plafond</div>
+              <div class="value">{{ g.typePlafond || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Plafond annuel</div>
+              <div class="value">{{ g.plafondAnnuel || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Plafond mensuel</div>
+              <div class="value">{{ g.plafondMensuel || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Plafond par acte</div>
+              <div class="value">{{ g.plafondParActe || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Franchise</div>
+              <div class="value">{{ g.franchise || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Coût moyen par sinistre</div>
+              <div class="value">{{ g.coutMoyenParSinistre || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Résiliable annuellement</div>
+              <div class="value">{{ g.resiliableAnnuellement ? 'Oui' : 'Non' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Durée contrat</div>
+              <div class="value">{{ g.dureeMinContrat || '—' }} – {{ g.dureeMaxContrat || '—' }} mois</div>
+            </div>
+            <div class="row">
+              <div class="label">Création</div>
+              <div class="value">{{ formatDateTime(g.dateCreation) }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Modification</div>
+              <div class="value">{{ formatDateTime(g.dateModification) }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Désactivation</div>
+              <div class="value">{{ formatDateTime(g.dateDesactivation) }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Créé par</div>
+              <div class="value">{{ g.creePar || '—' }}</div>
+            </div>
+          </div>
+
+          <ng-container *ngIf="g.customFields && (g.customFields | keyvalue).length > 0">
+            <div class="section-title">Champs personnalisés</div>
+            <div class="grid">
+              <div class="row" *ngFor="let field of g.customFields | keyvalue">
+                <div class="label">{{ field.key }}</div>
+                <div class="value">{{ field.value }}</div>
+              </div>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <ng-template #empty>
+          <div class="empty">
+            Garantie introuvable.
+          </div>
+        </ng-template>
+      </ng-template>
+    </p-card>
+  </div>
+</div>

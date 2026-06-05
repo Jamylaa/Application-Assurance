@@ -1,0 +1,250 @@
+<div class="page-container">
+  <p-toast position="top-right"></p-toast>
+
+  <form [formGroup]="garantieForm" (ngSubmit)="onSubmit()" class="auth-form">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="header-icon"><i class="bi bi-plus-circle-fill"></i></div>
+      <div>
+        <h1>Nouvelle Garantie</h1>
+        <p>Créer une nouvelle garantie d'assurance</p>
+      </div>
+    </div>
+    <div class="page-header-actions">
+      <p-button 
+        label="Annuler" 
+        icon="pi pi-times" 
+        [loading]="loading" 
+        type="button"
+        (click)="onCancel()" 
+        styleClass="p-button-outlined">
+      </p-button>
+      <p-button 
+        label="{{ loading ? 'Création...' : 'Créer' }}" 
+        icon="pi pi-check" 
+        [loading]="loading" 
+        [disabled]="(garantieForm.invalid && garantieForm.touched) || loading" 
+        type="submit"
+        styleClass="p-button-primary">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Form Card -->
+  <div class="form-card">
+      <div class="form-grid">
+        <!-- Nom de la garantie -->
+        <div class="form-field">
+          <label class="field-label" for="nomGarantie">
+            <i class="bi bi-tag"></i> Nom de la garantie *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('nomGarantie')">
+            <input
+              pInputText
+              id="nomGarantie"
+              formControlName="nomGarantie"
+              placeholder="Entrez le nom de la garantie"
+              class="auth-input" />
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('nomGarantie')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('nomGarantie') }}
+          </div>
+        </div>
+
+        <!-- Type de garantie -->
+        <div class="form-field">
+          <label class="field-label" for="type">
+            <i class="bi bi-shield"></i> Type de garantie *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('type')">
+            <p-dropdown
+              id="type"
+              formControlName="type"
+              [options]="typeGarantieOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez un type"
+              styleClass="auth-dropdown">
+            </p-dropdown>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('type')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('type') }}
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-field full-width">
+          <label class="field-label" for="description">
+            <i class="bi bi-text-paragraph"></i> Description *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('description')">
+            <textarea
+              pTextarea
+              id="description"
+              formControlName="description"
+              placeholder="Décrivez la garantie"
+              rows="4"
+              class="auth-textarea">
+            </textarea>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('description')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('description') }}
+          </div>
+        </div>
+
+        <!-- Taux de remboursement -->
+        <div class="form-field">
+          <label class="field-label" for="tauxRemboursement">
+            <i class="bi bi-percent"></i> Taux de remboursement *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('tauxRemboursement')">
+            <p-inputNumber
+              id="tauxRemboursement"
+              formControlName="tauxRemboursement"
+              [min]="0"
+              [max]="1"
+              [step]="0.01"
+              mode="decimal"
+              showButtons="false"
+              placeholder="0.00"
+              styleClass="auth-input">
+            </p-inputNumber>
+          </div>
+          <div class="field-help">Ex: 0.80 pour 80%</div>
+          <div class="field-error" *ngIf="isFieldInvalid('tauxRemboursement')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('tauxRemboursement') }}
+          </div>
+        </div>
+
+        <!-- Type de montant -->
+        <div class="form-field">
+          <label class="field-label" for="typeMontant">
+            <i class="bi bi-cash"></i> Type de montant *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('typeMontant')">
+            <p-dropdown
+              id="typeMontant"
+              formControlName="typeMontant"
+              [options]="typeMontantOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez un type"
+              styleClass="auth-dropdown">
+            </p-dropdown>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('typeMontant')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('typeMontant') }}
+          </div>
+        </div>
+
+        <!-- Type de plafond -->
+        <div class="form-field">
+          <label class="field-label" for="typePlafond">
+            <i class="bi bi-bar-chart"></i> Type de plafond *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('typePlafond')">
+            <p-dropdown
+              id="typePlafond"
+              formControlName="typePlafond"
+              [options]="typePlafondOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez un type"
+              styleClass="auth-dropdown">
+            </p-dropdown>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('typePlafond')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('typePlafond') }}
+          </div>
+        </div>
+
+        <!-- Plafond annuel -->
+        <div class="form-field">
+          <label class="field-label" for="plafondAnnuel">
+            <i class="bi bi-calendar-year"></i> Plafond annuel
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('plafondAnnuel')">
+            <p-inputNumber
+              id="plafondAnnuel"
+              formControlName="plafondAnnuel"
+              [min]="0"
+              mode="decimal"
+              showButtons="false"
+              placeholder="0.00"
+              styleClass="auth-input">
+            </p-inputNumber>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('plafondAnnuel')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('plafondAnnuel') }}
+          </div>
+        </div>
+
+        <!-- Plafond mensuel -->
+        <div class="form-field">
+          <label class="field-label" for="plafondMensuel">
+            <i class="bi bi-calendar-month"></i> Plafond mensuel
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('plafondMensuel')">
+            <p-inputNumber
+              id="plafondMensuel"
+              formControlName="plafondMensuel"
+              [min]="0"
+              mode="decimal"
+              showButtons="false"
+              placeholder="0.00"
+              styleClass="auth-input">
+            </p-inputNumber>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('plafondMensuel')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('plafondMensuel') }}
+          </div>
+        </div>
+
+        <!-- Franchise -->
+        <div class="form-field">
+          <label class="field-label" for="franchise">
+            <i class="bi bi-shield-exclamation"></i> Franchise
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('franchise')">
+            <p-inputNumber
+              id="franchise"
+              formControlName="franchise"
+              [min]="0"
+              mode="decimal"
+              showButtons="false"
+              placeholder="0.00"
+              styleClass="auth-input">
+            </p-inputNumber>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('franchise')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('franchise') }}
+          </div>
+        </div>
+
+        <!-- Statut -->
+        <div class="form-field">
+          <label class="field-label" for="statut">
+            <i class="bi bi-toggle-on"></i> Statut *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('statut')">
+            <p-dropdown
+              id="statut"
+              formControlName="statut"
+              [options]="statutOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez un statut"
+              styleClass="auth-dropdown">
+            </p-dropdown>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('statut')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('statut') }}
+          </div>
+        </div>
+      </div>
+  </div>
+
+  </form>
+</div>

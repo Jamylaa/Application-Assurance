@@ -1,15 +1,54 @@
-# Ignorer le dossier frontend
-frontend/
-
+ai-service
+GestionSouscription
 # Ignorer le fichier DIAGRAMMES_UML_GLOBAL.md
-DIAGRAMMES_UML_GLOBAL.md
-CORRECTION_VALIDATION_IMPORT.md
-FRONTEND_CHANGES.md
-README_VALIDATIONS.md
-README_ARCHITECTURE.md
-README.md
-diagramme_classes.md
+*.env
+application-local.properties
+target/
+node_modules/
+create-test-user.http
 **/application.properties
 #README_ARCHITECTURE.md
 # Ignorer les fichiers de configuration IDE
 .idea/
+.env
+application.properties
+**/pom.xml
+build-all.ps1
+build-all.sh
+start-all.ps1
+start-gestionproduit.ps1
+start-gestionuser.ps1
+start-recommendation.ps1
+start-gateway.ps1
+start-souscription.ps1
+External Libraries
+create-test-user.http
+# Ignorer les fichiers de configuration Docker
+docker-compose.yml
+Dockerfile
+test_business.json
+test_premium.json
+test_prompt.json
+start-all.ps1
+API.md
+ARCHITECTURE.md
+PFE_DELIVERABLES.md
+DEPLOYMENT.md
+# Build
+target/
+dist/
+build/
+# IDE
+.idea/
+.vscode/
+# Node
+node_modules/
+# Env
+.env
+# Logs
+*.log
+# PowerShell scripts
+*.ps1
+# Markdown docs temporaires
+DOCKER_DEPLOYMENT.md
+NETTOYAGE_FICHIERS_INUTILES.md

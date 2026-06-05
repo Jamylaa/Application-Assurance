@@ -1,2 +1,2 @@
 package tn.vermeg.gestionproduit.entities;
-public enum TypeProduit {Sante,Habitation,Auto,Epargne,vie}
+public enum TypeProduit {SANTE,HABITATION,AUTO,EPARGNE,VIE}

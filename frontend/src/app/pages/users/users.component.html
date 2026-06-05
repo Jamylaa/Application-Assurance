@@ -1,0 +1,127 @@
+<div class="page-container">
+  <p-toast position="top-right"></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="header-icon"><i class="bi bi-people-fill"></i></div>
+      <div>
+        <h1>Gestion des Utilisateurs</h1>
+        <p>Gérez les comptes et accès des utilisateurs</p>
+      </div>
+    </div>
+    <div class="page-header-actions">
+      <button class="btn-secondary" (click)="refreshUsers()" [disabled]="loading">
+        <i class="bi bi-arrow-clockwise" [class.spin]="loading"></i>
+        Actualiser
+      </button>
+      <button class="btn-primary" (click)="addUser()">
+        <i class="bi bi-person-plus-fill"></i>
+        Ajouter
+      </button>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="table-card">
+    <!-- Card Toolbar -->
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <div class="table-title">
+          <i class="bi bi-list-ul"></i>
+          <span>Utilisateurs</span>
+          <span class="count-badge">{{ users.length }}</span>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <div class="search-box">
+          <i class="bi bi-search"></i>
+          <input
+            type="text"
+            placeholder="Rechercher un utilisateur..."
+            (input)="onGlobalFilter($event)"
+            [value]="globalFilterValue">
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <p-table
+      [value]="users"
+      [loading]="loading"
+      [globalFilterFields]="['username', 'email', 'departement']"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[5, 10, 20, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Affichage {first} – {last} sur {totalRecords}"
+      sortMode="single"
+      styleClass="custom-table"
+      responsiveLayout="scroll">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="username">Utilisateur <p-sortIcon field="username"></p-sortIcon></th>
+          <th pSortableColumn="email">Email <p-sortIcon field="email"></p-sortIcon></th>
+          <th pSortableColumn="phone">Téléphone <p-sortIcon field="phone"></p-sortIcon></th>
+          <th pSortableColumn="dateCreation">Date création <p-sortIcon field="dateCreation"></p-sortIcon></th>
+          <th style="width: 100px; text-align: center;">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-user>
+        <tr class="table-row">
+          <td>
+            <div class="user-cell">
+              <div class="row-avatar">{{ getInitials(user.username) }}</div>
+              <div>
+                <div class="cell-primary">{{ user.username }}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="cell-with-icon">
+              <i class="bi bi-envelope text-muted"></i>
+              <span class="cell-text">{{ user.email }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="cell-with-icon">
+              <i class="bi bi-phone text-muted"></i>
+              <span class="cell-text">{{ user.phone || '—' }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="cell-with-icon">
+              <i class="bi bi-calendar3 text-muted"></i>
+              <span class="cell-text">{{ user.dateCreation | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="action-btns">
+              <button class="action-btn edit-btn" pTooltip="Modifier" tooltipPosition="top">
+                <i class="bi bi-pencil-fill"></i>
+              </button>
+              <button class="action-btn delete-btn" pTooltip="Supprimer" tooltipPosition="top" (click)="deleteUser(user)">
+                <i class="bi bi-trash3-fill"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5">
+            <div class="empty-state">
+              <div class="empty-icon"><i class="bi bi-people"></i></div>
+              <h3>Aucun utilisateur trouvé</h3>
+              <p>Commencez par ajouter un utilisateur</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

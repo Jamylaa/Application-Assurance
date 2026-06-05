@@ -1,0 +1,118 @@
+<div class="sidebar" [class.collapsed]="isCollapsed">
+  <!-- Header with logo and toggle -->
+  <div class="sidebar-header">
+    <div class="logo-section">
+      <div class="logo" (click)="navigateToDashboard()">
+        <div class="logo-icon-wrapper">
+          <i class="pi pi-shield"></i>
+        </div>
+        <div class="logo-text" *ngIf="!isCollapsed">
+          <span class="logo-title">Vermeg</span>
+          <span class="logo-subtitle">Assurance Pro</span>
+        </div>
+      </div>
+    </div>
+    <button class="toggle-btn" (click)="toggleSidebar()" [title]="isCollapsed ? 'Déployer' : 'Réduire'">
+      <i class="pi" [class.pi-angle-left]="!isCollapsed" [class.pi-angle-right]="isCollapsed"></i>
+    </button>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav">
+    <div class="nav-section-label" *ngIf="!isCollapsed">MENU PRINCIPAL</div>
+    <ul class="nav-list">
+      <li class="nav-item">
+        <a
+          class="nav-link"
+          [class.active]="isActiveRoute('/dashboard')"
+          (click)="navigateTo('/dashboard'); $event.preventDefault()"
+          href="#"
+          title="Dashboard">
+          <div class="nav-icon-wrapper">
+            <i class="bi bi-grid-1x2-fill nav-icon"></i>
+          </div>
+          <span class="nav-text" *ngIf="!isCollapsed">Dashboard</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a
+          class="nav-link"
+          [class.active]="isActiveRoute('/users')"
+          (click)="navigateTo('/users'); $event.preventDefault()"
+          href="#"
+          title="Utilisateurs">
+          <div class="nav-icon-wrapper">
+            <i class="bi bi-people-fill nav-icon"></i>
+          </div>
+          <span class="nav-text" *ngIf="!isCollapsed">Utilisateurs</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a
+          class="nav-link"
+          [class.active]="isActiveRoute('/produits')"
+          (click)="navigateTo('/produits'); $event.preventDefault()"
+          href="#"
+          title="Produits">
+          <div class="nav-icon-wrapper">
+            <i class="bi bi-box-seam-fill nav-icon"></i>
+          </div>
+          <span class="nav-text" *ngIf="!isCollapsed">Produits</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a
+          class="nav-link"
+          [class.active]="isActiveRoute('/packs')"
+          (click)="navigateTo('/packs'); $event.preventDefault()"
+          href="#"
+          title="Packs">
+          <div class="nav-icon-wrapper">
+            <i class="bi bi-collection-fill nav-icon"></i>
+          </div>
+          <span class="nav-text" *ngIf="!isCollapsed">Packs</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a
+          class="nav-link"
+          [class.active]="isActiveRoute('/garanties')"
+          (click)="navigateTo('/garanties'); $event.preventDefault()"
+          href="#"
+          title="Garanties">
+          <div class="nav-icon-wrapper">
+            <i class="bi bi-shield-fill-check nav-icon"></i>
+          </div>
+          <span class="nav-text" *ngIf="!isCollapsed">Garanties</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Footer Section -->
+  <div class="sidebar-footer">
+    <!-- Theme Toggle -->
+    <button class="theme-toggle-btn" (click)="toggleTheme()" [title]="isDarkMode ? 'Mode clair' : 'Mode sombre'">
+      <i class="bi" [class.bi-sun-fill]="isDarkMode" [class.bi-moon-stars-fill]="!isDarkMode"></i>
+      <span *ngIf="!isCollapsed">{{ isDarkMode ? 'Mode clair' : 'Mode sombre' }}</span>
+    </button>
+
+    <!-- User Profile -->
+    <div class="user-profile">
+      <div class="avatar-circle">
+        {{ getUserInitials() }}
+      </div>
+      <div class="user-info" *ngIf="!isCollapsed">
+        <div class="user-name">{{ currentUser?.username || 'Utilisateur' }}</div>
+        <div class="user-role">{{ getUserRole() }}</div>
+      </div>
+      <button class="logout-btn" (click)="logout()" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </div>
+</div>

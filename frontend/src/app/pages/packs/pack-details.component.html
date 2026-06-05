@@ -1,0 +1,98 @@
+<div class="page-container">
+  <p-toast position="top-right"></p-toast>
+  <div class="page-header packs-header">
+    <div class="page-header-left">
+      <div class="header-icon"><i class="bi bi-collection-fill"></i></div>
+      <div>
+        <h1>Détails pack</h1>
+        <p *ngIf="pack as p">{{ p.nomPack }}</p>
+        <p *ngIf="!pack">Consultez les informations du pack</p>
+      </div>
+    </div>
+    <div class="page-header-actions">
+      <p-button label="Retour" icon="pi pi-arrow-left" styleClass="p-button-outlined" (click)="back()"></p-button>
+      <p-button label="Modifier" icon="pi pi-pencil" [disabled]="!packId" (click)="edit()"></p-button>
+    </div>
+  </div>
+
+  <div class="details-card">
+    <p-card>
+      <ng-container *ngIf="loading; else content">
+        <div class="loading">
+          <p-progressSpinner ariaLabel="loading"></p-progressSpinner>
+        </div>
+      </ng-container>
+
+      <ng-template #content>
+        <ng-container *ngIf="pack as p; else empty">
+          <div class="grid">
+            <div class="row">
+              <div class="label">ID</div>
+              <div class="value">{{ p.idPack || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Nom</div>
+              <div class="value">{{ p.nomPack || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Description</div>
+              <div class="value">{{ p.description || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Produit</div>
+              <div class="value">{{ p.nomProduit || p.produitId || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Statut</div>
+              <div class="value">
+                <p-tag [severity]="getStatusSeverity(p.statut)" [value]="p.statut || 'INCONNU'"></p-tag>
+              </div>
+            </div>
+            <div class="row">
+              <div class="label">Prix mensuel</div>
+              <div class="value">{{ p.prixMensuel || '—' }} TND</div>
+            </div>
+            <div class="row">
+              <div class="label">Niveau couverture</div>
+              <div class="value">{{ p.niveauCouverture || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Couverture géographique</div>
+              <div class="value">{{ p.couvertureGeographique || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Âge</div>
+              <div class="value">{{ p.ageMinimum || '—' }} – {{ p.ageMaximum || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Durée contrat</div>
+              <div class="value">{{ p.dureeMinContrat || '—' }} – {{ p.dureeMaxContrat || '—' }} mois</div>
+            </div>
+            <div class="row">
+              <div class="label">Ancienneté requise</div>
+              <div class="value">{{ p.ancienneteContratMois || '0' }} mois</div>
+            </div>
+            <div class="row">
+              <div class="label">Type clients</div>
+              <div class="value">{{ (p.typeClients || []).join(', ') || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Création</div>
+              <div class="value">{{ formatDateTime(p.dateCreation) }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Modification</div>
+              <div class="value">{{ formatDateTime(p.dateModification) }}</div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #empty>
+          <div class="empty">
+            Pack introuvable.
+          </div>
+        </ng-template>
+      </ng-template>
+    </p-card>
+  </div>
+</div>

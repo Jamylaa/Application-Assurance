@@ -1,0 +1,4 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://admin:password@localhost:27017/vermeg_db?authSource=admin

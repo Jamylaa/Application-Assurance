@@ -1,3 +1,2 @@
 package tn.vermeg.gestionproduit.entities;
-
-public enum NiveauCouverture {basic ,premium ,gold}
+public enum NiveauCouverture {BASIC, PREMIUM, GOLD}

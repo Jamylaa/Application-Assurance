@@ -1,0 +1,255 @@
+<div class="unified-chatbot-container" [class.dark-mode]="isDarkMode">
+  <p-toast position="top-right"></p-toast>
+
+  <!-- Conversation History Sidebar -->
+  <p-sidebar [(visible)]="sidebarVisible" [baseZIndex]="10000" styleClass="history-sidebar">
+    <ng-template pTemplate="header">
+      <div class="sidebar-header">
+        <div class="sidebar-title">
+          <i class="bi bi-clock-history"></i>
+          <h2>Historique</h2>
+        </div>
+        <button class="new-chat-btn" (click)="startNewConversation()" title="Nouvelle conversation">
+          <i class="bi bi-plus-lg"></i>
+        </button>
+      </div>
+    </ng-template>
+
+    <div class="history-list">
+      <div
+        *ngFor="let conversation of conversationHistory; let i = index"
+        class="history-item"
+        [class.active]="i === currentConversationIndex"
+        (click)="loadConversation(i)"
+      >
+        <div class="history-item-content">
+          <div class="history-preview">
+            <i class="bi bi-chat-dots"></i>
+            <span>{{ getConversationPreview(conversation) }}</span>
+          </div>
+          <span class="history-time">{{ getConversationTime(conversation) }}</span>
+        </div>
+        <button class="delete-history-btn" (click)="deleteConversation(i); $event.stopPropagation()" title="Supprimer">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+
+      <div *ngIf="conversationHistory.length === 0" class="empty-history">
+        <div class="empty-history-icon">
+          <i class="bi bi-chat-square-text"></i>
+        </div>
+        <p>Aucune conversation</p>
+        <span class="empty-history-sub">Vos conversations apparaîtront ici</span>
+      </div>
+    </div>
+  </p-sidebar>
+
+  <!-- Header -->
+  <div class="chatbot-header">
+    <div class="header-left">
+      <button class="icon-btn sidebar-toggle-btn" (click)="toggleSidebar()" title="Historique">
+        <i class="bi bi-list"></i>
+      </button>
+      <button class="icon-btn back-btn" (click)="goBack()" title="Retour au dashboard">
+        <i class="bi bi-arrow-left"></i>
+      </button>
+      <div class="chatbot-info">
+        <div class="chatbot-title-section">
+          <h1 class="chatbot-title">
+            <i class="bi bi-robot"></i>
+            {{ chatbotConfig.title }}
+          </h1>
+          <div class="ai-status-indicator">
+            <span class="status-dot"></span>
+            <span class="status-text">IA Actif</span>
+          </div>
+        </div>
+        <p class="chatbot-subtitle">{{ chatbotConfig.subtitle }}</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <p-toggleButton
+        [ngModel]="isDarkMode"
+        (onChange)="toggleDarkMode()"
+        onIcon="bi-moon-fill"
+        offIcon="bi-sun-fill"
+        styleClass="dark-mode-toggle"
+        title="Mode sombre/clair"
+      ></p-toggleButton>
+      <button class="icon-btn clear-btn" (click)="clearChat()" title="Effacer la conversation">
+        <i class="bi bi-eraser"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Welcome Banner (shown when no messages) -->
+  <div class="welcome-banner" *ngIf="messages.length === 0">
+    <div class="welcome-content">
+      <div class="welcome-icon">
+        <i class="bi bi-sparkles"></i>
+      </div>
+      <h2 class="welcome-title">Comment puis-je vous aider ?</h2>
+      <p class="welcome-subtitle">Je suis votre assistant IA pour la gestion des produits d'assurance</p>
+      
+      <!-- Quick Actions Grid -->
+      <div class="quick-actions-grid">
+        <div class="quick-action-card" (click)="applySuggestion('Créer une nouvelle garantie d\'assurance avec un taux de remboursement de 80%')">
+          <div class="quick-action-icon">
+            <i class="bi bi-shield-check"></i>
+          </div>
+          <div class="quick-action-content">
+            <h4>Créer une garantie</h4>
+            <p>Définir une nouvelle garantie avec ses paramètres</p>
+          </div>
+        </div>
+        
+        <div class="quick-action-card" (click)="applySuggestion('Créer un nouveau pack d\'assurance santé complet')">
+          <div class="quick-action-icon">
+            <i class="bi bi-collection"></i>
+          </div>
+          <div class="quick-action-content">
+            <h4>Créer un pack</h4>
+            <p>Composer un pack avec plusieurs garanties</p>
+          </div>
+        </div>
+        
+        <div class="quick-action-card" (click)="applySuggestion('Recommande moi les meilleurs produits santé')">
+          <div class="quick-action-icon">
+            <i class="bi bi-lightbulb"></i>
+          </div>
+          <div class="quick-action-content">
+            <h4>Recommandations</h4>
+            <p>Obtenir des suggestions personnalisées</p>
+          </div>
+        </div>
+        
+        <div class="quick-action-card" (click)="applySuggestion('Liste tous les produits d\'assurance disponibles')">
+          <div class="quick-action-icon">
+            <i class="bi bi-list-check"></i>
+          </div>
+          <div class="quick-action-content">
+            <h4>Voir les produits</h4>
+            <p>Consulter le catalogue des produits</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Suggestion Prompts -->
+      <div class="suggestion-prompts">
+        <span class="suggestion-label">Essayez aussi :</span>
+        <div class="suggestion-chips">
+          <button class="suggestion-chip" (click)="applySuggestion('Quels sont les critères pour une bonne assurance hospitalisation ?')">
+            <i class="bi bi-question-circle"></i>
+            Critères assurance hospitalisation
+          </button>
+          <button class="suggestion-chip" (click)="applySuggestion('Compare les packs santé disponibles')">
+            <i class="bi bi-diagram-3"></i>
+            Comparer les packs
+          </button>
+          <button class="suggestion-chip" (click)="applySuggestion('Configure un pack dentaire avec les garanties essentielles')">
+            <i class="bi bi-gear"></i>
+            Pack dentaire essentiel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages Container -->
+  <div class="chat-messages" #messagesContainer [class.has-welcome]="messages.length <= 1">
+    <div
+      *ngFor="let message of messages; trackBy: trackByMessageId"
+      class="message"
+      [class.user-message]="message.sender === 'user'"
+      [class.bot-message]="message.sender === 'bot'"
+    >
+      <!-- Avatar -->
+      <div class="message-avatar">
+        <i *ngIf="message.sender === 'user'" class="bi bi-person-circle"></i>
+        <div *ngIf="message.sender === 'bot'" class="bot-avatar-inner">
+          <i class="bi bi-robot"></i>
+        </div>
+      </div>
+
+      <!-- Message Content -->
+      <div class="message-content">
+        <!-- Message Header for Bot -->
+        <div *ngIf="message.sender === 'bot' && message.intent" class="message-header">
+          <p-tag [value]="getIntentLabel(message.intent)" [severity]="getIntentSeverity(message.intent)"></p-tag>
+          <i class="bi {{ getIntentIcon(message.intent) }}"></i>
+        </div>
+
+        <!-- Message Text -->
+        <div class="message-text" [innerHTML]="formatMessage(message.text)"></div>
+
+        <!-- Message Time -->
+        <div class="message-time">{{ formatTime(message.timestamp) }}</div>
+
+        <!-- Actions -->
+        <div *ngIf="message.actions && message.actions.length > 0" class="message-actions">
+          <div class="actions-container">
+            <button
+              *ngFor="let action of message.actions; trackBy: trackByActionLabel"
+              class="action-btn"
+              (click)="executeAction(action)"
+              [class.primary]="action.type === 'CREATE' || action.type === 'NAVIGATE'"
+              [class.secondary]="action.type === 'LIST'"
+            >
+              <i class="bi" [ngClass]="getActionIcon(action.type)"></i>
+              {{ action.label }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div *ngIf="isLoading" class="message bot-message">
+      <div class="message-avatar">
+        <div class="bot-avatar-inner">
+          <i class="bi bi-robot"></i>
+        </div>
+      </div>
+      <div class="message-content">
+        <div class="typing-indicator">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input Area -->
+  <div class="chat-input-container">
+    <div class="input-wrapper">
+      <div class="input-prefix">
+        <i class="bi bi-chat-dots"></i>
+      </div>
+      <textarea
+        pInputTextarea
+        [(ngModel)]="currentMessage"
+        (keydown)="onKeyDown($event)"
+        placeholder="Posez votre question ou décrivez ce que vous souhaitez faire..."
+        [autoResize]="true"
+        rows="1"
+        [disabled]="isLoading"
+      ></textarea>
+      <button
+        class="send-btn"
+        (click)="sendMessage()"
+        [disabled]="!currentMessage.trim() || isLoading"
+        title="Envoyer le message"
+      >
+        <i *ngIf="!isLoading" class="bi bi-send-fill"></i>
+        <i *ngIf="isLoading" class="bi bi-hourglass-split"></i>
+      </button>
+    </div>
+    <div class="input-footer">
+      <span class="input-hint">
+        <i class="bi bi-info-circle"></i>
+        Appuyez sur Entrée pour envoyer, Shift+Entrée pour nouvelle ligne
+      </span>
+    </div>
+  </div>
+</div>

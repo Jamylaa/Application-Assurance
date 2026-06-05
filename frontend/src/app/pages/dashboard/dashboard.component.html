@@ -1,0 +1,509 @@
+<div class="dashboard-page">
+
+  <p-toast position="top-right"></p-toast>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-state">
+    <p-progressSpinner
+      strokeWidth="3"
+      [style]="{ width: '48px', height: '48px' }">
+    </p-progressSpinner>
+
+    <p>Chargement des statistiques...</p>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!loading" class="dashboard-content">
+
+    <!-- Welcome Banner -->
+    <div class="welcome-banner">
+
+      <!-- LEFT -->
+      <div class="welcome-left">
+
+        <div class="welcome-avatar">
+          {{ getInitials(currentUser?.username || 'U') }}
+        </div>
+
+        <div class="welcome-text">
+
+          <h1 class="welcome-heading">
+            {{ getGreeting() }},
+            <span>
+              {{ currentUser?.firstName || currentUser?.username || 'Utilisateur' }}
+            </span>
+          </h1>
+
+          <p class="welcome-sub">
+            Voici un résumé de votre plateforme d'assurance aujourd'hui.
+          </p>
+
+          <!-- USER META -->
+          <div class="welcome-meta" *ngIf="currentUser">
+
+            <!-- EMAIL -->
+            <span class="meta-tag" *ngIf="currentUser?.email">
+              <i class="bi bi-envelope-fill"></i>
+              {{ currentUser.email }}
+            </span>
+
+            <!-- ROLES -->
+            <span
+              class="meta-tag"
+              *ngIf="currentUser?.roles?.length">
+
+              <i class="bi bi-shield-lock-fill"></i>
+
+              {{ currentUser.roles.join(', ') }}
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- RIGHT -->
+      <div class="welcome-right">
+
+        <div class="welcome-date">
+          <i class="bi bi-calendar3"></i>
+          {{ today | date:'EEEE dd MMMM yyyy' }}
+        </div>
+
+        <!-- LOGOUT -->
+        <button
+          pButton
+          type="button"
+          icon="pi pi-sign-out"
+          label="Déconnexion"
+          class="p-button-danger logout-btn"
+          (click)="logout()">
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- KPI STATS -->
+    <div class="stats-grid">
+
+      <!-- Produits -->
+      <div
+        class="stat-card produits-card"
+        (click)="navigateToProduits()">
+
+        <div class="stat-card-content">
+
+          <div class="stat-icon produits">
+            <i class="bi bi-box-seam-fill"></i>
+          </div>
+
+          <div class="stat-info">
+
+            <div class="stat-value">
+              {{ stats.totalProduits }}
+            </div>
+
+            <div class="stat-label">
+              Produits
+            </div>
+
+            <div class="stat-trend">
+              <i class="bi bi-arrow-up-right"></i>
+              Disponibles
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="stat-card-footer">
+          <span>
+            Voir tous
+            <i class="bi bi-arrow-right"></i>
+          </span>
+        </div>
+
+      </div>
+
+      <!-- Packs -->
+      <div
+        class="stat-card packs-card"
+        (click)="navigateToPacks()">
+
+        <div class="stat-card-content">
+
+          <div class="stat-icon packs">
+            <i class="bi bi-collection-fill"></i>
+          </div>
+
+          <div class="stat-info">
+
+            <div class="stat-value">
+              {{ stats.totalPacks }}
+            </div>
+
+            <div class="stat-label">
+              Packs
+            </div>
+
+            <div class="stat-trend">
+              <i class="bi bi-arrow-up-right"></i>
+              Configurés
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="stat-card-footer">
+          <span>
+            Voir tous
+            <i class="bi bi-arrow-right"></i>
+          </span>
+        </div>
+
+      </div>
+
+      <!-- Garanties -->
+      <div
+        class="stat-card garanties-card"
+        (click)="navigateToGaranties()">
+
+        <div class="stat-card-content">
+
+          <div class="stat-icon garanties">
+            <i class="bi bi-shield-fill-check"></i>
+          </div>
+
+          <div class="stat-info">
+
+            <div class="stat-value">
+              {{ stats.totalGaranties }}
+            </div>
+
+            <div class="stat-label">
+              Garanties
+            </div>
+
+            <div class="stat-trend">
+              <i class="bi bi-arrow-up-right"></i>
+              Actives
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="stat-card-footer">
+          <span>
+            Voir tous
+            <i class="bi bi-arrow-right"></i>
+          </span>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Assistant IA -->
+    <section
+      class="dashboard-assistant"
+      aria-label="Assistant IA">
+
+      <div
+        class="unified-chatbot-card"
+        (click)="navigateToChatbot()">
+
+        <div class="chatbot-card-header">
+
+          <div class="chatbot-icon">
+            <i class="bi bi-robot"></i>
+          </div>
+
+          <div class="chatbot-info">
+
+            <h3>
+              Assistant IA Assurance
+            </h3>
+
+            <p>
+              Votre assistant intelligent pour gérer produits,
+              garanties, packs et configurations.
+            </p>
+
+          </div>
+
+        </div>
+
+        <div class="chatbot-features">
+
+          <div class="feature-item">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>Création de garanties</span>
+          </div>
+
+          <div class="feature-item">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>Gestion des packs</span>
+          </div>
+
+          <div class="feature-item">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>Configuration des produits</span>
+          </div>
+
+          <div class="feature-item">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>Recommandations intelligentes</span>
+          </div>
+
+        </div>
+
+        <div class="chatbot-card-footer">
+
+          <button
+            type="button"
+            class="chatbot-action-btn">
+
+            <i class="bi bi-chat-square-text"></i>
+
+            Démarrer l'assistant
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- Charts -->
+    <div class="charts-section">
+
+      <!-- BAR -->
+      <div class="chart-card">
+
+        <div class="chart-header">
+
+          <div class="chart-title-wrap">
+
+            <div class="chart-icon bar-icon">
+              <i class="bi bi-bar-chart-fill"></i>
+            </div>
+
+            <div>
+              <h3>Répartition des Produits</h3>
+              <p>Volume par type d'assurance</p>
+            </div>
+
+          </div>
+
+          <button class="chart-action-btn">
+            <i class="bi bi-three-dots-vertical"></i>
+          </button>
+
+        </div>
+
+        <div class="chart-container">
+
+          <p-chart
+            type="bar"
+            [data]="barChartData"
+            [options]="chartOptions">
+          </p-chart>
+
+        </div>
+
+      </div>
+
+      <!-- PIE -->
+      <div class="chart-card">
+
+        <div class="chart-header">
+
+          <div class="chart-title-wrap">
+
+            <div class="chart-icon pie-icon">
+              <i class="bi bi-pie-chart-fill"></i>
+            </div>
+
+            <div>
+              <h3>Packs par Niveau</h3>
+              <p>Couverture des abonnements</p>
+            </div>
+
+          </div>
+
+          <button class="chart-action-btn">
+            <i class="bi bi-three-dots-vertical"></i>
+          </button>
+
+        </div>
+
+        <div class="chart-container pie-container">
+
+          <p-chart
+            type="doughnut"
+            [data]="pieChartData"
+            [options]="pieChartOptions">
+          </p-chart>
+
+        </div>
+
+      </div>
+
+      <!-- POLAR -->
+      <div class="chart-card">
+
+        <div class="chart-header">
+
+          <div class="chart-title-wrap">
+
+            <div class="chart-icon polar-icon">
+              <i class="bi bi-shield-fill-check"></i>
+            </div>
+
+            <div>
+              <h3>Types de Garanties</h3>
+              <p>Répartition des couvertures actives</p>
+            </div>
+
+          </div>
+
+          <button class="chart-action-btn">
+            <i class="bi bi-three-dots-vertical"></i>
+          </button>
+
+        </div>
+
+        <div class="chart-container pie-container">
+
+          <p-chart
+            type="polarArea"
+            [data]="polarChartData"
+            [options]="polarOptions">
+          </p-chart>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="dashboard-grid">
+
+      <div class="quick-actions-card">
+
+        <div class="section-header">
+          <h2 class="section-title">
+            Actions rapides
+          </h2>
+        </div>
+
+        <div class="quick-actions-grid">
+
+          <!-- USERS -->
+          <button
+            class="quick-action-btn users-btn"
+            (click)="navigateToUsers()">
+
+            <div class="qa-icon">
+              <i class="bi bi-people-fill"></i>
+            </div>
+
+            <span>Gérer les utilisateurs</span>
+
+            <i class="bi bi-arrow-right qa-arrow"></i>
+
+          </button>
+
+          <!-- PRODUITS -->
+          <button
+            class="quick-action-btn produits-btn"
+            (click)="navigateToProduits()">
+
+            <div class="qa-icon">
+              <i class="bi bi-box-seam-fill"></i>
+            </div>
+
+            <span>Gérer les produits</span>
+
+            <i class="bi bi-arrow-right qa-arrow"></i>
+
+          </button>
+
+          <!-- PACKS -->
+          <button
+            class="quick-action-btn packs-btn"
+            (click)="navigateToPacks()">
+
+            <div class="qa-icon">
+              <i class="bi bi-collection-fill"></i>
+            </div>
+
+            <span>Gérer les packs</span>
+
+            <i class="bi bi-arrow-right qa-arrow"></i>
+
+          </button>
+
+          <!-- GARANTIES -->
+          <button
+            class="quick-action-btn garanties-btn"
+            (click)="navigateToGaranties()">
+
+            <div class="qa-icon">
+              <i class="bi bi-shield-fill-check"></i>
+            </div>
+
+            <span>Gérer les garanties</span>
+
+            <i class="bi bi-arrow-right qa-arrow"></i>
+
+          </button>
+
+        </div>
+
+      </div>
+
+      <!-- RECENT ACTIVITY -->
+      <div class="recent-activity-card">
+
+        <div class="section-header">
+          <h2 class="section-title">
+            Activité récente
+          </h2>
+        </div>
+
+        <div class="activity-list">
+
+          <div *ngFor="let activity of recentActivities" class="activity-item">
+
+            <div class="activity-icon" [class]="'activity-icon-' + activity.type">
+              <i class="bi" [ngClass]="activity.icon"></i>
+            </div>
+
+            <div class="activity-content">
+              <div class="activity-message">{{ activity.message }}</div>
+              <div class="activity-time">{{ activity.time }}</div>
+            </div>
+
+          </div>
+
+          <div *ngIf="recentActivities.length === 0" class="no-activity">
+            <i class="bi bi-inbox"></i>
+            <p>Aucune activité récente</p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

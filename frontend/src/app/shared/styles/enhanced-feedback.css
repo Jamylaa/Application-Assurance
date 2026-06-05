@@ -1,0 +1,344 @@
+/* ========================================================================
+   ENHANCED VISUAL FEEDBACK — Premium Insurance Platform
+   ======================================================================== */
+
+/* ── Button Enhancements ── */
+.p-button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.p-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.5s ease, height 0.5s ease;
+}
+
+.p-button:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+.p-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.p-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Card Enhancements ── */
+.p-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-xl);
+  animation: fadeInUp 0.4s var(--ease-out) both;
+}
+
+.p-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.p-card .p-card-header {
+  background: var(--app-surface);
+  border-bottom: 1px solid var(--app-border);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+.p-card .p-card-content {
+  padding: 1.5rem;
+}
+
+/* ── Table Enhancements ── */
+.p-table {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.p-table .p-table-thead > tr > th {
+  background: var(--app-surface);
+  color: var(--app-text-secondary);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: none;
+  padding: 0.875rem 1rem;
+  border-bottom: 2px solid var(--app-border);
+}
+
+.p-table .p-table-tbody > tr {
+  transition: all 0.15s ease;
+}
+
+.p-table .p-table-tbody > tr:hover {
+  background: var(--primary-lightest);
+}
+
+.p-table .p-table-tbody > tr > td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--app-border-light);
+  font-size: 0.875rem;
+}
+
+/* ── Input Enhancements ── */
+.p-inputtext {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1.5px solid var(--app-border);
+  border-radius: var(--radius-md);
+  padding: 0.625rem 0.875rem;
+}
+
+.p-inputtext:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.08);
+}
+
+.p-inputtext:hover {
+  border-color: var(--primary-lighter);
+}
+
+/* ── Tag Enhancements ── */
+.p-tag {
+  transition: all 0.2s ease;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+}
+
+.p-tag:hover {
+  transform: scale(1.03);
+}
+
+/* ── Badge Enhancements ── */
+.p-badge {
+  transition: all 0.2s ease;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+}
+
+/* ── Toast Enhancements ── */
+.p-toast {
+  border-radius: var(--radius-lg);
+}
+
+.p-toast-message {
+  border: none !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-xl) !important;
+  backdrop-filter: blur(12px) !important;
+  animation: slideInToast 0.4s var(--ease-out) both !important;
+  overflow: hidden;
+}
+
+.p-toast-message::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+}
+
+.p-toast-message-success {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(52, 211, 153, 0.95)) !important;
+}
+.p-toast-message-success::before {
+  background: #059669;
+}
+
+.p-toast-message-info {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(96, 165, 250, 0.95)) !important;
+}
+.p-toast-message-info::before {
+  background: #2563EB;
+}
+
+.p-toast-message-warn {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(251, 191, 36, 0.95)) !important;
+}
+.p-toast-message-warn::before {
+  background: #D97706;
+}
+
+.p-toast-message-error {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(248, 113, 113, 0.95)) !important;
+}
+.p-toast-message-error::before {
+  background: #DC2626;
+}
+
+.p-toast-message .p-toast-message-content {
+  color: white !important;
+  padding: 0.875rem 1rem 0.875rem 1.25rem !important;
+}
+
+.p-toast-message .p-toast-summary {
+  font-weight: 700 !important;
+  font-family: var(--font-heading) !important;
+}
+
+.p-toast-message .p-toast-detail {
+  opacity: 0.9 !important;
+  margin-top: 0.25rem !important;
+}
+
+.p-toast-message .p-toast-icon-close {
+  color: white !important;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.p-toast-message .p-toast-icon-close:hover {
+  opacity: 1;
+}
+
+@keyframes slideInToast {
+  from {
+    opacity: 0;
+    transform: translateX(40px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* ── Confirm Dialog Enhancements ── */
+.p-confirm-dialog {
+  border-radius: var(--radius-xl) !important;
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-2xl) !important;
+  border: 1px solid var(--app-border) !important;
+  animation: dialogAppear 0.3s var(--ease-out) both;
+}
+
+.p-confirm-dialog .p-dialog-header {
+  background: var(--app-surface) !important;
+  border-bottom: 1px solid var(--app-border) !important;
+  padding: 1.25rem 1.5rem !important;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0 !important;
+}
+
+.p-confirm-dialog .p-dialog-header .p-dialog-title {
+  font-family: var(--font-heading) !important;
+  font-weight: 700 !important;
+  font-size: 1.1rem !important;
+  color: var(--app-text) !important;
+}
+
+.p-confirm-dialog .p-dialog-content {
+  padding: 1.5rem !important;
+}
+
+.p-confirm-dialog .p-confirm-dialog-icon {
+  font-size: 1.5rem !important;
+  color: var(--warning) !important;
+  animation: iconBounce 0.5s ease both;
+}
+
+.p-confirm-dialog .p-dialog-footer {
+  padding: 1rem 1.5rem !important;
+  border-top: 1px solid var(--app-border) !important;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.p-confirm-dialog .p-dialog-footer .p-button {
+  min-width: 100px;
+}
+
+@keyframes dialogAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes iconBounce {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* ── Tooltip Enhancements ── */
+.p-tooltip {
+  border-radius: var(--radius-md) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+}
+
+.p-tooltip .p-tooltip-text {
+  background: var(--app-text) !important;
+  padding: 0.375rem 0.75rem !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* ── Paginator Enhancements ── */
+.p-paginator {
+  border: none !important;
+  padding: 0.75rem !important;
+  background: var(--app-surface) !important;
+  border-top: 1px solid var(--app-border) !important;
+}
+
+.p-paginator .p-paginator-element {
+  border-radius: var(--radius-md) !important;
+  min-width: 2rem !important;
+  height: 2rem !important;
+  transition: all 0.15s ease !important;
+}
+
+.p-paginator .p-paginator-element:hover {
+  background: var(--primary-lightest) !important;
+  color: var(--primary) !important;
+}
+
+.p-paginator .p-highlight {
+  background: var(--primary) !important;
+  color: white !important;
+  box-shadow: var(--shadow-primary) !important;
+}
+
+/* ── Dialog Overlay ── */
+.p-dialog-mask {
+  backdrop-filter: blur(4px) !important;
+  background: rgba(15, 23, 42, 0.4) !important;
+}
+
+/* ── Progress Spinner ── */
+.p-progress-spinner-circle {
+  stroke: var(--primary) !important;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .p-button:hover {
+    transform: translateY(-1px);
+  }
+
+  .p-card:hover {
+    transform: none;
+  }
+
+  .p-table .p-table-tbody > tr:hover {
+    transform: none;
+  }
+}

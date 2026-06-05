@@ -1,0 +1,130 @@
+<div class="page-container">
+  <p-toast position="top-right"></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="header-icon"><i class="bi bi-box-seam-fill"></i></div>
+      <div>
+        <h1>Gestion des Produits</h1>
+        <p>Gérez tous les produits d'assurance de la plateforme</p>
+      </div>
+    </div>
+    <div class="page-header-actions">
+      <p-button
+        label="Actualiser"
+        icon="pi pi-refresh"
+        [loading]="loading"
+        (click)="refreshProduits()"
+        styleClass="p-button-outlined">
+      </p-button>
+      <p-button
+        label="Ajouter"
+        icon="pi pi-plus"
+        (click)="addProduit()"
+        styleClass="p-button-primary">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="table-card">
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <div class="table-title">
+          <i class="bi bi-list-ul"></i>
+          <span>Produits</span>
+          <span class="count-badge">{{ produits.length }}</span>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <div class="search-box">
+          <i class="bi bi-search"></i>
+          <input type="text" placeholder="Rechercher un produit..." (input)="onGlobalFilter($event)" [value]="globalFilterValue">
+        </div>
+      </div>
+    </div>
+
+    <p-table
+      [value]="produits"
+      [loading]="loading"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[5,10,20,50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Affichage {first} – {last} sur {totalRecords}"
+      sortMode="single"
+      styleClass="custom-table"
+      responsiveLayout="scroll">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="nomProduit">Nom <p-sortIcon field="nomProduit"></p-sortIcon></th>
+          <th pSortableColumn="description">Description <p-sortIcon field="description"></p-sortIcon></th>
+          <th pSortableColumn="typeProduit">Type <p-sortIcon field="typeProduit"></p-sortIcon></th>
+          <th pSortableColumn="statut">Statut <p-sortIcon field="statut"></p-sortIcon></th>
+          <th style="width:100px;text-align:center;">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-produit>
+        <tr class="table-row">
+          <td>
+            <div class="product-cell">
+              <div class="product-icon"><i class="bi bi-box-seam-fill"></i></div>
+              <span class="cell-primary">{{ produit.nomProduit }}</span>
+            </div>
+          </td>
+          <td><span class="cell-text">{{ produit.description || '—' }}</span></td>
+          <td>
+            <span class="type-badge">{{ produit.typeProduit || 'N/A' }}</span>
+          </td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(produit.statut)">
+              <span class="status-dot"></span>
+              {{ produit.statut || 'INCONNU' }}
+            </span>
+          </td>
+          <td>
+            <div class="action-btns">
+              <p-button
+                icon="pi pi-eye"
+                pTooltip="Détails"
+                tooltipPosition="top"
+                styleClass="p-button-rounded p-button-text"
+                (click)="viewProduit(produit)">
+              </p-button>
+              <p-button
+                icon="pi pi-pencil"
+                pTooltip="Modifier"
+                tooltipPosition="top"
+                styleClass="p-button-rounded p-button-text p-button-info"
+                (click)="editProduit(produit)">
+              </p-button>
+              <p-button
+                icon="pi pi-trash"
+                pTooltip="Supprimer"
+                tooltipPosition="top"
+                styleClass="p-button-rounded p-button-text p-button-danger"
+                (click)="deleteProduit(produit)">
+              </p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5">
+            <div class="empty-state">
+              <div class="empty-icon"><i class="bi bi-box-seam"></i></div>
+              <h3>Aucun produit trouvé</h3>
+              <p>Commencez par ajouter un produit d'assurance</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

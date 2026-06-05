@@ -1,0 +1,208 @@
+<div class="dashboard-layout">
+
+  <!-- Sidebar -->
+  <app-sidebar (sidebarToggle)="onSidebarToggle()"></app-sidebar>
+
+  <!-- Main Content Area -->
+  <main class="main-content" [class.sidebar-collapsed]="isSidebarCollapsed">
+
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <div class="top-bar-inner">
+
+        <!-- Left -->
+        <div class="top-bar-left">
+
+          <button
+            class="mobile-menu-toggle"
+            (click)="toggleMobileSidebar()"
+            title="Menu"
+            aria-label="Ouvrir le menu mobile">
+
+            <i class="bi bi-list"></i>
+          </button>
+
+          <div class="page-breadcrumb">
+            <div class="page-title-group">
+
+              <div class="page-icon">
+                <i class="bi" [ngClass]="getCurrentPageIcon()"></i>
+              </div>
+
+              <div>
+                <h1 class="page-name">
+                  {{ getCurrentPageTitle() }}
+                </h1>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Right -->
+        <div class="top-bar-right">
+
+          <!-- Search -->
+          <div class="search-bar" [class.search-open]="searchOpen">
+
+            <button
+              class="search-trigger"
+              (click)="toggleSearch()"
+              *ngIf="!searchOpen">
+
+              <i class="bi bi-search"></i>
+            </button>
+
+            <div class="search-input-wrap" *ngIf="searchOpen">
+
+              <i class="bi bi-search search-icon"></i>
+
+              <input
+                #searchInput
+                type="text"
+                class="search-input"
+                placeholder="Rechercher..."
+                [(ngModel)]="searchQuery"
+                (blur)="closeSearch()"
+                (keyup.enter)="performSearch()">
+
+              <button
+                class="search-close"
+                (click)="closeSearch()"
+                aria-label="Fermer la recherche">
+
+                <i class="bi bi-x"></i>
+              </button>
+
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <button
+            class="icon-btn notif-btn"
+            title="Notifications">
+
+            <i class="bi bi-bell"></i>
+            <span class="notif-badge">3</span>
+          </button>
+
+          <!-- Divider -->
+          <div class="top-bar-divider"></div>
+
+          <!-- User Menu -->
+          <div
+            class="user-menu"
+            (click)="toggleUserDropdown()"
+            [class.open]="showUserDropdown">
+
+            <div class="user-avatar-wrap">
+
+              <div class="user-avatar">
+                {{ getInitials(currentUser?.username || 'Utilisateur') }}
+              </div>
+
+              <span class="online-dot"></span>
+            </div>
+
+            <div class="user-details">
+
+              <div class="user-display-name">
+                {{ currentUser?.username || 'Utilisateur' }}
+              </div>
+
+              <div class="user-display-role">
+                ADMIN
+              </div>
+
+            </div>
+
+            <i class="bi bi-chevron-down chevron-icon"></i>
+          </div>
+
+          <!-- Dropdown -->
+          <div
+            class="user-dropdown"
+            *ngIf="showUserDropdown"
+            (click)="$event.stopPropagation()">
+
+            <div class="dropdown-header">
+
+              <div class="dropdown-avatar">
+                {{ getInitials(currentUser?.username || 'U') }}
+              </div>
+
+              <div>
+
+                <div class="dropdown-name">
+                  {{ currentUser?.username || 'Utilisateur' }}
+                </div>
+
+                <div class="dropdown-email">
+                  {{ currentUser?.email || '' }}
+                </div>
+
+              </div>
+            </div>
+
+            <div class="dropdown-divider"></div>
+
+            <button
+              class="dropdown-item"
+              (click)="closeDropdown()">
+
+              <i class="bi bi-person-circle"></i>
+              <span>Mon profil</span>
+            </button>
+
+            <button
+              class="dropdown-item"
+              (click)="closeDropdown()">
+
+              <i class="bi bi-gear"></i>
+              <span>Paramètres</span>
+            </button>
+
+            <div class="dropdown-divider"></div>
+
+            <button
+              class="dropdown-item danger"
+              (click)="logout()">
+
+              <i class="bi bi-box-arrow-right"></i>
+              <span>Déconnexion</span>
+            </button>
+
+          </div>
+
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content-area">
+
+      <div class="content-wrapper">
+
+        <app-breadcrumb></app-breadcrumb>
+
+        <router-outlet></router-outlet>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Mobile Overlay -->
+  <div
+    class="mobile-overlay"
+    *ngIf="isMobileMenuOpen"
+    (click)="closeMobileSidebar()">
+  </div>
+
+  <!-- Dropdown Overlay -->
+  <div
+    class="dropdown-overlay"
+    *ngIf="showUserDropdown"
+    (click)="closeDropdown()">
+  </div>
+
+</div>

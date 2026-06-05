@@ -1,0 +1,21 @@
+<div class="theme-switcher">
+  <div class="theme-switcher-container">
+    <div class="theme-label">Thème</div>
+    <div class="theme-toggle">
+      <button
+        class="theme-btn light-btn"
+        [class.active]="!isDarkMode"
+        (click)="setLightMode()"
+        title="Mode Clair">
+        <i class="bi bi-sun"></i>
+      </button>
+      <button
+        class="theme-btn dark-btn"
+        [class.active]="isDarkMode"
+        (click)="setDarkMode()"
+        title="Mode Sombre">
+        <i class="bi bi-moon"></i>
+      </button>
+    </div>
+  </div>
+</div>

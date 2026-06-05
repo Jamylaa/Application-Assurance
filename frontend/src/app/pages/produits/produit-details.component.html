@@ -1,0 +1,90 @@
+<div class="page-container">
+  <p-toast position="top-right"></p-toast>
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="header-icon"><i class="bi bi-box-seam-fill"></i></div>
+      <div>
+        <h1>Détails produit</h1>
+        <p *ngIf="produit as p">{{ p.nomProduit }}</p>
+        <p *ngIf="!produit">Consultez les informations du produit</p>
+      </div>
+    </div>
+    <div class="page-header-actions">
+      <p-button label="Retour" icon="pi pi-arrow-left" styleClass="p-button-outlined" (click)="back()"></p-button>
+      <p-button label="Modifier" icon="pi pi-pencil" [disabled]="!produitId" (click)="edit()"></p-button>
+    </div>
+  </div>
+
+  <div class="details-card">
+    <p-card>
+      <ng-container *ngIf="loading; else content">
+        <div class="loading">
+          <p-progressSpinner ariaLabel="loading"></p-progressSpinner>
+        </div>
+      </ng-container>
+
+      <ng-template #content>
+        <ng-container *ngIf="produit as p; else empty">
+          <div class="grid">
+            <div class="row">
+              <div class="label">ID</div>
+              <div class="value">{{ p.idProduit || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Nom</div>
+              <div class="value">{{ p.nomProduit || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Description</div>
+              <div class="value">{{ p.description || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Type</div>
+              <div class="value">{{ p.typeProduit || '—' }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Statut</div>
+              <div class="value">
+                <p-tag [severity]="getStatusSeverity(p.statut)" [value]="p.statut || 'INCONNU'"></p-tag>
+              </div>
+            </div>
+            <div class="row">
+              <div class="label">Création</div>
+              <div class="value">{{ formatDateTime(p.dateCreation) }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Modification</div>
+              <div class="value">{{ formatDateTime(p.dateModification) }}</div>
+            </div>
+          </div>
+
+          <ng-container *ngIf="p.customFields && (p.customFields | keyvalue).length > 0">
+            <div class="section-title">Champs personnalisés</div>
+            <div class="grid">
+              <div class="row" *ngFor="let field of p.customFields | keyvalue">
+                <div class="label">{{ field.key }}</div>
+                <div class="value">{{ field.value }}</div>
+              </div>
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="p.packs && p.packs.length > 0">
+            <div class="section-title">Packs associés ({{ p.packs.length }})</div>
+            <div class="packs-list">
+              <div class="pack-item" *ngFor="let pack of p.packs">
+                <span class="pack-nom">{{ pack.nomPack }}</span>
+                <span class="pack-statut">{{ pack.statut }}</span>
+              </div>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <ng-template #empty>
+          <div class="empty">
+            Produit introuvable.
+          </div>
+        </ng-template>
+      </ng-template>
+    </p-card>
+  </div>
+</div>

@@ -1,0 +1,308 @@
+<div class="page-container">
+  <p-toast position="top-right"></p-toast>
+
+  <form [formGroup]="packForm" (ngSubmit)="onSubmit()" class="auth-form">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="header-icon"><i class="bi bi-plus-circle-fill"></i></div>
+      <div>
+        <h1>Nouveau Pack</h1>
+        <p>Créer un nouveau pack d'assurance</p>
+      </div>
+    </div>
+    <div class="page-header-actions">
+      <p-button 
+        label="Annuler" 
+        icon="pi pi-times" 
+        [loading]="loading" 
+        type="button"
+        (click)="onCancel()" 
+        styleClass="p-button-outlined">
+      </p-button>
+      <p-button 
+        label="{{ loading ? 'Création...' : 'Créer' }}" 
+        icon="pi pi-check" 
+        [loading]="loading" 
+        [disabled]="(packForm.invalid && packForm.touched) || loading" 
+        type="submit"
+        styleClass="p-button-primary">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Form Card -->
+  <div class="form-card">
+      <div class="form-grid">
+        <!-- Nom du pack -->
+        <div class="form-field">
+          <label class="field-label" for="nomPack">
+            <i class="bi bi-tag"></i> Nom du pack *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('nomPack')">
+            <input
+              pInputText
+              id="nomPack"
+              formControlName="nomPack"
+              placeholder="Entrez le nom du pack"
+              class="auth-input" />
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('nomPack')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('nomPack') }}
+          </div>
+        </div>
+
+        <!-- Produit associé -->
+        <div class="form-field">
+          <label class="field-label" for="produitId">
+            <i class="bi bi-box"></i> Produit associé *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('produitId')">
+            <p-dropdown
+              id="produitId"
+              formControlName="produitId"
+              [options]="produits"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez un produit"
+              styleClass="auth-dropdown">
+            </p-dropdown>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('produitId')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('produitId') }}
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-field full-width">
+          <label class="field-label" for="description">
+            <i class="bi bi-text-paragraph"></i> Description *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('description')">
+            <textarea
+              pTextarea
+              id="description"
+              formControlName="description"
+              placeholder="Décrivez le pack d'assurance"
+              rows="4"
+              class="auth-textarea">
+            </textarea>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('description')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('description') }}
+          </div>
+        </div>
+
+        <!-- Âge minimum -->
+        <div class="form-field">
+          <label class="field-label" for="ageMinimum">
+            <i class="bi bi-person"></i> Âge minimum
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('ageMinimum')">
+            <p-inputNumber
+              id="ageMinimum"
+              formControlName="ageMinimum"
+              [min]="0"
+              [max]="120"
+              showButtons="false"
+              placeholder="0"
+              styleClass="auth-input">
+            </p-inputNumber>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('ageMinimum')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('ageMinimum') }}
+          </div>
+        </div>
+
+        <!-- Âge maximum -->
+        <div class="form-field">
+          <label class="field-label" for="ageMaximum">
+            <i class="bi bi-person-check"></i> Âge maximum
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('ageMaximum')">
+            <p-inputNumber
+              id="ageMaximum"
+              formControlName="ageMaximum"
+              [min]="0"
+              [max]="120"
+              showButtons="false"
+              placeholder="0"
+              styleClass="auth-input">
+            </p-inputNumber>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('ageMaximum')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('ageMaximum') }}
+          </div>
+        </div>
+
+        <!-- Types de clients -->
+        <div class="form-field">
+          <label class="field-label" for="typeClients">
+            <i class="bi bi-people"></i> Types de clients *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('typeClients')">
+            <p-multiSelect
+              id="typeClients"
+              formControlName="typeClients"
+              [options]="typeClientOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez les types"
+              styleClass="auth-dropdown">
+            </p-multiSelect>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('typeClients')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('typeClients') }}
+          </div>
+        </div>
+
+        <!-- Ancienneté contrat -->
+        <div class="form-field">
+          <label class="field-label" for="ancienneteContratMois">
+            <i class="bi bi-calendar"></i> Ancienneté contrat (mois)
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('ancienneteContratMois')">
+            <p-inputNumber
+              id="ancienneteContratMois"
+              formControlName="ancienneteContratMois"
+              [min]="0"
+              showButtons="false"
+              placeholder="0"
+              styleClass="auth-input">
+            </p-inputNumber>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('ancienneteContratMois')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('ancienneteContratMois') }}
+          </div>
+        </div>
+
+        <!-- Couverture géographique -->
+        <div class="form-field">
+          <label class="field-label" for="couvertureGeographique">
+            <i class="bi bi-globe"></i> Couverture géographique *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('couvertureGeographique')">
+            <p-dropdown
+              id="couvertureGeographique"
+              formControlName="couvertureGeographique"
+              [options]="couvertureGeoOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez une couverture"
+              styleClass="auth-dropdown">
+            </p-dropdown>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('couvertureGeographique')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('couvertureGeographique') }}
+          </div>
+        </div>
+
+        <!-- Prix mensuel -->
+        <div class="form-field">
+          <label class="field-label" for="prixMensuel">
+            <i class="bi bi-cash"></i> Prix mensuel *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('prixMensuel')">
+            <p-inputNumber
+              id="prixMensuel"
+              formControlName="prixMensuel"
+              [min]="0"
+              mode="decimal"
+              showButtons="false"
+              placeholder="0.00"
+              styleClass="auth-input">
+            </p-inputNumber>
+          </div>
+          <div class="field-help">En TND</div>
+          <div class="field-error" *ngIf="isFieldInvalid('prixMensuel')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('prixMensuel') }}
+          </div>
+        </div>
+
+        <!-- Durée min contrat -->
+        <div class="form-field">
+          <label class="field-label" for="dureeMinContrat">
+            <i class="bi bi-calendar-minus"></i> Durée min contrat (mois)
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('dureeMinContrat')">
+            <p-inputNumber
+              id="dureeMinContrat"
+              formControlName="dureeMinContrat"
+              [min]="1"
+              showButtons="false"
+              placeholder="1"
+              styleClass="auth-input">
+            </p-inputNumber>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('dureeMinContrat')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('dureeMinContrat') }}
+          </div>
+        </div>
+
+        <!-- Durée max contrat -->
+        <div class="form-field">
+          <label class="field-label" for="dureeMaxContrat">
+            <i class="bi bi-calendar-plus"></i> Durée max contrat (mois)
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('dureeMaxContrat')">
+            <p-inputNumber
+              id="dureeMaxContrat"
+              formControlName="dureeMaxContrat"
+              [min]="1"
+              showButtons="false"
+              placeholder="12"
+              styleClass="auth-input">
+            </p-inputNumber>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('dureeMaxContrat')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('dureeMaxContrat') }}
+          </div>
+        </div>
+
+        <!-- Niveau de couverture -->
+        <div class="form-field">
+          <label class="field-label" for="niveauCouverture">
+            <i class="bi bi-shield-check"></i> Niveau de couverture *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('niveauCouverture')">
+            <p-dropdown
+              id="niveauCouverture"
+              formControlName="niveauCouverture"
+              [options]="niveauCouvertureOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez un niveau"
+              styleClass="auth-dropdown">
+            </p-dropdown>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('niveauCouverture')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('niveauCouverture') }}
+          </div>
+        </div>
+
+        <!-- Statut -->
+        <div class="form-field">
+          <label class="field-label" for="statut">
+            <i class="bi bi-toggle-on"></i> Statut *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('statut')">
+            <p-dropdown
+              id="statut"
+              formControlName="statut"
+              [options]="statutOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez un statut"
+              styleClass="auth-dropdown">
+            </p-dropdown>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('statut')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('statut') }}
+          </div>
+        </div>
+      </div>
+  </div>
+
+  </form>
+</div>
