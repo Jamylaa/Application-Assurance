@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: gestionUser
+  profiles:
+    active: test
+  cloud:
+    config:
+      enabled: false
+  data:
+    mongodb:
+      auto-index-creation: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://dummy-url
+
+eureka:
+  client:
+    enabled: false
+  instance:
+    prefer-ip-address: false
+
+logging:
+  level:
+    org.springframework: ERROR
+    tn.vermeg: ERROR
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
