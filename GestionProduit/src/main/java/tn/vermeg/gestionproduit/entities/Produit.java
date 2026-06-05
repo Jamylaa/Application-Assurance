@@ -6,6 +6,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.Map;
 
 @Document(collection = "produits")
 public class Produit {
@@ -22,23 +23,25 @@ public class Produit {
     @CreatedDate
     private Instant dateCreation;
 
+    private Map<String, Object> customFields;
     @LastModifiedDate
     private Instant dateModification;
 
     // CONSTRUCTEURS
-    public Produit() {}
-    public Produit(String idProduit, String nomProduit, String description,
-                   TypeProduit typeProduit, Statut statut,
-                   Instant dateCreation, Instant dateModification) {
 
+
+    public Produit(String idProduit, String nomProduit, String description, TypeProduit typeProduit, Statut statut, Instant dateCreation, Map<String, Object> customFields, Instant dateModification) {
         this.idProduit = idProduit;
         this.nomProduit = nomProduit;
         this.description = description;
         this.typeProduit = typeProduit;
         this.statut = statut;
         this.dateCreation = dateCreation;
+        this.customFields = customFields;
         this.dateModification = dateModification;
     }
+
+    public Produit() {}
 
     // MÉTHODES MÉTIER
     public boolean estActif() {
@@ -51,6 +54,13 @@ public class Produit {
                 && statut != null;
     }
     // GETTERS & SETTERS
+    public Map<String, Object> getCustomFields() {
+        return customFields;
+    }
+
+    public void setCustomFields(Map<String, Object> customFields) {
+        this.customFields = customFields;
+    }
     public String getIdProduit() { return idProduit; }
     public void setIdProduit(String idProduit) { this.idProduit = idProduit; }
 

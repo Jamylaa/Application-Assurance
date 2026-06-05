@@ -3,7 +3,8 @@ package tn.vermeg.gestionproduit.services;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tn.vermeg.gestionproduit.entities.*;
-import tn.vermeg.gestionproduit.exceptions.ResourceNotFoundException;
+import tn.vermeg.gestionproduit.exceptions.ResourceException;
+import tn.vermeg.gestionproduit.exceptions.ApiException;
 import tn.vermeg.gestionproduit.repositories.GarantieRepository;
 import tn.vermeg.gestionproduit.repositories.PackGarantieRepository;
 import tn.vermeg.gestionproduit.repositories.PackUnifiedRepository;
@@ -12,10 +13,8 @@ import tn.vermeg.gestionproduit.repositories.ProduitRepository;
 import jakarta.validation.Valid;
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-// Service unifié pour la gestion complète des packs
 @Service
 @Transactional
 public class PackUnifiedService {
@@ -44,8 +43,7 @@ public class PackUnifiedService {
     //Récupère un pack par son ID
     public Pack getPackById(String idPack) {
         return packRepository.findById(idPack)
-                .orElseThrow(() -> new ResourceNotFoundException("Pack", idPack, 
-                    "Pack non trouvé avec l'ID: " + idPack));
+                .orElseThrow(() -> new ApiException("Pack non trouvé avec l'ID: " + idPack, ApiException.ErrorCode.RESOURCE_NOT_FOUND));
     }
 // Crée un nouveau pack
     public Pack createPack(@Valid Pack pack) {
@@ -85,6 +83,9 @@ public class PackUnifiedService {
         existingPack.setDureeMaxContrat(details.getDureeMaxContrat());
         existingPack.setNiveauCouverture(details.getNiveauCouverture());
         existingPack.setStatut(details.getStatut());
+        if (details.getCustomFields() != null) {
+            existingPack.setCustomFields(details.getCustomFields());
+        }
         existingPack.setDateModification(Instant.now());
 
         return packRepository.save(existingPack);
@@ -107,7 +108,7 @@ public class PackUnifiedService {
     public Pack associatePackToProduit(String packId, String produitId) {
         Pack pack = getPackById(packId);
         Produit produit = produitRepository.findById(produitId)
-                .orElseThrow(() -> new ResourceNotFoundException("Produit", produitId, 
+                .orElseThrow(() -> new ResourceException(ResourceException.OperationType.NOT_FOUND, "Produit", produitId, 
                     "Produit non trouvé avec l'ID: " + produitId));
 
         pack.setProduitId(produitId);
@@ -188,7 +189,7 @@ public class PackUnifiedService {
     //Récupère une association pack-garantie par son ID
     public PackGarantie getPackGarantieById(String idPackGarantie) {
         return packGarantieRepository.findById(idPackGarantie)
-                .orElseThrow(() -> new ResourceNotFoundException("PackGarantie", idPackGarantie, 
+                .orElseThrow(() -> new ResourceException(ResourceException.OperationType.NOT_FOUND, "PackGarantie", idPackGarantie, 
                     "Association Pack-Garantie non trouvée avec l'ID: " + idPackGarantie));
     }
 //Récupère toutes les garanties d'un pack
@@ -204,7 +205,7 @@ public class PackUnifiedService {
     public PackGarantie ajouterGarantieAuPack(String packId, String garantieId, @Valid PackGarantie packGarantie) {
         Pack pack = getPackById(packId);
         Garantie garantie = garantieRepository.findById(garantieId)
-                .orElseThrow(() -> new ResourceNotFoundException("Garantie", garantieId, 
+                .orElseThrow(() -> new ResourceException(ResourceException.OperationType.NOT_FOUND, "Garantie", garantieId, 
                     "Garantie non trouvée avec l'ID: " + garantieId));
 
         // Vérifier duplication

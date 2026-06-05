@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tn.vermeg.gestionproduit.dto.ChatbotPromptRequestDTO;
 import tn.vermeg.gestionproduit.dto.ChatbotResponseDTO;
 import tn.vermeg.gestionproduit.services.chatbot.ChatbotOrchestratorService;
 
@@ -23,17 +24,9 @@ public class ChatbotController {
         this.chatbotOrchestratorService = chatbotOrchestratorService;
     }
     @PostMapping("/process")
-    public ResponseEntity<ChatbotResponseDTO> processPrompt(@Valid @RequestBody Map<String, String> request) {
+    public ResponseEntity<ChatbotResponseDTO> processPrompt(@Valid @RequestBody ChatbotPromptRequestDTO request) {
         try {
-            String prompt = request.get("prompt");
-            
-            if (prompt == null || prompt.trim().isEmpty()) {
-                ChatbotResponseDTO errorResponse = new ChatbotResponseDTO();
-                errorResponse.setSuccess(false);
-                errorResponse.setMessage("Prompt requis");
-                errorResponse.addError("Veuillez fournir un prompt à traiter");
-                return ResponseEntity.badRequest().body(errorResponse);
-            }
+            String prompt = request.getPrompt();
 
             logger.info("Traitement du prompt: {}", prompt);
 
@@ -169,11 +162,3 @@ public class ChatbotController {
         return ResponseEntity.ok(response);
     }
 }
-
-// Endpoint principal pour le traitement des prompts
-// Gère la création et la configuration des garanties, produits et packs
-//- {"prompt": "Créer une garantie hospitalisation premium active avec un remboursement de 90% sur les frais réels, un plafond annuel de 50000, un plafond mensuel de 10000 et un plafond par acte de 5000, avec une franchise de 100, un coût moyen par sinistre de 2000, une durée de contrat comprise entre 12 et 60 mois, résiliable annuellement"}
-// - {"prompt": "Créer un produit d'assurance santé nommé 'Produit Assurance Santé Minimum', avec la description 'Couverture médicale complète pour particuliers et familles', de type SANTE et avec le statut ACTIF"}
-// - {"prompt": "Créer un pack Gold lié au produit Santé Premium avec les garanties hospitalisation et dentaire"}
-// - {"prompt": "Ajouter la garantie optique au pack Silver"}
-// - {"prompt": "Créer un pack santé premium nommé 'Santé Premium Gold' pour un produit SANTE intitulé 'Produit Assurance Santé Minimum'. Le pack doit respecter les conditions suivantes : un âge minimum de 18 ans et un âge maximum de 70 ans, un type de clients FAMILLE et INDIVIDUEL, une ancienneté minimale de 0 mois, une couverture géographique INTERNATIONAL, un prix mensuel de 120, une durée de contrat comprise entre 12 et 60 mois, un niveau de couverture GOLD et un statut ACTIF"}

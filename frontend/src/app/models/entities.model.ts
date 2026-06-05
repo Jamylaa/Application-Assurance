@@ -68,6 +68,8 @@ export interface Produit {
   description: string;
   typeProduit: TypeProduit;
   statut: Statut;
+  packs?: Pack[];
+  customFields?: Record<string, unknown>;
   dateCreation: string;
   dateModification: string;
 }
@@ -88,6 +90,7 @@ export interface Pack {
   dureeMaxContrat: number;
   niveauCouverture: NiveauCouverture;
   statut: Statut;
+  customFields?: Record<string, unknown>;
   dateCreation: string;
   dateModification: string;
 }
@@ -110,6 +113,7 @@ export interface Garantie {
   dureeMaxContrat: number;
   resiliableAnnuellement: boolean;
   creePar: string;
+  customFields?: Record<string, unknown>;
   dateCreation: string;
   dateModification: string;
   dateDesactivation?: string;
@@ -127,6 +131,7 @@ export interface PackGarantie {
   delaiCarence: number;
   priorite: number;
   actif: boolean;
+  customFields?: Record<string, unknown>;
   dateActivation: string;
   dateDesactivation?: string;
   optionnelle: boolean;

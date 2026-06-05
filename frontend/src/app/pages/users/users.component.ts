@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
 import { GestionUserService, User } from '../../services/gestion-user.service';
 import { TableModule } from 'primeng/table';
@@ -40,6 +41,7 @@ export class UsersComponent implements OnInit {
   globalFilterValue = '';
 
   constructor(
+    private router: Router,
     private userService: GestionUserService,
     private confirmationService: ConfirmationService,
     private toastService: ToastService,
@@ -60,7 +62,6 @@ export class UsersComponent implements OnInit {
       },
       error: (error) => {
         this.loading = false;
-        console.error('Error loading users:', error);
         this.toastService.showLoadError('utilisateurs');
       }
     });
@@ -80,7 +81,6 @@ export class UsersComponent implements OnInit {
             this.toastService.showDeleteSuccess('Utilisateur');
           },
           error: (error) => {
-            console.error('Error deleting user:', error);
             this.toastService.showDeleteError('utilisateur');
           }
         });
@@ -103,12 +103,6 @@ export class UsersComponent implements OnInit {
   }
 
   addUser(): void {
-    try {
-      this.toastService.showSuccess('Formulaire d\'ajout d\'utilisateur', 'Redirection vers le formulaire de création');
-      // TODO: Implémenter la navigation vers le formulaire d'ajout
-      // this.router.navigate(['/users/add']);
-    } catch (error) {
-      this.toastService.showError('Erreur lors de l\'ajout de l\'utilisateur', 'Veuillez réessayer plus tard');
-    }
+    this.toastService.showError('Fonctionnalité non disponible', 'Les utilisateurs doivent être créés via Keycloak');
   }
 }

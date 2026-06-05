@@ -1,0 +1,40 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'gestion-produit'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:9093']
+        labels:
+          application: 'GestionProduit'
+          service: 'backend'
+
+  - job_name: 'gestion-user'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:9092']
+        labels:
+          application: 'GestionUser'
+          service: 'backend'
+
+  - job_name: 'gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+        labels:
+          application: 'Gateway'
+          service: 'gateway'
+
+  - job_name: 'eureka'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8761']
+        labels:
+          application: 'Eureka'
+          service: 'discovery'
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

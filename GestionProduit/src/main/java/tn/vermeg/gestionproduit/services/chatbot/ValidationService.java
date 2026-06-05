@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
+@Service
 public class ValidationService {
     private static final Logger logger = LoggerFactory.getLogger(ValidationService.class);
     // Patterns de validation
@@ -55,6 +56,17 @@ public class ValidationService {
         // Validation du type
         if (garantie.getType() == null || garantie.getType().trim().isEmpty()) {
             result.addError("Le type de garantie est obligatoire");
+        } else {
+            boolean isKnownType = java.util.Arrays
+                    .stream(tn.vermeg.gestionproduit.entities.TypeGarantie.values())
+                    .anyMatch(t -> t.name().equalsIgnoreCase(garantie.getType().trim()));
+            if (!isKnownType) {
+                result.addWarning("Le type '" + garantie.getType()
+                        + "' n'est pas un type de garantie sante standard. Types reconnus: "
+                        + java.util.Arrays.stream(tn.vermeg.gestionproduit.entities.TypeGarantie.values())
+                                .map(Enum::name)
+                                .collect(java.util.stream.Collectors.joining(", ")));
+            }
         }
         // Validation du taux de remboursement
         if (garantie.getTauxRemboursement() < 0.0 || garantie.getTauxRemboursement() > 1.0) {

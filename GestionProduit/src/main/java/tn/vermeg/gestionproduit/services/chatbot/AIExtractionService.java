@@ -1,5 +1,7 @@
 package tn.vermeg.gestionproduit.services.chatbot;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +16,6 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 public class AIExtractionService {
@@ -60,10 +60,9 @@ public class AIExtractionService {
     }
 
     // ========== EXTRACTION DONNÉES ==========
-
     public Map<String, Object> extractGarantieData(String prompt) {
         try {
-            return callGoogleAIWithRetry(prompt + "\n\nExtrais les informations pour créer une garantie d'assurance. Retourne un JSON avec: nom, description, type, tauxRemboursement, typeMontant, plafond*, franchise, coutMoyenParSinistre, dureeMin/MaxContrat, resiliableAnnuellement, statut. Utilise null si absent.");
+            return callGoogleAIWithRetry(buildExtractionPrompt("GARANTIE", prompt));
         } catch (Exception e) {
             logger.error("❌ Erreur extraction garantie IA: {}", e.getMessage());
             return new HashMap<>();
@@ -72,7 +71,7 @@ public class AIExtractionService {
 
     public Map<String, Object> extractProduitData(String prompt) {
         try {
-            return callGoogleAIWithRetry(prompt + "\n\nExtrais les informations pourcreer un produit d'assurance. Retourne un JSON avec: nom, description, typeProduit (SANTE/AUTO/HABITATION/VIE/PREVOYANCE/EPARGNE), statut. Utilise null si absent.");
+            return callGoogleAIWithRetry(buildExtractionPrompt("PRODUIT", prompt));
         } catch (Exception e) {
             logger.error("❌ Erreur extraction produit IA: {}", e.getMessage());
             return new HashMap<>();
@@ -81,7 +80,7 @@ public class AIExtractionService {
 
     public Map<String, Object> extractPackData(String prompt) {
         try {
-            return callGoogleAIWithRetry(prompt + "\n\nExtrais les informations pour créer un pack d'assurance. Retourne un JSON avec: nom, description, age min/max, typeClients, couvertureGeographique, prixMensuel, dureeMin/MaxContrat, niveauCouverture, statut. Utilise null si absent.");
+            return callGoogleAIWithRetry(buildExtractionPrompt("PACK", prompt));
         } catch (Exception e) {
             logger.error("❌ Erreur extraction pack IA: {}", e.getMessage());
             return new HashMap<>();
@@ -90,7 +89,7 @@ public class AIExtractionService {
 
     public Map<String, Object> extractPackConfigurationData(String prompt) {
         try {
-            return callGoogleAIWithRetry(prompt + "\n\nExtrais les informations pour configurer un pack: packId, garantieId, tauxRemboursement, plafond, franchise, optionnelle, supplementPrix. Utilise null si absent.");
+            return callGoogleAIWithRetry(buildExtractionPrompt("CONFIGURATION_PACK", prompt));
         } catch (Exception e) {
             logger.error("❌ Erreur extraction configuration pack IA: {}", e.getMessage());
             return new HashMap<>();
@@ -99,7 +98,7 @@ public class AIExtractionService {
 
     public Map<String, Object> extractAddGarantieToPackData(String prompt) {
         try {
-            return callGoogleAIWithRetry(prompt + "\n\nExtrais: nomPack, nomGarantie, tauxRemboursement, plafond, franchise, optionnelle. Utilise null si absent.");
+            return callGoogleAIWithRetry(buildExtractionPrompt("AJOUT_GARANTIE_PACK", prompt));
         } catch (Exception e) {
             logger.error("❌ Erreur extraction ajout garantie pack IA: {}", e.getMessage());
             return new HashMap<>();
@@ -145,13 +144,26 @@ public class AIExtractionService {
 
         String requestBody = String.format("""
             {
-              "contents": [{"parts": [{"text": "%s"}]}],
+              "systemInstruction": {
+                "parts": [
+                  { "text": "%s" }
+                ]
+              },
+              "contents": [
+                {
+                  "role": "user",
+                  "parts": [
+                    { "text": "%s" }
+                  ]
+                }
+              ],
               "generationConfig": {
-                "temperature": 0.3,
-                "maxOutputTokens": 2048
+                "temperature": 0.1,
+                "maxOutputTokens": 2048,
+                "responseMimeType": "application/json"
               }
             }
-            """, escapeJsonString(fullPrompt));
+            """, escapeJsonString(buildSystemInstruction()), escapeJsonString(fullPrompt));
 
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(url))
@@ -178,32 +190,189 @@ public class AIExtractionService {
             .replace("\r", "\\r");
     }
 
-    private Map<String, Object> parseAIResponse(String aiResponse) {
+    /**
+     * Parse la réponse Gemini V1Beta.
+     * IMPORTANT: on ne doit PAS extraire un JSON "au hasard" dans le body, sinon on parse la réponse API elle-même.
+     * On lit d'abord le texte généré (candidates[0].content.parts[0].text), puis on parse ce texte en JSON.
+     */
+    private Map<String, Object> parseAIResponse(String rawResponse) {
         try {
-            Pattern jsonPattern = Pattern.compile("\\{[^{}]*(?:\\{[^{}]*\\}[^{}]*)*\\}", Pattern.DOTALL);
-            Matcher matcher = jsonPattern.matcher(aiResponse);
-            if (matcher.find()) {
-                Map<String, Object> result = objectMapper.readValue(cleanJsonString(matcher.group()), HashMap.class);
-                logger.debug("✅ JSON parsed");
-                return result;
+            JsonNode root = objectMapper.readTree(rawResponse);
+            JsonNode textNode = root.path("candidates").path(0).path("content").path("parts").path(0).path("text");
+
+            String modelText = textNode.isMissingNode() ? "" : textNode.asText("");
+            modelText = stripCodeFences(modelText).trim();
+
+            if (modelText.isBlank()) {
+                logger.warn("⚠️ Réponse Gemini vide (aucun texte)");
+                return new HashMap<>();
             }
-            logger.warn("⚠️ Aucun JSON trouvé");
-            return new HashMap<>();
+
+            // Nettoyage léger
+            modelText = modelText.replaceAll("[\\x00-\\x1F]", "");
+
+            Map<String, Object> parsed = objectMapper.readValue(modelText, new TypeReference<Map<String, Object>>() {});
+            logger.debug("✅ JSON extracted from Gemini");
+            return parsed;
         } catch (Exception e) {
-            logger.warn("⚠️ Parse error: {}", e.getMessage());
+            logger.warn("⚠️ Parse error Gemini: {}", e.getMessage());
             return new HashMap<>();
         }
     }
 
-    private String cleanJsonString(String jsonStr) {
-        jsonStr = jsonStr.replaceAll("(?<![\\\\])'([^']*)'", "\"$1\"");
-        jsonStr = jsonStr.replaceAll("[\\x00-\\x1F]", "");
-        return jsonStr;
+    private static String stripCodeFences(String text) {
+        if (text == null) {
+            return "";
+        }
+        return text
+            .replaceAll("^```(?:json)?\\s*", "")
+            .replaceAll("\\s*```$", "");
+    }
+
+    private String buildSystemInstruction() {
+        return """
+            Tu es un moteur d'extraction d'informations pour un domaine d'assurance.
+            Contraintes OBLIGATOIRES :
+            - Réponds UNIQUEMENT par un JSON valide (pas de texte, pas de markdown).
+            - N'invente pas de valeurs : mets null si l'information n'est pas présente.
+            - Les montants sont des nombres (ex: 20000). Les durées sont en mois.
+            - Les taux sont entre 0 et 1 (ex: 0.5 pour 50%).
+            - Utilise ces enums quand applicable :
+              * statut: ACTIF | INACTIF | EN_ATTENTE
+              * typeProduit: SANTE | AUTO | HABITATION | VIE | PREVOYANCE | EPARGNE
+              * niveauCouverture: BASIC | STANDARD | PREMIUM | GOLD
+              * couvertureGeographique: NATIONAL | LOCAL | UE | MAGHREB | INTERNATIONAL
+              * typeClients: tableau de INDIVIDUEL | FAMILLE | ENTREPRISE | SENIOR
+              * typeGarantie: HOSPITALISATION | DENTAIRE | OPTIQUE | CONSULTATION | EXAMEN | MEDICAMENTS | SOINS_GENERAUX | INTERNATIONAL
+              * typeMontant: FRAIS_REELS | FORFAIT | TARIF_CONVENTIONNE
+            """;
+    }
+
+    private String buildExtractionPrompt(String kind, String userPrompt) {
+        return switch (kind) {
+            case "GARANTIE" -> """
+                Extrais les informations d'une garantie d'assurance depuis le prompt utilisateur.
+
+                JSON attendu (toutes les clés présentes) :
+                {
+                  "nom": null,
+                  "description": null,
+                  "type": null,
+                  "tauxRemboursement": null,
+                  "typeMontant": null,
+                  "plafondAnnuel": null,
+                  "plafondMensuel": null,
+                  "plafondParActe": null,
+                  "franchise": null,
+                  "coutMoyenParSinistre": null,
+                  "dureeMinContrat": null,
+                  "dureeMaxContrat": null,
+                  "resiliableAnnuellement": null,
+                  "statut": null
+                }
+
+                Prompt utilisateur :
+                """ + userPrompt;
+            case "PRODUIT" -> """
+                Extrais les informations d'un produit d'assurance depuis le prompt utilisateur.
+
+                JSON attendu :
+                {
+                  "nom": null,
+                  "description": null,
+                  "typeProduit": null,
+                  "statut": null
+                }
+
+                Prompt utilisateur :
+                """ + userPrompt;
+            case "PACK" -> """
+                Extrais les informations d'un pack d'assurance depuis le prompt utilisateur.
+
+                JSON attendu :
+                {
+                  "nom": null,
+                  "description": null,
+                  "ageMinimum": null,
+                  "ageMaximum": null,
+                  "typeClients": null,
+                  "couvertureGeographique": null,
+                  "prixMensuel": null,
+                  "dureeMinContrat": null,
+                  "dureeMaxContrat": null,
+                  "niveauCouverture": null,
+                  "statut": null,
+                  "nomProduit": null,
+                  "produitId": null
+                }
+
+                Prompt utilisateur :
+                """ + userPrompt;
+            case "CONFIGURATION_PACK" -> """
+                Extrais les informations pour configurer un pack (liaison Pack <-> Garantie) depuis le prompt utilisateur.
+
+                JSON attendu :
+                {
+                  "packId": null,
+                  "garantieId": null,
+                  "nomPack": null,
+                  "nomGarantie": null,
+                  "tauxRemboursement": null,
+                  "plafond": null,
+                  "franchise": null,
+                  "optionnelle": null,
+                  "supplementPrix": null,
+                  "delaiCarence": null,
+                  "priorite": null,
+                  "condition": null,
+                  "ordreAffichage": null
+                }
+
+                Prompt utilisateur :
+                """ + userPrompt;
+            case "AJOUT_GARANTIE_PACK" -> """
+                Extrais les informations pour ajouter une garantie à un pack depuis le prompt utilisateur.
+
+                JSON attendu :
+                {
+                  "nomPack": null,
+                  "nomGarantie": null,
+                  "tauxRemboursement": null,
+                  "plafond": null,
+                  "franchise": null,
+                  "optionnelle": null,
+                  "supplementPrix": null,
+                  "delaiCarence": null,
+                  "priorite": null
+                }
+
+                Prompt utilisateur :
+                """ + userPrompt;
+            case "RECOMMENDATION" -> """
+                Analyse le besoin client et retourne un JSON.
+
+                JSON attendu :
+                {
+                  "typeProduit": null,
+                  "budgetMensuel": null,
+                  "age": null,
+                  "typeClient": null,
+                  "niveauCouverture": null,
+                  "couvertureGeographique": null,
+                  "garantiesRecherchees": null,
+                  "familyStatus": null,
+                  "children": null
+                }
+
+                Prompt utilisateur :
+                """ + userPrompt;
+            default -> userPrompt;
+        };
     }
 
     public Map<String, Object> extractRecommendationData(String prompt) {
         try {
-            return callGoogleAIWithRetry(prompt + "\n\nAnalyse le besoin client et retourne un JSON avec: typeProduit (SANTE/AUTO/HABITATION/VIE/PREVOYANCE/EPARGNE), budgetMensuel, age, typeClient (FAMILLE/INDIVIDUEL/ENTREPRISE/SENIOR), niveauCouverture (BASIC/STANDARD/PREMIUM/GOLD), garantiesRecherchees (liste de strings). Utilise null si absent.");
+            return callGoogleAIWithRetry(buildExtractionPrompt("RECOMMENDATION", prompt));
         } catch (Exception e) {
             logger.error("❌ Erreur extraction recommandation IA: {}", e.getMessage());
             return new HashMap<>();
@@ -221,6 +390,12 @@ public class AIExtractionService {
             return defaultValue;
         }
         String s = value.toString().trim();
+        
+        // Strip leading French articles from nom field to fix extraction bug
+        if ("nom".equals(key) && s != null) {
+            s = s.replaceFirst("^(une?|la|le|les|des|du|de la|de l'|l')\\s+", "").trim();
+        }
+        
         return s.isEmpty() ? defaultValue : s;
     }
 

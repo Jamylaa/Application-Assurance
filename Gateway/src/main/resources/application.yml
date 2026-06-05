@@ -19,24 +19,89 @@ spring:
           uri: lb://GESTIONUSER
           predicates:
             - Path=/api/auth/**,/api/users/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: userServiceCircuitBreaker
+                fallbackUri: forward:/fallback/user
 
         - id: api-product-service
           uri: lb://GESTIONPRODUIT
           predicates:
             - Path=/api/produits/**,/api/packs/**,/api/garanties/**,/api/chatbot/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: productServiceCircuitBreaker
+                fallbackUri: forward:/fallback/product
 
         - id: api-recommendation-service
           uri: lb://GESTIONPRODUIT
           predicates:
             - Path=/api/recommendations/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: recommendationServiceCircuitBreaker
+                fallbackUri: forward:/fallback/recommendation
 
       globalcors:
         cors-configurations:
           "[/**]":
-            allowed-origins: "http://localhost:4200"
+            allowed-origins: "${CORS_ALLOWED_ORIGINS:http://localhost:4200}"
             allowed-methods: "*"
             allowed-headers: "*"
             allow-credentials: true
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 10s
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 100
+        slow-call-duration-threshold: 2s
+        record-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.client.HttpServerErrorException
+    instances:
+      userServiceCircuitBreaker:
+        base-config: default
+      productServiceCircuitBreaker:
+        base-config: default
+      recommendationServiceCircuitBreaker:
+        base-config: default
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 1s
+        retry-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+    instances:
+      userServiceRetry:
+        base-config: default
+      productServiceRetry:
+        base-config: default
+      recommendationServiceRetry:
+        base-config: default
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 5s
+    instances:
+      userServiceTimelimiter:
+        base-config: default
+      productServiceTimelimiter:
+        base-config: default
+      recommendationServiceTimelimiter:
+        base-config: default
 
 server:
   port: 9091
@@ -49,9 +114,26 @@ eureka:
     prefer-ip-address: true
 
 logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{correlationId}] [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{correlationId}] [%thread] %-5level %logger{36} - %msg%n"
   level:
     org.springframework.cloud.gateway: DEBUG
     org.springframework.security: INFO
+    tn.vermeg: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
 
 ---
 spring:

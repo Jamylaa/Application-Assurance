@@ -5,6 +5,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.Map;
 
 @Document(collection = "pack_garanties")
 public class PackGarantie {
@@ -19,7 +20,7 @@ public class PackGarantie {
     private double tauxRemboursement;
     private double plafond;
     private double franchise;
-
+    private Map<String, Object> customFields;
     private TypeMontant typeMontant;
 
     private int delaiCarence; // en jours/mois
@@ -34,6 +35,8 @@ public class PackGarantie {
 
     private boolean optionnelle;
     private double supplementPrix;
+    private String condition;
+    private int ordreAffichage;
 
     // MÉTHODES MÉTIER
     public boolean estValide() {
@@ -47,13 +50,8 @@ public class PackGarantie {
 
     // CONSTRUCTEURS
     public PackGarantie() {}
-    public PackGarantie(String idPackGarantie, String packId, String garantieId,
-                        String nomGarantie, double tauxRemboursement, double plafond,
-                        double franchise, TypeMontant typeMontant,
-                        int delaiCarence, int priorite, boolean actif,
-                        Instant dateActivation, Instant dateDesactivation,
-                        boolean optionnelle, double supplementPrix) {
 
+    public PackGarantie(String idPackGarantie, String packId, String garantieId, String nomGarantie, double tauxRemboursement, double plafond, double franchise, Map<String, Object> customFields, TypeMontant typeMontant, int delaiCarence, int priorite, boolean actif, Instant dateActivation, Instant dateDesactivation, boolean optionnelle, double supplementPrix) {
         this.idPackGarantie = idPackGarantie;
         this.packId = packId;
         this.garantieId = garantieId;
@@ -61,6 +59,7 @@ public class PackGarantie {
         this.tauxRemboursement = tauxRemboursement;
         this.plafond = plafond;
         this.franchise = franchise;
+        this.customFields = customFields;
         this.typeMontant = typeMontant;
         this.delaiCarence = delaiCarence;
         this.priorite = priorite;
@@ -74,6 +73,13 @@ public class PackGarantie {
     // GETTERS & SETTERS
     public String getIdPackGarantie() {
         return idPackGarantie;
+    }
+    public Map<String, Object> getCustomFields() {
+        return customFields;
+    }
+
+    public void setCustomFields(Map<String, Object> customFields) {
+        this.customFields = customFields;
     }
     public void setIdPackGarantie(String idPackGarantie) {
         this.idPackGarantie = idPackGarantie;
@@ -144,6 +150,22 @@ public class PackGarantie {
 
     public void setPriorite(int priorite) {
         this.priorite = priorite;
+    }
+
+    public String getCondition() {
+        return condition;
+    }
+
+    public void setCondition(String condition) {
+        this.condition = condition;
+    }
+
+    public int getOrdreAffichage() {
+        return ordreAffichage;
+    }
+
+    public void setOrdreAffichage(int ordreAffichage) {
+        this.ordreAffichage = ordreAffichage;
     }
 
     public boolean isActif() {

@@ -10,6 +10,7 @@ import tn.vermeg.gestionproduit.entities.TypeMontant;
 import tn.vermeg.gestionproduit.entities.TypePlafond;
 
 import java.time.Instant;
+import java.util.Map;
 
 public class GarantieDTO {
 
@@ -59,6 +60,8 @@ public class GarantieDTO {
     private Instant dateCreation;
     private Instant dateModification;
     private Instant dateDesactivation;
+
+    private Map<String, Object> customFields;
 
     // CONSTRUCTEURS
     public GarantieDTO() {}
@@ -246,5 +249,13 @@ public class GarantieDTO {
 
     public void setDateDesactivation(Instant dateDesactivation) {
         this.dateDesactivation = dateDesactivation;
+    }
+
+    public Map<String, Object> getCustomFields() {
+        return customFields;
+    }
+
+    public void setCustomFields(Map<String, Object> customFields) {
+        this.customFields = customFields;
     }
 }

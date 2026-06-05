@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../core/theme.service';
+import { KeycloakService } from 'keycloak-angular';
 
 @Component({
   selector: 'app-sidebar',
@@ -17,7 +18,7 @@ export class SidebarComponent {
   isDarkMode = false;
   currentUser: any = null;
 
-  constructor(private router: Router, private themeService: ThemeService) {
+  constructor(private router: Router, private themeService: ThemeService, private keycloak: KeycloakService) {
     this.loadUserData();
     this.themeService.theme$.subscribe(theme => {
       this.isDarkMode = theme === 'dark';
@@ -48,9 +49,9 @@ export class SidebarComponent {
     this.router.navigate(['/dashboard']);
   }
 
-  logout(): void {
+  async logout(): Promise<void> {
     localStorage.clear();
-    this.router.navigate(['/auth/login']);
+    await this.keycloak.logout();
   }
 
   isActiveRoute(route: string): boolean {

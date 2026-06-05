@@ -49,10 +49,37 @@ eureka:
   instance:
     prefer-ip-address: true
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true
+  show-actuator: false
+
 logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{correlationId}] [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{correlationId}] [%thread] %-5level %logger{36} - %msg%n"
   level:
-    org.springframework.security: DEBUG
-    org.springframework: INFO
+    org.springframework.security: WARN
+    org.springframework: WARN
+    tn.vermeg: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
 
 ---
 spring:
@@ -86,6 +113,13 @@ spring:
     mongodb:
       uri: ${MONGODB_URI:mongodb://admin:password@localhost:27017/vermeg_db?authSource=admin}
       database: ${MONGODB_DATABASE:vermeg_db}
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9090/realms/vermeg-realm
+          jwk-set-uri: http://localhost:9090/realms/vermeg-realm/protocol/openid-connect/certs
 
 eureka:
   client:

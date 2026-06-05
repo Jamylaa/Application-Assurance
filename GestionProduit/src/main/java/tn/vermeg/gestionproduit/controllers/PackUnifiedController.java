@@ -5,6 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.vermeg.gestionproduit.entities.*;
+import tn.vermeg.gestionproduit.dto.PackDTO;
+import tn.vermeg.gestionproduit.dto.PackGarantieDTO;
 import tn.vermeg.gestionproduit.services.PackUnifiedService;
 
 import java.util.List;
@@ -108,7 +110,23 @@ public class PackUnifiedController {
     }
 
     @PostMapping
-    public ResponseEntity<Pack> createPack(@Valid @RequestBody Pack pack) {
+    public ResponseEntity<Pack> createPack(@Valid @RequestBody PackDTO dto) {
+        Pack pack = new Pack();
+        pack.setNomPack(dto.getNomPack());
+        pack.setDescription(dto.getDescription());
+        pack.setProduitId(dto.getProduitId());
+        pack.setNomProduit(dto.getNomProduit());
+        pack.setCustomFields(dto.getCustomFields());
+        pack.setAgeMinimum(dto.getAgeMinimum());
+        pack.setAgeMaximum(dto.getAgeMaximum());
+        pack.setTypeClients(dto.getTypeClients());
+        pack.setAncienneteContratMois(dto.getAncienneteContratMois());
+        pack.setCouvertureGeographique(dto.getCouvertureGeographique());
+        pack.setPrixMensuel(dto.getPrixMensuel());
+        pack.setDureeMinContrat(dto.getDureeMinContrat());
+        pack.setDureeMaxContrat(dto.getDureeMaxContrat());
+        pack.setNiveauCouverture(dto.getNiveauCouverture());
+        pack.setStatut(dto.getStatut());
         Pack createdPack = packUnifiedService.createPack(pack);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdPack);
     }
@@ -148,7 +166,18 @@ public class PackUnifiedController {
     public ResponseEntity<PackGarantie> ajouterGarantieAuPack(
             @PathVariable String packId,
             @PathVariable String garantieId,
-            @Valid @RequestBody PackGarantie packGarantie) {
+            @Valid @RequestBody PackGarantieDTO dto) {
+        PackGarantie packGarantie = new PackGarantie();
+        packGarantie.setTauxRemboursement(dto.getTauxRemboursement());
+        packGarantie.setPlafond(dto.getPlafond());
+        packGarantie.setFranchise(dto.getFranchise());
+        packGarantie.setTypeMontant(dto.getTypeMontant());
+        packGarantie.setDelaiCarence(dto.getDelaiCarence());
+        packGarantie.setPriorite(dto.getPriorite());
+        packGarantie.setActif(dto.isActif());
+        packGarantie.setOptionnelle(dto.isOptionnelle());
+        packGarantie.setSupplementPrix(dto.getSupplementPrix());
+        packGarantie.setCustomFields(dto.getCustomFields());
         PackGarantie association = packUnifiedService.ajouterGarantieAuPack(packId, garantieId, packGarantie);
         return ResponseEntity.status(HttpStatus.CREATED).body(association);
     }
@@ -164,7 +193,23 @@ public class PackUnifiedController {
     }
 
     @PutMapping("/{idPack}")
-    public ResponseEntity<Pack> updatePack(@PathVariable String idPack, @Valid @RequestBody Pack pack) {
+    public ResponseEntity<Pack> updatePack(@PathVariable String idPack, @Valid @RequestBody PackDTO dto) {
+        Pack pack = new Pack();
+        pack.setNomPack(dto.getNomPack());
+        pack.setDescription(dto.getDescription());
+        pack.setProduitId(dto.getProduitId());
+        pack.setNomProduit(dto.getNomProduit());
+        pack.setCustomFields(dto.getCustomFields());
+        pack.setAgeMinimum(dto.getAgeMinimum());
+        pack.setAgeMaximum(dto.getAgeMaximum());
+        pack.setTypeClients(dto.getTypeClients());
+        pack.setAncienneteContratMois(dto.getAncienneteContratMois());
+        pack.setCouvertureGeographique(dto.getCouvertureGeographique());
+        pack.setPrixMensuel(dto.getPrixMensuel());
+        pack.setDureeMinContrat(dto.getDureeMinContrat());
+        pack.setDureeMaxContrat(dto.getDureeMaxContrat());
+        pack.setNiveauCouverture(dto.getNiveauCouverture());
+        pack.setStatut(dto.getStatut());
         return ResponseEntity.ok(packUnifiedService.updatePack(idPack, pack));
     }
 
@@ -197,5 +242,17 @@ public class PackUnifiedController {
     @GetMapping("/{id}")
     public ResponseEntity<Pack> getPackById(@PathVariable String id) {
         return ResponseEntity.ok(packUnifiedService.getPackById(id));
+    }
+
+    @GetMapping("/{idPack}/details")
+    public ResponseEntity<java.util.Map<String, Object>> getPackDetails(@PathVariable String idPack) {
+        Pack pack = packUnifiedService.getPackById(idPack);
+        java.util.List<PackGarantie> garanties = packUnifiedService.getGarantiesByPackId(idPack);
+        double prixTotal = packUnifiedService.calculerPrixTotalPack(idPack);
+        return ResponseEntity.ok(java.util.Map.of(
+                "pack", pack,
+                "garanties", garanties,
+                "prixTotal", prixTotal
+        ));
     }
 }

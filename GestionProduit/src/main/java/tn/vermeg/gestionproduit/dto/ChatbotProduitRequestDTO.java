@@ -3,10 +3,6 @@ package tn.vermeg.gestionproduit.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * dto pour les requêtes de création de produit via chatbot
- * Contient les données extraites du prompt par l'IA
- */
 public class ChatbotProduitRequestDTO {
     
     // Données extraites
@@ -75,10 +71,6 @@ public class ChatbotProduitRequestDTO {
             this.statut = "ACTIF";
         }
     }
-
-    /**
-     * Génère un hash métier pour la détection de doublons
-     */
     public void generateBusinessHash() {
         if (this.nomProduit != null && this.typeProduit != null) {
             this.businessHash = (this.nomProduit + "_" + this.typeProduit).toUpperCase().replaceAll("[^A-Z0-9_]", "_");

@@ -6,6 +6,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 import tn.vermeg.gestionproduit.entities.TypeMontant;
 
 import java.time.Instant;
+import java.util.Map;
 
 public class PackGarantieDTO {
 
@@ -42,6 +43,10 @@ public class PackGarantieDTO {
 
     private boolean optionnelle;
     private double supplementPrix;
+    private String condition;
+    private int ordreAffichage;
+
+    private Map<String, Object> customFields;
 
     // CONSTRUCTEURS
     public PackGarantieDTO() {}
@@ -49,7 +54,7 @@ public class PackGarantieDTO {
     public PackGarantieDTO(String idPackGarantie, String packId, String garantieId,
                           String nomGarantie, double tauxRemboursement, double plafond,
                           double franchise, TypeMontant typeMontant,
-                          int delaiCarence, int priorite, boolean actif,
+                          int delaiCarence, int priorite, String condition, int ordreAffichage, boolean actif,
                           Instant dateActivation, Instant dateDesactivation,
                           boolean optionnelle, double supplementPrix) {
         this.idPackGarantie = idPackGarantie;
@@ -62,6 +67,8 @@ public class PackGarantieDTO {
         this.typeMontant = typeMontant;
         this.delaiCarence = delaiCarence;
         this.priorite = priorite;
+        this.condition = condition;
+        this.ordreAffichage = ordreAffichage;
         this.actif = actif;
         this.dateActivation = dateActivation;
         this.dateDesactivation = dateDesactivation;
@@ -150,6 +157,22 @@ public class PackGarantieDTO {
         this.priorite = priorite;
     }
 
+    public String getCondition() {
+        return condition;
+    }
+
+    public void setCondition(String condition) {
+        this.condition = condition;
+    }
+
+    public int getOrdreAffichage() {
+        return ordreAffichage;
+    }
+
+    public void setOrdreAffichage(int ordreAffichage) {
+        this.ordreAffichage = ordreAffichage;
+    }
+
     public boolean isActif() {
         return actif;
     }
@@ -188,5 +211,13 @@ public class PackGarantieDTO {
 
     public void setSupplementPrix(double supplementPrix) {
         this.supplementPrix = supplementPrix;
+    }
+
+    public Map<String, Object> getCustomFields() {
+        return customFields;
+    }
+
+    public void setCustomFields(Map<String, Object> customFields) {
+        this.customFields = customFields;
     }
 }

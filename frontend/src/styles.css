@@ -4,6 +4,20 @@
 @import "bootstrap-icons/font/bootstrap-icons.css";
 @import "./app/shared/styles/enhanced-feedback.css";
 
+/* Dark Mode Support */
+[data-theme="dark"] {
+  --app-bg: #0F172A;
+  --app-bg-secondary: #1E293B;
+  --app-surface: #1E293B;
+  --app-surface-hover: #334155;
+  --app-surface-soft: rgba(30, 41, 59, 0.8);
+  --app-text: #F1F5F9;
+  --app-text-muted: #94A3B8;
+  --app-border: #334155;
+  --app-border-light: #1E293B;
+  --app-border-hover: #475569;
+}
+
 /* ========================================================================
    VERMEG DESIGN SYSTEM — 2024 Premium Insurance Platform
    ======================================================================== */
@@ -203,9 +217,7 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-/* ========================================================================
-   PAGE HEADERS
-   ======================================================================== */
+/*  PAGE HEADERS */
 .page-header {
   background: var(--primary-gradient);
   color: white;
@@ -255,9 +267,7 @@ h1, h2, h3, h4, h5, h6 {
   z-index: 1;
 }
 
-/* ========================================================================
-   CONTAINERS
-   ======================================================================== */
+/*    CONTAINERS  */
 .packs-container,
 .produits-container,
 .users-container,
@@ -265,9 +275,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0;
 }
 
-/* ========================================================================
-   PREMIUM CARDS
-   ======================================================================== */
+/*    PREMIUM CARDS */
 .premium-card,
 .p-card {
   background: var(--app-surface);
@@ -291,9 +299,7 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--glass-shadow);
 }
 
-/* ========================================================================
-   DATA TABLE STYLES
-   ======================================================================== */
+/*    DATA TABLE STYLES */
 .p-datatable {
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -328,9 +334,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.875rem !important;
 }
 
-/* ========================================================================
-   BUTTON STYLES
-   ======================================================================== */
+/* BUTTON STYLES */
 .p-button {
   border-radius: var(--radius-md) !important;
   font-family: var(--font-body) !important;
@@ -395,9 +399,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--radius-md) !important;
 }
 
-/* ========================================================================
-   DATA DISPLAY
-   ======================================================================== */
+/* DATA DISPLAY */
 .pack-name,
 .product-info,
 .price-info,
@@ -413,9 +415,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--primary);
 }
 
-/* ========================================================================
-   TAG STYLES
-   ======================================================================== */
+/*    TAG STYLES */
 .p-tag {
   border-radius: var(--radius-full) !important;
   font-weight: 600 !important;
@@ -424,9 +424,7 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.02em !important;
 }
 
-/* ========================================================================
-   TOAST STYLES
-   ======================================================================== */
+/*   TOAST STYLES */
 .p-toast {
   top: calc(var(--navbar-height) + 20px) !important;
   right: 20px !important;
@@ -437,6 +435,7 @@ h1, h2, h3, h4, h5, h6 {
 .p-toast-message {
   border-radius: var(--radius-lg) !important;
   box-shadow: var(--shadow-xl) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
   backdrop-filter: blur(10px) !important;
 }
 
@@ -530,6 +529,7 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   z-index: 1000;
   border-radius: var(--radius-xl);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 
@@ -624,9 +624,7 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-/* ========================================================================
-   UTILITY CLASSES
-   ======================================================================== */
+/*    UTILITY CLASSES */
 .text-gradient {
   background: var(--primary-gradient);
   -webkit-background-clip: text;

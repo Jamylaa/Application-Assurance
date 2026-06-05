@@ -1,7 +1,11 @@
 package tn.vermeg.gestionuser.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
@@ -13,39 +17,137 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Object> handleRuntimeException(RuntimeException ex, WebRequest request) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
-        body.put("message", ex.getMessage());
-        body.put("path", request.getDescription(false).replace("uri=", ""));
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(AppException.class)
+    public ResponseEntity<ErrorResponse> handleAppException(
+            AppException ex, WebRequest request) {
         
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+        logger.error("[{}] {}", ex.getErrorCode(), ex.getMessage(), ex);
+
+        ErrorResponse errorResponse = buildErrorResponse(
+            ex.getHttpStatus().value(),
+            ex.getErrorCode(),
+            ex.getMessage(),
+            request
+        );
+
+        return ResponseEntity.status(ex.getHttpStatus()).body(errorResponse);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleGlobalException(Exception ex, WebRequest request) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        body.put("error", "Internal Server Error");
-        body.put("message", "Une erreur interne est survenue");
-        body.put("path", request.getDescription(false).replace("uri=", ""));
+    @ExceptionHandler(ResourceException.class)
+    public ResponseEntity<ErrorResponse> handleResourceException(
+            ResourceException ex, WebRequest request) {
         
-        return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
+        logger.warn("[{}] Resource exception - Type: {}, ID: {}", 
+            ex.getErrorCode(), ex.getResourceType(), ex.getResourceId());
+
+        ErrorResponse errorResponse = buildErrorResponse(
+            ex.getHttpStatus().value(),
+            ex.getErrorCode(),
+            ex.getMessage(),
+            request
+        );
+
+        return ResponseEntity.status(ex.getHttpStatus()).body(errorResponse);
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ErrorResponse> handleValidationException(
+            ValidationException ex, WebRequest request) {
+        
+        logger.warn("[{}] Validation error on field: {}", ex.getErrorCode(), ex.getValidationField());
+
+        ErrorResponse errorResponse = buildErrorResponse(
+            ex.getHttpStatus().value(),
+            ex.getErrorCode(),
+            ex.getMessage(),
+            request
+        );
+
+        return ResponseEntity.status(ex.getHttpStatus()).body(errorResponse);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
+            MethodArgumentNotValidException ex, WebRequest request) {
+        
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+
+        logger.warn("Validation errors: {}", errors);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.BAD_REQUEST.value())
+            .error("VALIDATION_ERROR")
+            .message("Erreur de validation des données")
+            .details(errors)
+            .path(request.getDescription(false))
+            .build();
+
+        return ResponseEntity.badRequest().body(errorResponse);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Invalid Argument");
-        body.put("message", ex.getMessage());
-        body.put("path", request.getDescription(false).replace("uri=", ""));
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
+            IllegalArgumentException ex, WebRequest request) {
         
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+        logger.error("Illegal argument: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = buildErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            "ILLEGAL_ARGUMENT",
+            ex.getMessage(),
+            request
+        );
+
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorResponse> handleRuntimeException(
+            RuntimeException ex, WebRequest request) {
+        
+        logger.error("Runtime exception: {}", ex.getMessage(), ex);
+
+        ErrorResponse errorResponse = buildErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            "RUNTIME_ERROR",
+            ex.getMessage(),
+            request
+        );
+
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGlobalException(
+            Exception ex, WebRequest request) {
+        
+        logger.error("Unhandled exception: {}", ex.getMessage(), ex);
+
+        ErrorResponse errorResponse = buildErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+            "INTERNAL_SERVER_ERROR",
+            "Une erreur interne est survenue",
+            request
+        );
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+
+    private ErrorResponse buildErrorResponse(int status, String error, String message, WebRequest request) {
+        return ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(status)
+            .error(error)
+            .message(message)
+            .path(request.getDescription(false))
+            .build();
     }
 }

@@ -105,6 +105,16 @@
               <div class="value">{{ g.creePar || '—' }}</div>
             </div>
           </div>
+
+          <ng-container *ngIf="g.customFields && (g.customFields | keyvalue).length > 0">
+            <div class="section-title">Champs personnalisés</div>
+            <div class="grid">
+              <div class="row" *ngFor="let field of g.customFields | keyvalue">
+                <div class="label">{{ field.key }}</div>
+                <div class="value">{{ field.value }}</div>
+              </div>
+            </div>
+          </ng-container>
         </ng-container>
 
         <ng-template #empty>

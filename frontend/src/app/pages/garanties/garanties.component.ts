@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
 import { GestionProduitService, Garantie } from '../../services/gestion-produit.service';

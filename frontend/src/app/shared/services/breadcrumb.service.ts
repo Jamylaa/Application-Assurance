@@ -45,6 +45,33 @@ export class BreadcrumbService {
     ]);
   }
 
+  setProduitAddBreadcrumb(): void {
+    this.setBreadcrumb([
+      { label: 'Accueil', routerLink: ['/dashboard'], icon: 'pi pi-home' },
+      { label: 'Gestion', icon: 'pi pi-cog' },
+      { label: 'Produits', routerLink: ['/produits'], icon: 'pi pi-box' },
+      { label: 'Ajouter', icon: 'pi pi-plus' }
+    ]);
+  }
+
+  setProduitEditBreadcrumb(id: string): void {
+    this.setBreadcrumb([
+      { label: 'Accueil', routerLink: ['/dashboard'], icon: 'pi pi-home' },
+      { label: 'Gestion', icon: 'pi pi-cog' },
+      { label: 'Produits', routerLink: ['/produits'], icon: 'pi pi-box' },
+      { label: 'Modifier', icon: 'pi pi-pencil' }
+    ]);
+  }
+
+  setProduitDetailsBreadcrumb(id: string): void {
+    this.setBreadcrumb([
+      { label: 'Accueil', routerLink: ['/dashboard'], icon: 'pi pi-home' },
+      { label: 'Gestion', icon: 'pi pi-cog' },
+      { label: 'Produits', routerLink: ['/produits'], icon: 'pi pi-box' },
+      { label: 'Détails', icon: 'pi pi-eye' }
+    ]);
+  }
+
   setPacksBreadcrumb(): void {
     this.setBreadcrumb([
       { label: 'Accueil', routerLink: ['/dashboard'], icon: 'pi pi-home' },
@@ -53,11 +80,65 @@ export class BreadcrumbService {
     ]);
   }
 
+  setPackAddBreadcrumb(): void {
+    this.setBreadcrumb([
+      { label: 'Accueil', routerLink: ['/dashboard'], icon: 'pi pi-home' },
+      { label: 'Gestion', icon: 'pi pi-cog' },
+      { label: 'Packs', routerLink: ['/packs'], icon: 'pi pi-collection' },
+      { label: 'Ajouter', icon: 'pi pi-plus' }
+    ]);
+  }
+
+  setPackEditBreadcrumb(id: string): void {
+    this.setBreadcrumb([
+      { label: 'Accueil', routerLink: ['/dashboard'], icon: 'pi pi-home' },
+      { label: 'Gestion', icon: 'pi pi-cog' },
+      { label: 'Packs', routerLink: ['/packs'], icon: 'pi pi-collection' },
+      { label: 'Modifier', icon: 'pi pi-pencil' }
+    ]);
+  }
+
+  setPackDetailsBreadcrumb(id: string): void {
+    this.setBreadcrumb([
+      { label: 'Accueil', routerLink: ['/dashboard'], icon: 'pi pi-home' },
+      { label: 'Gestion', icon: 'pi pi-cog' },
+      { label: 'Packs', routerLink: ['/packs'], icon: 'pi pi-collection' },
+      { label: 'Détails', icon: 'pi pi-eye' }
+    ]);
+  }
+
   setGarantiesBreadcrumb(): void {
     this.setBreadcrumb([
       { label: 'Accueil', routerLink: ['/dashboard'], icon: 'pi pi-home' },
       { label: 'Gestion', icon: 'pi pi-cog' },
       { label: 'Garanties', routerLink: ['/garanties'], icon: 'pi pi-shield' }
+    ]);
+  }
+
+  setGarantieAddBreadcrumb(): void {
+    this.setBreadcrumb([
+      { label: 'Accueil', routerLink: ['/dashboard'], icon: 'pi pi-home' },
+      { label: 'Gestion', icon: 'pi pi-cog' },
+      { label: 'Garanties', routerLink: ['/garanties'], icon: 'pi pi-shield' },
+      { label: 'Ajouter', icon: 'pi pi-plus' }
+    ]);
+  }
+
+  setGarantieEditBreadcrumb(id: string): void {
+    this.setBreadcrumb([
+      { label: 'Accueil', routerLink: ['/dashboard'], icon: 'pi pi-home' },
+      { label: 'Gestion', icon: 'pi pi-cog' },
+      { label: 'Garanties', routerLink: ['/garanties'], icon: 'pi pi-shield' },
+      { label: 'Modifier', icon: 'pi pi-pencil' }
+    ]);
+  }
+
+  setGarantieDetailsBreadcrumb(id: string): void {
+    this.setBreadcrumb([
+      { label: 'Accueil', routerLink: ['/dashboard'], icon: 'pi pi-home' },
+      { label: 'Gestion', icon: 'pi pi-cog' },
+      { label: 'Garanties', routerLink: ['/garanties'], icon: 'pi pi-shield' },
+      { label: 'Détails', icon: 'pi pi-eye' }
     ]);
   }
 
@@ -86,10 +167,28 @@ export class BreadcrumbService {
     
     if (url.includes('/users')) {
       this.setUsersBreadcrumb();
+    } else if (url.includes('/produits/add')) {
+      this.setProduitAddBreadcrumb();
+    } else if (url.includes('/produits/edit/')) {
+      this.setProduitEditBreadcrumb('');
+    } else if (url.includes('/produits/') && !url.includes('/produits/add') && !url.includes('/produits/edit')) {
+      this.setProduitDetailsBreadcrumb('');
     } else if (url.includes('/produits')) {
       this.setProduitsBreadcrumb();
+    } else if (url.includes('/packs/add')) {
+      this.setPackAddBreadcrumb();
+    } else if (url.includes('/packs/edit/')) {
+      this.setPackEditBreadcrumb('');
+    } else if (url.includes('/packs/') && !url.includes('/packs/add') && !url.includes('/packs/edit')) {
+      this.setPackDetailsBreadcrumb('');
     } else if (url.includes('/packs')) {
       this.setPacksBreadcrumb();
+    } else if (url.includes('/garanties/add')) {
+      this.setGarantieAddBreadcrumb();
+    } else if (url.includes('/garanties/edit/')) {
+      this.setGarantieEditBreadcrumb('');
+    } else if (url.includes('/garanties/') && !url.includes('/garanties/add') && !url.includes('/garanties/edit')) {
+      this.setGarantieDetailsBreadcrumb('');
     } else if (url.includes('/garanties')) {
       this.setGarantiesBreadcrumb();
     } else if (url.includes('/chatbot')) {

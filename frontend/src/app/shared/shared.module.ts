@@ -21,8 +21,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { PaginatorModule } from 'primeng/paginator';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
-import { SortIconModule } from 'primeng/sorticon';
-import { ConfirmationService, ConfirmEventType } from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
 
 @NgModule({
   declarations: [],
@@ -49,8 +48,7 @@ import { ConfirmationService, ConfirmEventType } from 'primeng/api';
     DropdownModule,
     PaginatorModule,
     TagModule,
-    TooltipModule,
-    SortIconModule
+    TooltipModule
   ],
   exports: [
     CommonModule,
@@ -75,8 +73,7 @@ import { ConfirmationService, ConfirmEventType } from 'primeng/api';
     DropdownModule,
     PaginatorModule,
     TagModule,
-    TooltipModule,
-    SortIconModule
+    TooltipModule
   ],
   providers: [
     ConfirmationService

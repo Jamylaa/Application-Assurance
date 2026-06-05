@@ -14,6 +14,7 @@ import { ToastModule } from 'primeng/toast';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { CustomFieldsEditorComponent } from '../../shared/components/custom-fields-editor.component';
 
 @Component({
   selector: 'app-produit-form',
@@ -29,7 +30,8 @@ import { RouterModule } from '@angular/router';
     ToastModule,
     CommonModule,
     ReactiveFormsModule,
-    RouterModule
+    RouterModule,
+    CustomFieldsEditorComponent
   ]
 })
 export class ProduitFormComponent implements OnInit {
@@ -63,9 +65,10 @@ export class ProduitFormComponent implements OnInit {
       nomProduit: ['', [Validators.required]],
       description: ['', [Validators.required]],
       typeProduit: [null, [Validators.required]],
-      statut: [Statut.ACTIF, [Validators.required]]
+      statut: [Statut.ACTIF, [Validators.required]],
+      customFields: [null]
     });
-    
+
     // Prevent initial disabled state
     this.produitForm.markAsUntouched();
   }
@@ -90,7 +93,8 @@ export class ProduitFormComponent implements OnInit {
             nomProduit: produit.nomProduit,
             description: produit.description,
             typeProduit: produit.typeProduit,
-            statut: produit.statut
+            statut: produit.statut,
+            customFields: produit.customFields ?? null
           });
           this.loading = false;
         },
@@ -128,7 +132,6 @@ export class ProduitFormComponent implements OnInit {
       error: (error) => {
         this.loading = false;
         this.toastService.showError('Erreur', this.isEdit ? 'Impossible de modifier le produit' : 'Impossible de créer le produit');
-        console.error('Error saving produit:', error);
       }
     });
   }

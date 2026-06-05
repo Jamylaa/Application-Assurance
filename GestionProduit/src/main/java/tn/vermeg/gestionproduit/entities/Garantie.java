@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
+import java.util.Map;
 
 @Document(collection = "garanties")
 public class Garantie {
@@ -21,6 +22,7 @@ public class Garantie {
 
     @NotNull(message = "Le statut est obligatoire")
     private Statut statut;
+    private Map<String, Object> customFields;
 
     @NotBlank(message = "Le type de garantie est obligatoire")
     @Size(min = 2, max = 50, message = "Le type doit contenir entre 2 et 50 caractères")
@@ -68,25 +70,14 @@ public class Garantie {
     }
     // CONSTRUCTEURS
     public Garantie() {}
-    public Garantie(String idGarantie, String nomGarantie, String description,
-                    Statut statut, String type,
-                    double tauxRemboursement, TypeMontant typeMontant,
-                    TypePlafond typePlafond,
-                    double plafondAnnuel, double plafondMensuel,
-                    double plafondParActe, double franchise,
-                    double coutMoyenParSinistre,
-                    int dureeMinContrat, int dureeMaxContrat,
-                    boolean resiliableAnnuellement,
-                    String creePar,
-                    Instant dateCreation,
-                    Instant dateModification,
-                    Instant dateDesactivation) {
 
+    public Garantie(String idGarantie, String nomGarantie, String description, Statut statut, Map<String, Object> customFields, String type, double tauxRemboursement, TypeMontant typeMontant, TypePlafond typePlafond, double plafondAnnuel, double plafondMensuel, double plafondParActe, double franchise, double coutMoyenParSinistre, int dureeMinContrat, int dureeMaxContrat, boolean resiliableAnnuellement, String creePar, Instant dateCreation, Instant dateModification, Instant dateDesactivation) {
         this.idGarantie = idGarantie;
         this.nomGarantie = nomGarantie;
         this.description = description;
         this.statut = statut;
-        this.type = normalizeType(type);
+        this.customFields = customFields;
+        this.type = type;
         this.tauxRemboursement = tauxRemboursement;
         this.typeMontant = typeMontant;
         this.typePlafond = typePlafond;
@@ -109,7 +100,13 @@ public class Garantie {
     public void setIdGarantie(String idGarantie) { this.idGarantie = idGarantie; }
     public String getNomGarantie() { return nomGarantie; }
     public void setNomGarantie(String nomGarantie) { this.nomGarantie = nomGarantie; }
+    public Map<String, Object> getCustomFields() {
+        return customFields;
+    }
 
+    public void setCustomFields(Map<String, Object> customFields) {
+        this.customFields = customFields;
+    }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 

@@ -16,7 +16,8 @@
           <button
             class="mobile-menu-toggle"
             (click)="toggleMobileSidebar()"
-            title="Menu">
+            title="Menu"
+            aria-label="Ouvrir le menu mobile">
 
             <i class="bi bi-list"></i>
           </button>
@@ -62,11 +63,13 @@
                 class="search-input"
                 placeholder="Rechercher..."
                 [(ngModel)]="searchQuery"
-                (blur)="closeSearch()">
+                (blur)="closeSearch()"
+                (keyup.enter)="performSearch()">
 
               <button
                 class="search-close"
-                (click)="closeSearch()">
+                (click)="closeSearch()"
+                aria-label="Fermer la recherche">
 
                 <i class="bi bi-x"></i>
               </button>

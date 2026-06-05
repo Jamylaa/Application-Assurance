@@ -19,10 +19,33 @@ public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ErrorResponse> handleApiException(
+            ApiException ex, WebRequest request) {
+        logger.error("[{}] {}", ex.getErrorCode(), ex.getMessage(), ex);
+
+        HttpStatus status = switch (ex.getErrorCode()) {
+            case RESOURCE_NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case RESOURCE_ALREADY_EXISTS -> HttpStatus.CONFLICT;
+            case VALIDATION_ERROR -> HttpStatus.BAD_REQUEST;
+            case CONFLICT_ERROR -> HttpStatus.CONFLICT;
+            case INVALID_STATE -> HttpStatus.BAD_REQUEST;
+            case INTERNAL_ERROR -> HttpStatus.INTERNAL_SERVER_ERROR;
+        };
+
+        ErrorResponse errorResponse = buildErrorResponse(
+            status.value(),
+            ex.getErrorCode().name(),
+            ex.getMessage(),
+            request
+        );
+
+        return ResponseEntity.status(status).body(errorResponse);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException ex, WebRequest request) {
-        
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
@@ -30,7 +53,7 @@ public class GlobalExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
 
-        logger.warn("Erreur de validation: {}", errors);
+        logger.warn("Validation errors: {}", errors);
 
         ErrorResponse errorResponse = ErrorResponse.builder()
             .timestamp(LocalDateTime.now())
@@ -47,155 +70,70 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
             IllegalArgumentException ex, WebRequest request) {
-        
-        logger.error("Argument illégal: {}", ex.getMessage());
+        logger.error("Illegal argument: {}", ex.getMessage());
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
-            .timestamp(LocalDateTime.now())
-            .status(HttpStatus.BAD_REQUEST.value())
-            .error("ILLEGAL_ARGUMENT")
-            .message(ex.getMessage())
-            .path(request.getDescription(false))
-            .build();
+        ErrorResponse errorResponse = buildErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            "ILLEGAL_ARGUMENT",
+            ex.getMessage(),
+            request
+        );
 
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
-    @ExceptionHandler(TypeGarantieException.class)
-    public ResponseEntity<ErrorResponse> handleTypeGarantieException(
-            TypeGarantieException ex, WebRequest request) {
-        
-        logger.error("Erreur de type de garantie: {}", ex.getMessage());
+    @ExceptionHandler(org.springframework.web.client.ResourceAccessException.class)
+    public ResponseEntity<ErrorResponse> handleResourceAccessException(
+            org.springframework.web.client.ResourceAccessException ex, WebRequest request) {
+        logger.error("Resource access exception (AI service unavailable): {}", ex.getMessage());
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
-            .timestamp(LocalDateTime.now())
-            .status(HttpStatus.BAD_REQUEST.value())
-            .error("TYPE_GARANTIE_ERROR")
-            .message(ex.getMessage())
-            .path(request.getDescription(false))
-            .build();
+        ErrorResponse errorResponse = buildErrorResponse(
+            HttpStatus.SERVICE_UNAVAILABLE.value(),
+            "AI_SERVICE_UNAVAILABLE",
+            "Service IA temporairement indisponible. Veuillez réessayer.",
+            request
+        );
 
-        return ResponseEntity.badRequest().body(errorResponse);
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
     }
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
-            ResourceNotFoundException ex, WebRequest request) {
-        
-        logger.warn("Ressource non trouvée: {}", ex.getMessage());
+    @ExceptionHandler(java.net.SocketTimeoutException.class)
+    public ResponseEntity<ErrorResponse> handleSocketTimeoutException(
+            java.net.SocketTimeoutException ex, WebRequest request) {
+        logger.warn("AI service timeout: {}", ex.getMessage());
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
-            .timestamp(LocalDateTime.now())
-            .status(HttpStatus.NOT_FOUND.value())
-            .error("RESOURCE_NOT_FOUND")
-            .message(ex.getMessage())
-            .path(request.getDescription(false))
-            .build();
+        ErrorResponse errorResponse = buildErrorResponse(
+            HttpStatus.REQUEST_TIMEOUT.value(),
+            "AI_SERVICE_TIMEOUT",
+            "Délai d'attente du service IA dépassé. Mode fallback activé.",
+            request
+        );
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
-    }
-
-    @ExceptionHandler(ResourceConflictException.class)
-    public ResponseEntity<ErrorResponse> handleResourceConflictException(
-            ResourceConflictException ex, WebRequest request) {
-        
-        logger.warn("Conflit de ressource: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-            .timestamp(LocalDateTime.now())
-            .status(HttpStatus.CONFLICT.value())
-            .error("RESOURCE_CONFLICT")
-            .message(ex.getMessage())
-            .path(request.getDescription(false))
-            .build();
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+        return ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT).body(errorResponse);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(
             Exception ex, WebRequest request) {
-        
-        logger.error("Erreur non gérée: {}", ex.getMessage(), ex);
+        logger.error("Unhandled exception: {}", ex.getMessage(), ex);
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
-            .timestamp(LocalDateTime.now())
-            .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-            .error("INTERNAL_SERVER_ERROR")
-            .message("Une erreur interne est survenue")
-            .path(request.getDescription(false))
-            .build();
+        ErrorResponse errorResponse = buildErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+            "INTERNAL_SERVER_ERROR",
+            "Une erreur interne est survenue",
+            request
+        );
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 
-    public static class ErrorResponse {
-        private LocalDateTime timestamp;
-        private int status;
-        private String error;
-        private String message;
-        private Map<String, String> details;
-        private String path;
-
-        public static Builder builder() {
-            return new Builder();
-        }
-
-        // Getters et Setters
-        public LocalDateTime getTimestamp() { return timestamp; }
-        public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
-
-        public int getStatus() { return status; }
-        public void setStatus(int status) { this.status = status; }
-
-        public String getError() { return error; }
-        public void setError(String error) { this.error = error; }
-
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
-
-        public Map<String, String> getDetails() { return details; }
-        public void setDetails(Map<String, String> details) { this.details = details; }
-
-        public String getPath() { return path; }
-        public void setPath(String path) { this.path = path; }
-
-        public static class Builder {
-            private ErrorResponse errorResponse = new ErrorResponse();
-
-            public Builder timestamp(LocalDateTime timestamp) {
-                errorResponse.timestamp = timestamp;
-                return this;
-            }
-
-            public Builder status(int status) {
-                errorResponse.status = status;
-                return this;
-            }
-
-            public Builder error(String error) {
-                errorResponse.error = error;
-                return this;
-            }
-
-            public Builder message(String message) {
-                errorResponse.message = message;
-                return this;
-            }
-
-            public Builder details(Map<String, String> details) {
-                errorResponse.details = details;
-                return this;
-            }
-
-            public Builder path(String path) {
-                errorResponse.path = path;
-                return this;
-            }
-
-            public ErrorResponse build() {
-                return errorResponse;
-            }
-        }
+    private ErrorResponse buildErrorResponse(int status, String error, String message, WebRequest request) {
+        return ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(status)
+            .error(error)
+            .message(message)
+            .path(request.getDescription(false))
+            .build();
     }
 }

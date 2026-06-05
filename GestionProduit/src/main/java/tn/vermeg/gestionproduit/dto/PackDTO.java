@@ -9,6 +9,7 @@ import tn.vermeg.gestionproduit.entities.TypeClient;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 public class PackDTO {
 
@@ -20,6 +21,8 @@ public class PackDTO {
     private String description;
     private String produitId;
     private String nomProduit;
+
+    private Map<String, Object> customFields;
 
     // Conditions d'éligibilité
     private Integer ageMinimum;
@@ -103,6 +106,14 @@ public class PackDTO {
 
     public void setNomProduit(String nomProduit) {
         this.nomProduit = nomProduit;
+    }
+
+    public Map<String, Object> getCustomFields() {
+        return customFields;
+    }
+
+    public void setCustomFields(Map<String, Object> customFields) {
+        this.customFields = customFields;
     }
 
     public Integer getAgeMinimum() {

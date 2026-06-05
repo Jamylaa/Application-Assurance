@@ -7,6 +7,7 @@ import tn.vermeg.gestionproduit.entities.Statut;
 import tn.vermeg.gestionproduit.entities.TypeProduit;
 
 import java.time.Instant;
+import java.util.Map;
 
 public class ProduitDTO {
 
@@ -27,6 +28,8 @@ public class ProduitDTO {
     private Instant dateCreation;
 
     private Instant dateModification;
+
+    private Map<String, Object> customFields;
 
     // CONSTRUCTEURS
     public ProduitDTO() {}
@@ -95,5 +98,13 @@ public class ProduitDTO {
 
     public void setDateModification(Instant dateModification) {
         this.dateModification = dateModification;
+    }
+
+    public Map<String, Object> getCustomFields() {
+        return customFields;
+    }
+
+    public void setCustomFields(Map<String, Object> customFields) {
+        this.customFields = customFields;
     }
 }

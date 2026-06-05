@@ -2,14 +2,6 @@ package tn.vermeg.gestionproduit.dto;
 
 import java.util.ArrayList;
 import java.util.List;
-
-/**
- * dto pour les requêtes de création de garantie via chatbot
- * Contient les données extraites du prompt par l'IA
- * 
- * @author PFE Ingénieur - GestionProduit
- * @version 1.0 - Architecture Chatbot Unifiée
- */
 public class ChatbotGarantieRequestDTO {
     
     // Données extraites
@@ -166,10 +158,6 @@ public class ChatbotGarantieRequestDTO {
             }
         }
     }
-
-    /**
-     * Génère un hash métier pour la détection de doublons
-     */
     public void generateBusinessHash() {
         if (this.nomGarantie != null && this.type != null) {
             this.businessHash = (this.nomGarantie + "_" + this.type).toUpperCase().replaceAll("[^A-Z0-9_]", "_");

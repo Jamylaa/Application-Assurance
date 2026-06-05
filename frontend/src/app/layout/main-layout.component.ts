@@ -149,6 +149,18 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     }, 150);
   }
 
+  performSearch(): void {
+    if (!this.searchQuery || this.searchQuery.trim().length < 2) {
+      return;
+    }
+
+    const query = this.searchQuery.toLowerCase().trim();
+    this.closeSearch();
+
+    // Navigate to produits page with search query
+    this.router.navigate(['/produits'], { queryParams: { search: query } });
+  }
+
   toggleUserDropdown(): void {
     this.showUserDropdown = !this.showUserDropdown;
   }
@@ -165,25 +177,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
-    this.keycloakService.logout();
+    this.keycloakService.logout(window.location.origin);
   }
 }
-
-// ngOnInit(): void {
-
-  //   // Charger les informations utilisateur depuis Keycloak
-  //   this.currentUser = this.keycloakService.getUser();
-
-  //   // Breadcrumbs
-  //   this.breadcrumbService.updateBreadcrumbFromUrl();
-
-  //   this.routerSub = this.router.events
-  //     .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
-  //     .subscribe(() => {
-  //       this.breadcrumbService.updateBreadcrumbFromUrl();
-  //     });
-
-  //   // Responsive
-  //   this.checkMobileView();
-  //   window.addEventListener('resize', this.resizeHandler);
-  // }

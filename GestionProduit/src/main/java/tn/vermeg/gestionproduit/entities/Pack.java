@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 @Document(collection = "packs")
 public class Pack {
@@ -18,6 +19,7 @@ public class Pack {
     private String description;
     private String produitId;
     private String nomProduit;
+    private Map<String, Object> customFields;
 
     // Conditions d'éligibilité
     private Integer ageMinimum;
@@ -40,18 +42,14 @@ public class Pack {
     private Instant dateModification;
 
     public Pack() {}
-    public Pack(String idPack, String nomPack, String description, String produitId, String nomProduit,
-                Integer ageMinimum, Integer ageMaximum, List<TypeClient> typeClients,
-                int ancienneteContratMois, CouvertureGeographique couvertureGeographique,
-                double prixMensuel, int dureeMinContrat, int dureeMaxContrat,
-                NiveauCouverture niveauCouverture, Statut statut,
-                Instant dateCreation, Instant dateModification) {
 
+    public Pack(String idPack, String nomPack, String description, String produitId, String nomProduit, Map<String, Object> customFields, Integer ageMinimum, Integer ageMaximum, List<TypeClient> typeClients, int ancienneteContratMois, CouvertureGeographique couvertureGeographique, double prixMensuel, int dureeMinContrat, int dureeMaxContrat, NiveauCouverture niveauCouverture, Statut statut, Instant dateCreation, Instant dateModification) {
         this.idPack = idPack;
         this.nomPack = nomPack;
         this.description = description;
         this.produitId = produitId;
         this.nomProduit = nomProduit;
+        this.customFields = customFields;
         this.ageMinimum = ageMinimum;
         this.ageMaximum = ageMaximum;
         this.typeClients = typeClients;
@@ -67,7 +65,13 @@ public class Pack {
     }
 
     //   Getters & Setters
+    public Map<String, Object> getCustomFields() {
+        return customFields;
+    }
 
+    public void setCustomFields(Map<String, Object> customFields) {
+        this.customFields = customFields;
+    }
     public String getIdPack() { return idPack; }
     public void setIdPack(String idPack) { this.idPack = idPack; }
 

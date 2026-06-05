@@ -23,7 +23,7 @@ spring:
           # issuer-uri = ce que Keycloak met dans le token (vu du browser/client)
          # issuer-uri: http://localhost:9090/realms/vermeg-realm
           #  jwk-set-uri = pour télécharger les clés depuis l'intérieur Docker
-          jwk-set-uri: http://keycloak:8080/realms/vermeg-realm/protocol/openid-connect/certs
+          jwk-set-uri: http://keycloak:9090/realms/vermeg-realm/protocol/openid-connect/certs
 
 server:
   port: 9092
@@ -44,9 +44,26 @@ eureka:
     prefer-ip-address: true
 
 logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{correlationId}] [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{correlationId}] [%thread] %-5level %logger{36} - %msg%n"
   level:
     org.springframework.security: DEBUG
     org.springframework: INFO
+    tn.vermeg: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
 
 ---
 spring:
@@ -58,7 +75,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: http://keycloak:8080/realms/vermeg-realm/protocol/openid-connect/certs
+          jwk-set-uri: http://keycloak:9090/realms/vermeg-realm/protocol/openid-connect/certs
 
 eureka:
   client:

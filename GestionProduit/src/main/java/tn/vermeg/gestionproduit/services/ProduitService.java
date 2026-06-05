@@ -73,6 +73,9 @@ public class ProduitService {
         produit.setDescription(produitDetails.getDescription());
         produit.setTypeProduit(produitDetails.getTypeProduit());
         produit.setStatut(produitDetails.getStatut());
+        if (produitDetails.getCustomFields() != null) {
+            produit.setCustomFields(produitDetails.getCustomFields());
+        }
 
         return produitRepository.save(produit);
     }

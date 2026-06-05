@@ -57,6 +57,26 @@
               <div class="value">{{ formatDateTime(p.dateModification) }}</div>
             </div>
           </div>
+
+          <ng-container *ngIf="p.customFields && (p.customFields | keyvalue).length > 0">
+            <div class="section-title">Champs personnalisés</div>
+            <div class="grid">
+              <div class="row" *ngFor="let field of p.customFields | keyvalue">
+                <div class="label">{{ field.key }}</div>
+                <div class="value">{{ field.value }}</div>
+              </div>
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="p.packs && p.packs.length > 0">
+            <div class="section-title">Packs associés ({{ p.packs.length }})</div>
+            <div class="packs-list">
+              <div class="pack-item" *ngFor="let pack of p.packs">
+                <span class="pack-nom">{{ pack.nomPack }}</span>
+                <span class="pack-statut">{{ pack.statut }}</span>
+              </div>
+            </div>
+          </ng-container>
         </ng-container>
 
         <ng-template #empty>

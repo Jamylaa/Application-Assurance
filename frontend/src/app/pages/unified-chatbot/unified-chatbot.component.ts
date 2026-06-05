@@ -1,8 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { EventSourcePolyfill } from 'event-source-polyfill';
 import { ToastModule } from 'primeng/toast';
 import { ButtonModule } from 'primeng/button';
 import { InputTextareaModule } from 'primeng/inputtextarea';
@@ -12,10 +13,15 @@ import { BadgeModule } from 'primeng/badge';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
+import { ToggleButtonModule } from 'primeng/togglebutton';
+import { SidebarModule } from 'primeng/sidebar';
+import { DividerModule } from 'primeng/divider';
 
 import { ChatbotService, ChatbotResponse, ChatbotIntent } from '../../services/chatbot.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
+import { DataRefreshService, RefreshType } from '../../shared/services/data-refresh.service';
+import { environment } from '../../../environments/environment';
 
 interface ChatMessage {
   id: string;
@@ -44,7 +50,10 @@ interface ChatMessage {
     CardModule,
     BadgeModule,
     TagModule,
-    TooltipModule
+    TooltipModule,
+    ToggleButtonModule,
+    SidebarModule,
+    DividerModule
   ],
   providers: [MessageService],
   templateUrl: './unified-chatbot.component.html',
@@ -54,60 +63,53 @@ export class UnifiedChatbotComponent implements OnInit, OnDestroy {
   messages: ChatMessage[] = [];
   currentMessage = '';
   isLoading = false;
+  isStreaming = false;
+  isDarkMode = false;
+  sidebarVisible = false;
+  conversationHistory: ChatMessage[][] = [];
+  currentConversationIndex = -1;
+
+  @ViewChild('messagesContainer') messagesContainer!: ElementRef;
 
   // Configuration du chatbot
   chatbotConfig = {
     title: 'Assistant IA Assurance',
-    subtitle: 'Votre assistant intelligent pour configurer des produits, garanties, packs.',
-    features: [
-      'Création de garanties',
-      'Gestion des packs',
-      'Configuration des produits',
-      'Recommandations intelligentes'
-    ],
-    intents: [
-      { icon: 'bi-box', label: 'CREATE_PRODUIT', description: 'Créer des produits d\'assurance' },
-      { icon: 'bi-shield-check', label: 'CREATE_GARANTIE', description: 'Créer des garanties' },
-      { icon: 'bi-collection', label: 'CREATE_PACK', description: 'Créer des packs' },
-      { icon: 'bi-gear', label: 'CONFIGURE_PACK', description: 'Configurer des packs avec garanties' },
-      { icon: 'bi-lightbulb', label: 'RECOMMENDATION', description: 'Obtenir des recommandations' }
-    ]
+    subtitle: 'Votre assistant intelligent pour configurer des produits, packs et des garanties.',
   };
 
-  readonly suggestionPrompts = [
-    'Créer une garantie hospitalisation avec 90% de remboursement',
-    'Créer un produit d\'assurance santé nommé Produit Santé Plus',
-    'Créer un pack Gold lié au produit Santé Premium',
-    'Recommande moi un produit santé avec garantie dentaire'
-  ];
-
-  private chatbotSubscription?: Subscription;
+ private chatbotSubscription?: Subscription;
+  private eventSource?: EventSourcePolyfill;
 
   constructor(
     private readonly chatbotService: ChatbotService,
     private readonly toastService: ToastService,
     private readonly breadcrumbService: BreadcrumbService,
+    private readonly dataRefreshService: DataRefreshService,
     private readonly router: Router,
     private readonly messageService: MessageService
-  ) {}
+  ) {
+    // Load dark mode preference
+    this.isDarkMode = localStorage.getItem('darkMode') === 'true';
+    document.body.classList.toggle('dark-mode', this.isDarkMode);
+  }
 
   ngOnInit(): void {
     try {
       this.breadcrumbService.setChatbotBreadcrumb();
 
+      // Load conversation history from localStorage
+      this.loadConversationHistory();
+
       // Message de bienvenue
-      const welcomeMessage = `**${this.chatbotConfig.title}**
+      const welcomeMessage = `${this.chatbotConfig.title}
 
 ${this.chatbotConfig.subtitle}
 
-Fonctionnalités disponibles :
-${this.chatbotConfig.features.map(f => `• ${f}`).join('\n')}
-
 Comment puis-je vous aider aujourd'hui ?`;
-      
       this.addBotMessage(welcomeMessage);
     } catch (error) {
-      console.error('ChatbotComponent: Error in ngOnInit', error);
+      console.error('Erreur lors de l\'initialisation:', error);
+      this.toastService.showWarning('Initialisation', 'Certaines fonctionnalités peuvent ne pas être disponibles');
     }
   }
 
@@ -115,31 +117,147 @@ Comment puis-je vous aider aujourd'hui ?`;
     if (this.chatbotSubscription) {
       this.chatbotSubscription.unsubscribe();
     }
+    if (this.eventSource) {
+      this.eventSource.close();
+    }
+    // Save current conversation before leaving
+    this.saveCurrentConversation();
   }
 
   sendMessage(): void {
-    if (!this.currentMessage.trim() || this.isLoading) {
+    if (!this.currentMessage.trim() || this.isLoading || this.isStreaming) {
       return;
     }
-
-    const userMessage = this.currentMessage.trim();
-    this.addUserMessage(userMessage);
+   const userMessage = this.currentMessage.trim().toLowerCase();
+    this.addUserMessage(this.currentMessage.trim());
     this.currentMessage = '';
     this.isLoading = true;
 
-    this.chatbotService.processPrompt({ prompt: userMessage }).subscribe({
+    // Detect if this is a business operation (create product/guarantie/pack)
+    const isBusinessOperation = userMessage.includes('créer') ||
+                                userMessage.includes('créer une') ||
+                                userMessage.includes('créer un') ||
+                                userMessage.includes('create') ||
+                                userMessage.includes('ajouter') ||
+                                userMessage.includes('nouveau') ||
+                                userMessage.includes('configurer');
+
+    if (isBusinessOperation) {
+      // Use business process endpoint for operations
+      this.sendMessageRegular(this.currentMessage.trim() || userMessage);
+    } else {
+      // Use streaming endpoint for conversational AI
+      this.sendMessageWithStream(this.currentMessage.trim() || userMessage);
+    }
+  }
+
+  private sendMessageWithStream(message: string): void {
+    this.isStreaming = true;
+    let fullResponse = '';
+    let botMessageId = '';
+
+    try {
+      // Get JWT token from localStorage
+      const token = localStorage.getItem('token');
+
+      // Create a placeholder bot message for streaming
+      botMessageId = this.generateId();
+      this.messages.push({
+        id: botMessageId,
+        sender: 'bot',
+        text: '',
+        timestamp: new Date()
+      });
+
+      // Use fetch for POST request with proper headers via gateway
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream'
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      fetch(`${environment.apiProduit}/chatbot/stream/chat`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ message })
+      }).then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+
+        if (!reader) {
+          throw new Error('Response body is null');
+        }
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.substring(6);
+              if (data && data !== '[DONE]' && !data.startsWith('Error:')) {
+                fullResponse += data;
+                const messageIndex = this.messages.findIndex(m => m.id === botMessageId);
+                if (messageIndex !== -1) {
+                  this.messages[messageIndex].text = fullResponse;
+                  this.scrollToBottom();
+                }
+              }
+            }
+          }
+        }
+
+        this.eventSource?.close();
+        this.isStreaming = false;
+        this.isLoading = false;
+        this.scrollToBottom();
+      }).catch((error) => {
+        console.error('Streaming error:', error);
+        this.isStreaming = false;
+        this.messages = this.messages.filter(m => m.id === botMessageId);
+
+        // Show user-friendly error message
+        const errorMessage = this.getErrorMessage(error);
+        this.toastService.showInfo('Mode streaming', errorMessage);
+
+        // Fallback to regular request
+        this.sendMessageRegular(message);
+      });
+
+    } catch (error) {
+      console.error('Stream setup error:', error);
+      this.isStreaming = false;
+      this.messages = this.messages.filter(m => m.id === botMessageId);
+
+      // Fallback to regular request
+      this.sendMessageRegular(message);
+    }
+  }
+
+  private sendMessageRegular(message: string): void {
+    this.chatbotService.processPrompt({ prompt: message }).subscribe({
       next: (response) => {
         this.handleChatbotResponse(response);
         this.isLoading = false;
       },
-      error: () => {
-        this.addBotMessage('Erreur de communication avec l\'assistant. Veuillez réessayer.');
-        this.toastService.showError('Erreur chatbot', 'Communication impossible');
+      error: (error) => {
+        const errorMessage = this.getErrorMessage(error);
+        this.addBotMessage(`Erreur de communication avec l\'assistant\n\n${errorMessage}`);
+        this.toastService.showError('Erreur chatbot', errorMessage);
         this.isLoading = false;
       }
     });
   }
-
   private handleChatbotResponse(response: ChatbotResponse): void {
     let message = response.message;
 
@@ -159,6 +277,38 @@ Comment puis-je vous aider aujourd'hui ?`;
     }
 
     this.addBotMessage(message, response.intent, response.actions);
+
+    // Rafraîchir les listes après création réussie
+    if (response.success && response.intent) {
+      this.refreshDataBasedOnIntent(response.intent);
+    }
+  }
+
+  private refreshDataBasedOnIntent(intent: ChatbotIntent): void {
+    switch (intent) {
+      case ChatbotIntent.CREATE_PRODUIT:
+      case ChatbotIntent.UPDATE_PRODUIT:
+      case ChatbotIntent.DELETE_PRODUIT:
+      case ChatbotIntent.LIST_PRODUITS:
+        this.dataRefreshService.refreshProduits();
+        break;
+      case ChatbotIntent.CREATE_GARANTIE:
+      case ChatbotIntent.UPDATE_GARANTIE:
+      case ChatbotIntent.DELETE_GARANTIE:
+      case ChatbotIntent.LIST_GARANTIES:
+        this.dataRefreshService.refreshGaranties();
+        break;
+      case ChatbotIntent.CREATE_PACK:
+      case ChatbotIntent.CONFIGURE_PACK:
+      case ChatbotIntent.CREATE_PACK_WITH_GARANTIES:
+      case ChatbotIntent.UPDATE_PACK:
+      case ChatbotIntent.DELETE_PACK:
+      case ChatbotIntent.LIST_PACKS:
+        this.dataRefreshService.refreshPacks();
+        break;
+      default:
+        this.dataRefreshService.refreshAll();
+    }
   }
 
   private formatDataForDisplay(data: ChatbotResponse['data']): string {
@@ -176,11 +326,10 @@ Comment puis-je vous aider aujourd'hui ?`;
     }
 
     if (data.garantie) {
-      const garantie = data.garantie as { nomGarantie: string; description: string; type?: string; tauxRemboursement: number; statut: string };
+      const garantie = data.garantie as { nomGarantie: string; description: string; tauxRemboursement: number; statut: string };
       formatted += `Garantie proposée :\n`;
       formatted += `• Nom : ${garantie.nomGarantie}\n`;
       formatted += `• Description : ${garantie.description}\n`;
-      formatted += `• Type : ${garantie.type ?? '—'}\n`;
       formatted += `• Taux : ${(garantie.tauxRemboursement * 100).toFixed(0)}%\n`;
       formatted += `• Statut : ${garantie.statut}\n`;
     }
@@ -279,7 +428,7 @@ Comment puis-je vous aider aujourd'hui ?`;
         this.isLoading = false;
       },
       error: (error) => {
-        const errorMessage = error?.message || 'Erreur de communication';
+        const errorMessage = this.getErrorMessage(error);
         this.addBotMessage(`Erreur de communication\n\n${errorMessage}`);
         this.toastService.showError('Erreur communication', errorMessage);
         this.isLoading = false;
@@ -304,12 +453,100 @@ Comment puis-je vous aider aujourd'hui ?`;
       event.preventDefault();
     }
   }
-
   clearChat(): void {
     this.messages = [];
     this.addBotMessage(
-      `**${this.chatbotConfig.title}**\n\nConversation effacée. Vous pouvez poser une nouvelle question.`
+      `${this.chatbotConfig.title}\n\nConversation effacée. Vous pouvez poser une nouvelle question.`
     );
+  }
+  toggleDarkMode(): void {
+    this.isDarkMode = !this.isDarkMode;
+    document.body.classList.toggle('dark-mode', this.isDarkMode);
+    localStorage.setItem('darkMode', this.isDarkMode.toString());
+  }
+
+  toggleSidebar(): void {
+    this.sidebarVisible = !this.sidebarVisible;
+  }
+
+  loadConversation(index: number): void {
+    if (index >= 0 && index < this.conversationHistory.length) {
+      this.messages = [...this.conversationHistory[index]];
+      this.currentConversationIndex = index;
+      this.sidebarVisible = false;
+      this.scrollToBottom();
+    }
+  }
+
+  deleteConversation(index: number): void {
+    this.conversationHistory.splice(index, 1);
+    this.saveConversationHistory();
+    if (this.currentConversationIndex === index) {
+      this.currentConversationIndex = -1;
+    }
+  }
+
+  startNewConversation(): void {
+    this.saveCurrentConversation();
+    this.messages = [];
+    this.currentConversationIndex = -1;
+    this.sidebarVisible = false;
+  }
+
+  private saveCurrentConversation(): void {
+    if (this.messages.length > 1) {
+      if (this.currentConversationIndex >= 0) {
+        this.conversationHistory[this.currentConversationIndex] = [...this.messages];
+      } else {
+        this.conversationHistory.unshift([...this.messages]);
+        this.currentConversationIndex = 0;
+      }
+      this.saveConversationHistory();
+    }
+  }
+
+  private saveConversationHistory(): void {
+    try {
+      localStorage.setItem('chatbotHistory', JSON.stringify(this.conversationHistory));
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde de l\'historique:', error);
+      // Quota exceeded or storage disabled - silently fail
+    }
+  }
+
+  private loadConversationHistory(): void {
+    try {
+      const saved = localStorage.getItem('chatbotHistory');
+      if (saved) {
+        this.conversationHistory = JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de l\'historique:', error);
+      this.conversationHistory = [];
+    }
+  }
+
+  private scrollToBottom(): void {
+    setTimeout(() => {
+      if (this.messagesContainer) {
+        this.messagesContainer.nativeElement.scrollTop = this.messagesContainer.nativeElement.scrollHeight;
+      }
+    }, 100);
+  }
+
+  getConversationPreview(conversation: ChatMessage[]): string {
+    const userMessages = conversation.filter(m => m.sender === 'user');
+    if (userMessages.length > 0) {
+      return userMessages[0].text.substring(0, 50) + (userMessages[0].text.length > 50 ? '...' : '');
+    }
+    return 'Nouvelle conversation';
+  }
+
+  getConversationTime(conversation: ChatMessage[]): string {
+    if (conversation.length > 0) {
+      return this.formatTime(conversation[0].timestamp);
+    }
+    return '';
   }
 
   goBack(): void {
@@ -345,7 +582,46 @@ Comment puis-je vous aider aujourd'hui ?`;
   }
 
   private generateId(): string {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    return Date.now().toString(36) + Math.random().toString(36).substring(2);
+  }
+
+  private getErrorMessage(error: any): string {
+    if (!error) return 'Erreur inconnue';
+
+    // Check for HTTP errors
+    if (error.status) {
+      switch (error.status) {
+        case 0:
+          return 'Impossible de joindre le serveur. Vérifiez votre connexion.';
+        case 400:
+          return 'Requête invalide. Veuillez vérifier votre message.';
+        case 401:
+          return 'Non autorisé. Veuillez vous reconnecter.';
+        case 403:
+          return 'Accès refusé.';
+        case 404:
+          return 'Service non trouvé.';
+        case 500:
+          return 'Erreur interne du serveur. Veuillez réessayer plus tard.';
+        case 503:
+          return 'Service temporairement indisponible.';
+        default:
+          return `Erreur HTTP ${error.status}: ${error.statusText || 'Erreur inconnue'}`;
+      }
+    }
+
+    // Check for network errors
+    if (error.name === 'TypeError' && error.message?.includes('fetch')) {
+      return 'Erreur réseau. Vérifiez votre connexion internet.';
+    }
+
+    // Check for timeout
+    if (error.name === 'TimeoutError') {
+      return 'Délai d\'attente dépassé. Le serveur met trop de temps à répondre.';
+    }
+
+    // Return custom error message or fallback
+    return error.message || error.error?.message || 'Erreur inconnue';
   }
 
   formatTime(date: Date): string {

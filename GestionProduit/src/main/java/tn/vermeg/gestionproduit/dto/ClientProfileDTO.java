@@ -3,10 +3,6 @@ package tn.vermeg.gestionproduit.dto;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Profil client complet pour la logique de recommandation IA
- * Contient toutes les informations personnelles et préférences d'assurance du client
- */
 public class ClientProfileDTO {
     
     // === INFORMATIONS PERSONNELLES ===

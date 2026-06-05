@@ -393,75 +393,112 @@
     </div>
 
     <!-- QUICK ACTIONS -->
-    <div class="quick-actions-card">
+    <div class="dashboard-grid">
 
-      <div class="section-header">
-        <h2 class="section-title">
-          Actions rapides
-        </h2>
+      <div class="quick-actions-card">
+
+        <div class="section-header">
+          <h2 class="section-title">
+            Actions rapides
+          </h2>
+        </div>
+
+        <div class="quick-actions-grid">
+
+          <!-- USERS -->
+          <button
+            class="quick-action-btn users-btn"
+            (click)="navigateToUsers()">
+
+            <div class="qa-icon">
+              <i class="bi bi-people-fill"></i>
+            </div>
+
+            <span>Gérer les utilisateurs</span>
+
+            <i class="bi bi-arrow-right qa-arrow"></i>
+
+          </button>
+
+          <!-- PRODUITS -->
+          <button
+            class="quick-action-btn produits-btn"
+            (click)="navigateToProduits()">
+
+            <div class="qa-icon">
+              <i class="bi bi-box-seam-fill"></i>
+            </div>
+
+            <span>Gérer les produits</span>
+
+            <i class="bi bi-arrow-right qa-arrow"></i>
+
+          </button>
+
+          <!-- PACKS -->
+          <button
+            class="quick-action-btn packs-btn"
+            (click)="navigateToPacks()">
+
+            <div class="qa-icon">
+              <i class="bi bi-collection-fill"></i>
+            </div>
+
+            <span>Gérer les packs</span>
+
+            <i class="bi bi-arrow-right qa-arrow"></i>
+
+          </button>
+
+          <!-- GARANTIES -->
+          <button
+            class="quick-action-btn garanties-btn"
+            (click)="navigateToGaranties()">
+
+            <div class="qa-icon">
+              <i class="bi bi-shield-fill-check"></i>
+            </div>
+
+            <span>Gérer les garanties</span>
+
+            <i class="bi bi-arrow-right qa-arrow"></i>
+
+          </button>
+
+        </div>
+
       </div>
 
-      <div class="quick-actions-grid">
+      <!-- RECENT ACTIVITY -->
+      <div class="recent-activity-card">
 
-        <!-- USERS -->
-        <button
-          class="quick-action-btn users-btn"
-          (click)="navigateToUsers()">
+        <div class="section-header">
+          <h2 class="section-title">
+            Activité récente
+          </h2>
+        </div>
 
-          <div class="qa-icon">
-            <i class="bi bi-people-fill"></i>
+        <div class="activity-list">
+
+          <div *ngFor="let activity of recentActivities" class="activity-item">
+
+            <div class="activity-icon" [class]="'activity-icon-' + activity.type">
+              <i class="bi" [ngClass]="activity.icon"></i>
+            </div>
+
+            <div class="activity-content">
+              <div class="activity-message">{{ activity.message }}</div>
+              <div class="activity-time">{{ activity.time }}</div>
+            </div>
+
           </div>
 
-          <span>Gérer les utilisateurs</span>
-
-          <i class="bi bi-arrow-right qa-arrow"></i>
-
-        </button>
-
-        <!-- PRODUITS -->
-        <button
-          class="quick-action-btn produits-btn"
-          (click)="navigateToProduits()">
-
-          <div class="qa-icon">
-            <i class="bi bi-box-seam-fill"></i>
+          <div *ngIf="recentActivities.length === 0" class="no-activity">
+            <i class="bi bi-inbox"></i>
+            <p>Aucune activité récente</p>
           </div>
 
-          <span>Gérer les produits</span>
-
-          <i class="bi bi-arrow-right qa-arrow"></i>
-
-        </button>
-
-        <!-- PACKS -->
-        <button
-          class="quick-action-btn packs-btn"
-          (click)="navigateToPacks()">
-
-          <div class="qa-icon">
-            <i class="bi bi-collection-fill"></i>
-          </div>
-
-          <span>Gérer les packs</span>
-
-          <i class="bi bi-arrow-right qa-arrow"></i>
-
-        </button>
-
-        <!-- GARANTIES -->
-        <button
-          class="quick-action-btn garanties-btn"
-          (click)="navigateToGaranties()">
-
-          <div class="qa-icon">
-            <i class="bi bi-shield-fill-check"></i>
-          </div>
-
-          <span>Gérer les garanties</span>
-
-          <i class="bi bi-arrow-right qa-arrow"></i>
-
-        </button>
+        </div>
 
       </div>
 

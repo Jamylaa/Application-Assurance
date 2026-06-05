@@ -1,9 +1,5 @@
 package tn.vermeg.gestionproduit.dto;
 
-/**
- * Représente un bénéficiaire d'une couverture d'assurance
- * Enfant, conjoint, ou personne à charge
- */
 public class BeneficiaireDTO {
     
     private String idBeneficiaire;

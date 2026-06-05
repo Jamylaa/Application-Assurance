@@ -96,6 +96,9 @@ public class ChatbotOrchestratorService {
 
             // Étape 4: Exécution de l'action
             Object result = executeAction(action, prompt);
+            if (result instanceof Map<?, ?> resultMap && resultMap.containsKey("success") && Boolean.FALSE.equals(resultMap.get("success"))) {
+                return createErrorResponse("Erreur lors de l'exécution", List.of(resultMap.get("error") != null ? resultMap.get("error").toString() : "Erreur inconnue"));
+            }
 
             // Étape 5: Création de la réponse
             return createSuccessResponse(action, result, prompt, promptValidation.getWarnings());
@@ -128,13 +131,20 @@ public class ChatbotOrchestratorService {
             String garantiesText = segmented.getGarantiesSection().isBlank() ? prompt : segmented.getGarantiesSection();
 
             Map<String, Object> extractedData;
+            List<String> extractionWarnings = new ArrayList<>();
             if (aiExtractionService.isAIAvailable()) {
                 extractedData = aiExtractionService.extractGarantieData(prompt);
+                if (extractedData == null || extractedData.isEmpty()) {
+                    extractionWarnings.add("Extraction IA vide/échouée → fallback regex appliqué.");
+                    extractedData = extractGarantieDataFallback(garantiesText);
+                }
             } else {
                 extractedData = extractGarantieDataFallback(garantiesText);
+                extractionWarnings.add("IA indisponible → extraction regex appliquée.");
             }
 
             ChatbotGarantieRequestDTO dto = createGarantieDTO(extractedData, prompt, garantiesText);
+            dto.getWarnings().addAll(extractionWarnings);
 
             // Normalisation
             Garantie garantie = normalizeAndConvertToGarantie(dto);
@@ -154,7 +164,20 @@ public class ChatbotOrchestratorService {
             normalizationService.applyGarantieDefaults(garantie);
 
             // Création via le service métier existant
-            Garantie created = garantieService.createGarantie(garantie);
+            Garantie created;
+            try {
+                created = garantieService.createGarantie(garantie);
+            } catch (IllegalArgumentException e) {
+                if (e.getMessage() != null && e.getMessage().contains("existe déjà")) {
+                    return Map.of(
+                        "success", false,
+                        "error", "Garantie déjà existante",
+                        "details", List.of(e.getMessage()),
+                        "suggestion", "Vous pouvez soit modifier le nom de la garantie, soit mettre à jour la garantie existante."
+                    );
+                }
+                throw e;
+            }
 
             return Map.of(
                 "success", true,
@@ -395,6 +418,9 @@ public class ChatbotOrchestratorService {
             String niveauCouverture = aiExtractionService.getStringValue(extractedData, "niveauCouverture", "");
             String couvertureGeographique = aiExtractionService.getStringValue(extractedData, "couvertureGeographique", "");
             List<String> garantiesRecherchees = extractStringList(extractedData, "garantiesRecherchees");
+            List<String> maladiesChroniques = extractStringList(extractedData, "maladiesChroniques");
+            int nombreBeneficiaires = aiExtractionService.getIntegerValue(extractedData, "nombreBeneficiaires", 1);
+            String situationFamiliale = aiExtractionService.getStringValue(extractedData, "situationFamiliale", "");
             if (garantiesRecherchees.isEmpty()) {
                 garantiesRecherchees = extractStringList(extractedData, "garantiesSouhaitees");
             }
@@ -423,11 +449,13 @@ public class ChatbotOrchestratorService {
             ScoringService.ClientProfile profile = new ScoringService.ClientProfile(
                 typeClient,
                 age,
-                0,
+                nombreBeneficiaires,
                 budget,
                 garantiesRecherchees,
                 couvertureGeographique,
-                requestedProductType
+                requestedProductType,
+                maladiesChroniques,
+                situationFamiliale
             );
 
             List<ScoringService.RecommendationDTO> rankedPacks = scoringService.recommendPacks(profile);
@@ -591,21 +619,39 @@ public class ChatbotOrchestratorService {
     private ChatbotGarantieRequestDTO createGarantieDTO(Map<String, Object> extractedData, String prompt, String analysisText) {
         ChatbotGarantieRequestDTO dto = new ChatbotGarantieRequestDTO();
         dto.setOriginalPrompt(prompt);
-        dto.setNomGarantie(aiExtractionService.getStringValue(extractedData, "nom", promptAnalyzerService.extractNomGarantie(analysisText)));
+
+        // --- Nom: ne garder la valeur IA que si elle est cohérente avec le prompt (sinon fallback regex) ---
+        String regexNom = promptAnalyzerService.extractNomGarantie(analysisText);
+        String aiNom = aiExtractionService.getStringValue(extractedData, "nom", null);
+        if (aiNom != null && !aiNom.isBlank()) {
+            String aiNomClean = aiNom.trim();
+            boolean appearsInPrompt = analysisText != null
+                    && analysisText.toLowerCase(Locale.ROOT).contains(aiNomClean.toLowerCase(Locale.ROOT));
+            boolean looksValid = aiNomClean.length() >= 3 && aiNomClean.matches("^[\\p{L}0-9 _'\\-]{3,80}$");
+            dto.setNomGarantie((appearsInPrompt || looksValid) ? aiNomClean : regexNom);
+            if (!appearsInPrompt && regexNom != null && !regexNom.equalsIgnoreCase(aiNomClean)) {
+                dto.addWarning("Nom IA incohérent détecté ('" + aiNomClean + "') → nom regex utilisé ('" + regexNom + "').");
+            }
+        } else {
+            dto.setNomGarantie(regexNom);
+        }
+
         dto.setDescription(aiExtractionService.getStringValue(extractedData, "description", promptAnalyzerService.extractDescription(analysisText)));
         dto.setType(normalizationService.normalizeTypeGarantie(
             aiExtractionService.getStringValue(extractedData, "type", promptAnalyzerService.extractTypeGarantie(analysisText))));
         dto.setTauxRemboursement(aiExtractionService.getDoubleValue(extractedData, "tauxRemboursement", promptAnalyzerService.extractTauxRemboursement(analysisText)));
-        dto.setTypeMontant(aiExtractionService.getStringValue(extractedData, "typeMontant", null));
+        dto.setTypeMontant(aiExtractionService.getStringValue(extractedData, "typeMontant", promptAnalyzerService.extractTypeMontant(analysisText)));
         
         PromptAnalyzerService.PlafondData plafonds = promptAnalyzerService.extractPlafonds(analysisText);
         dto.setPlafondAnnuel(aiExtractionService.getDoubleValue(extractedData, "plafondAnnuel", plafonds.annuel));
         dto.setPlafondMensuel(aiExtractionService.getDoubleValue(extractedData, "plafondMensuel", plafonds.mensuel));
         dto.setPlafondParActe(aiExtractionService.getDoubleValue(extractedData, "plafondParActe", plafonds.parActe));
         
-        dto.setFranchise(
+        dto.setFranchise(aiExtractionService.getDoubleValue(
+            extractedData,
+            "franchise",
             Optional.ofNullable(promptAnalyzerService.extractFranchise(analysisText)).orElse(0.0)
-        );
+        ));
         dto.setCoutMoyenParSinistre(aiExtractionService.getDoubleValue(extractedData, "coutMoyenParSinistre", promptAnalyzerService.extractCoutMoyenParSinistre(analysisText)));
         dto.setDureeMinContrat(aiExtractionService.getIntegerValue(extractedData, "dureeMinContrat", promptAnalyzerService.extractDureeMinContrat(analysisText)));
         dto.setDureeMaxContrat(aiExtractionService.getIntegerValue(extractedData, "dureeMaxContrat", promptAnalyzerService.extractDureeMaxContrat(analysisText)));

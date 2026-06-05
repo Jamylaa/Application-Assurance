@@ -8,9 +8,12 @@ import tn.vermeg.gestionproduit.entities.Produit;
 import tn.vermeg.gestionproduit.entities.Statut;
 import tn.vermeg.gestionproduit.entities.TypeProduit;
 import tn.vermeg.gestionproduit.services.ProduitService;
+import tn.vermeg.gestionproduit.services.PackUnifiedService;
+import tn.vermeg.gestionproduit.dto.ProduitDTO;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/produits")
@@ -19,6 +22,8 @@ public class ProduitController {
 
     @Autowired
     private ProduitService produitService;
+    @Autowired
+    private PackUnifiedService packUnifiedService;
 
     // READ
     @GetMapping
@@ -30,6 +35,26 @@ public class ProduitController {
     public ResponseEntity<Produit> getProduitById(@PathVariable String idProduit) {
         try {
             return ResponseEntity.ok(produitService.getProduitById(idProduit));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{idProduit}/details")
+    public ResponseEntity<Map<String, Object>> getProduitDetails(@PathVariable String idProduit) {
+        try {
+            Produit produit = produitService.getProduitById(idProduit);
+            List<tn.vermeg.gestionproduit.entities.Pack> packs = packUnifiedService.getPacksByProduitId(idProduit);
+            List<Map<String, Object>> packsWithGaranties = packs.stream()
+                    .map(pack -> Map.<String, Object>of(
+                            "pack", pack,
+                            "garanties", packUnifiedService.getGarantiesByPackId(pack.getIdPack())
+                    ))
+                    .toList();
+            return ResponseEntity.ok(Map.of(
+                    "produit", produit,
+                    "packs", packsWithGaranties
+            ));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
@@ -52,8 +77,16 @@ public class ProduitController {
 
     // CREATE
     @PostMapping
-    public ResponseEntity<Produit> createProduit(@RequestBody Produit produit) {
+    public ResponseEntity<Produit> createProduit(@RequestBody ProduitDTO dto) {
         try {
+            Produit produit = new Produit();
+            produit.setNomProduit(dto.getNomProduit());
+            produit.setDescription(dto.getDescription());
+            produit.setTypeProduit(dto.getTypeProduit());
+            produit.setStatut(dto.getStatut());
+            if (dto.getCustomFields() != null) {
+                produit.setCustomFields(dto.getCustomFields());
+            }
             Produit newProduit = produitService.createProduit(produit);
             return ResponseEntity.status(HttpStatus.CREATED).body(newProduit);
         } catch (IllegalArgumentException e) {
@@ -65,9 +98,15 @@ public class ProduitController {
     @PutMapping("/{idProduit}")
     public ResponseEntity<Produit> updateProduit(
             @PathVariable String idProduit,
-            @RequestBody Produit produitDetails) {
+            @RequestBody ProduitDTO dto) {
         try {
-            return ResponseEntity.ok(produitService.updateProduit(idProduit, produitDetails));
+            Produit details = new Produit();
+            details.setNomProduit(dto.getNomProduit());
+            details.setDescription(dto.getDescription());
+            details.setTypeProduit(dto.getTypeProduit());
+            details.setStatut(dto.getStatut());
+            details.setCustomFields(dto.getCustomFields());
+            return ResponseEntity.ok(produitService.updateProduit(idProduit, details));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }

@@ -162,7 +162,6 @@ export class GarantieFormComponent implements OnInit {
       error: (error) => {
         this.loading = false;
         this.toastService.showError('Erreur', this.isEdit ? 'Impossible de modifier la garantie' : 'Impossible de créer la garantie');
-        console.error('Error saving garantie:', error);
       }
     });
   }

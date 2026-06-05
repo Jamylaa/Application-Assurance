@@ -16,6 +16,7 @@ import { CardModule } from 'primeng/card';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { CustomFieldsEditorComponent } from '../../shared/components/custom-fields-editor.component';
 
 @Component({
   selector: 'app-pack-form',
@@ -153,7 +154,6 @@ export class PackFormComponent implements OnInit {
         }));
       },
       error: (error) => {
-        console.error('Error loading produits:', error);
         this.toastService.showError('Erreur', 'Impossible de charger les produits');
       }
     });
@@ -188,7 +188,6 @@ export class PackFormComponent implements OnInit {
       error: (error) => {
         this.loading = false;
         this.toastService.showError('Erreur', this.isEdit ? 'Impossible de modifier le pack' : 'Impossible de créer le pack');
-        console.error('Error saving pack:', error);
       }
     });
   }

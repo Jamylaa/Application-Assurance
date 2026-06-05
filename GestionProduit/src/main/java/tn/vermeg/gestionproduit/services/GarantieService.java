@@ -4,7 +4,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import tn.vermeg.gestionproduit.entities.Garantie;
 import tn.vermeg.gestionproduit.entities.Statut;
-import tn.vermeg.gestionproduit.exceptions.ResourceNotFoundException;
+import tn.vermeg.gestionproduit.entities.DomaineSante;
+import tn.vermeg.gestionproduit.entities.TypeGarantie;
+import tn.vermeg.gestionproduit.exceptions.ApiException;
+import tn.vermeg.gestionproduit.exceptions.ResourceException;
 import tn.vermeg.gestionproduit.repositories.GarantieRepository;
 import jakarta.validation.Valid;
 import java.time.Instant;
@@ -28,7 +31,7 @@ public class GarantieService {
     public Garantie getGarantieById(String idGarantie) {
         return garantieRepository.findById(idGarantie)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Garantie", idGarantie, "Garantie non trouvée avec l'ID: " + idGarantie));
+                        new ResourceException(ResourceException.OperationType.NOT_FOUND, "Garantie", idGarantie, "Garantie non trouvée avec l'ID: " + idGarantie));
     }
 
     public List<Garantie> getGarantiesByStatut(Statut statut) {
@@ -95,6 +98,9 @@ public class GarantieService {
         garantie.setDureeMaxContrat(details.getDureeMaxContrat());
         garantie.setResiliableAnnuellement(details.isResiliableAnnuellement());
         garantie.setCreePar(details.getCreePar());
+        if (details.getCustomFields() != null) {
+            garantie.setCustomFields(details.getCustomFields());
+        }
 
         return garantieRepository.save(garantie);
     }
@@ -148,5 +154,42 @@ public class GarantieService {
         garantie.setCreePar("system");
         
         return garantieRepository.save(garantie);
+    }
+
+    public java.util.Map<String, List<Garantie>> getGarantiesByDomain() {
+        java.util.Map<String, List<Garantie>> result = new java.util.LinkedHashMap<>();
+        
+        for (DomaineSante domaine : DomaineSante.values()) {
+            List<TypeGarantie> typesForDomain = TypeGarantie.parDomaine(domaine);
+            List<String> typeNames = typesForDomain.stream()
+                .map(Enum::name)
+                .collect(java.util.stream.Collectors.toList());
+            
+            List<Garantie> garanties = garantieRepository.findAll().stream()
+                .filter(g -> g.getStatut() == Statut.ACTIF)
+                .filter(g -> g.getType() != null && typeNames.contains(g.getType().toUpperCase()))
+                .collect(java.util.stream.Collectors.toList());
+            
+            result.put(domaine.getLibelle(), garanties);
+        }
+        
+        return result;
+    }
+
+    public List<Garantie> getGarantiesByDomainName(String domaineName) {
+        try {
+            DomaineSante domaine = DomaineSante.valueOf(domaineName.toUpperCase());
+            List<TypeGarantie> typesForDomain = TypeGarantie.parDomaine(domaine);
+            List<String> typeNames = typesForDomain.stream()
+                .map(Enum::name)
+                .collect(java.util.stream.Collectors.toList());
+            
+            return garantieRepository.findAll().stream()
+                .filter(g -> g.getStatut() == Statut.ACTIF)
+                .filter(g -> g.getType() != null && typeNames.contains(g.getType().toUpperCase()))
+                .collect(java.util.stream.Collectors.toList());
+        } catch (IllegalArgumentException e) {
+            return java.util.Collections.emptyList();
+        }
     }
 }

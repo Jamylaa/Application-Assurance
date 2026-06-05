@@ -2,11 +2,6 @@ package tn.vermeg.gestionproduit.dto;
 
 import java.util.List;
 import java.util.Map;
-
-/**
- * dto de réponse pour le chatbot
- * Contient le résultat du traitement d'un prompt
- */
 public class ChatbotResponseDTO {
     
     private boolean success;
@@ -52,9 +47,6 @@ public class ChatbotResponseDTO {
     public Map<String, Object> getMetadata() { return metadata; }
     public void setMetadata(Map<String, Object> metadata) { this.metadata = metadata; }
 
-    /**
-     * Ajoute un avertissement à la réponse
-     */
     public void addWarning(String warning) {
         if (this.warnings == null) {
             this.warnings = new java.util.ArrayList<>();
@@ -62,9 +54,6 @@ public class ChatbotResponseDTO {
         this.warnings.add(warning);
     }
 
-    /**
-     * Ajoute une erreur à la réponse
-     */
     public void addError(String error) {
         if (this.errors == null) {
             this.errors = new java.util.ArrayList<>();

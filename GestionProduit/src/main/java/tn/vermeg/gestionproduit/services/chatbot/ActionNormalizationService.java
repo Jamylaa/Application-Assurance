@@ -38,38 +38,9 @@ public class ActionNormalizationService {
         };
     }
 
-     //Normalise le type de garantie
+     //Normalise le type de garantie vers un TypeGarantie santé reconnu
     public String normalizeTypeGarantie(String typeGarantie) {
-        if (typeGarantie == null || typeGarantie.trim().isEmpty()) {
-            return "AUTRE";
-        }
-
-        String normalized = typeGarantie.toUpperCase().trim();
-        
-        if (normalized.contains("HOSPITAL") || normalized.contains("HÔPITAL")) {
-            if (normalized.contains("PREMIUM") || normalized.contains("SUPÉRIEUR")) {
-                return "HOSPITALISATION_PREMIUM";
-            }
-            return "HOSPITALISATION";
-        }
-        
-        if (normalized.contains("CONSULT") || normalized.contains("MÉDECIN") || normalized.contains("MEDECIN")) {
-            return "CONSULTATION";
-        }
-        
-        if (normalized.contains("DENT") || normalized.contains("SOIN DENT")) {
-            return "DENTAIRE";
-        }
-        
-        if (normalized.contains("OPTIQU") || normalized.contains("LUNETT") || normalized.contains("VERRE")) {
-            return "OPTIQUE";
-        }
-        
-        if (normalized.contains("MÉDICAMENT") || normalized.contains("PHARMAC") || normalized.contains("MEDICAMENT")) {
-            return "MEDICAMENT";
-        }
-        
-        return "AUTRE";
+        return tn.vermeg.gestionproduit.entities.TypeGarantie.fromString(typeGarantie).name();
     }
 
      //Normalise le type de montant
@@ -153,7 +124,7 @@ public class ActionNormalizationService {
         }
 
         if (normalized.contains("SILVER") || normalized.contains("STANDARD") || normalized.contains("MOYEN")) {
-            return NiveauCouverture.PREMIUM;
+            return NiveauCouverture.BASIC;
         }
 
         if (normalized.contains("BASIC") || normalized.contains("BRONZE") || normalized.contains("MINIMUM")) {
@@ -290,9 +261,8 @@ public class ActionNormalizationService {
             garantie.setDureeMaxContrat(60);
         }
         
-        if (!garantie.isResiliableAnnuellement()) {
-            garantie.setResiliableAnnuellement(true);
-        }
+        // Ne jamais écraser explicitement "false" (ex: "non résiliable annuellement").
+        // Le défaut doit être appliqué au niveau parsing/DTO, pas ici.
         
         if (garantie.getStatut() == null) {
             garantie.setStatut(Statut.ACTIF);

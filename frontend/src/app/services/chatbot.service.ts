@@ -70,8 +70,6 @@ export interface ChatbotResponse {
   error?: string;
   timestamp: number;
 }
-
-/** Réponse brute de `POST /api/chatbot/process` (alignée sur `ChatbotResponseDTO` côté Spring). */
 export interface ChatbotResponseDTO {
   success: boolean;
   action?: string;
