@@ -2,17 +2,14 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, feature/* ]
   pull_request:
     branches: [ main, develop ]
 
 env:
-  JAVA_VERSION: '21'
-  NODE_VERSION: '20'
+  JAVA_VERSION: '17'
+  NODE_VERSION: '18'
   DOCKER_REGISTRY: docker.io
-  # These will be set as secrets in GitHub
-  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
 jobs:
   # ============================================
@@ -26,7 +23,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
@@ -36,7 +33,7 @@ jobs:
       - name: Build GestionProduit
         run: |
           cd GestionProduit
-          mvn clean compile -DskipTests
+          mvn clean install -DskipTests
 
       - name: Run Backend Tests
         run: |
@@ -46,22 +43,17 @@ jobs:
       - name: Build GestionUser
         run: |
           cd GestionUser
-          mvn clean compile -DskipTests
+          mvn clean install -DskipTests
 
       - name: Build Gateway
         run: |
           cd Gateway
-          mvn clean compile -DskipTests
+          mvn clean install -DskipTests
 
       - name: Build Eureka
         run: |
           cd Eureka
-          mvn clean compile -DskipTests
-
-      - name: Build Recommendation
-        run: |
-          cd Recommendation
-          mvn clean compile -DskipTests
+          mvn clean install -DskipTests
 
   # ============================================
   # Frontend Build and Test
@@ -128,8 +120,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.DOCKER_REGISTRY }}
-          username: ${{ env.DOCKER_USERNAME }}
-          password: ${{ env.DOCKER_PASSWORD }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push GestionProduit
         uses: docker/build-push-action@v5
@@ -138,10 +130,10 @@ jobs:
           file: ./GestionProduit/Dockerfile
           push: true
           tags: |
-            ${{ env.DOCKER_USERNAME }}/vermeg-gestion-produit:latest
-            ${{ env.DOCKER_USERNAME }}/vermeg-gestion-produit:${{ github.sha }}
-          cache-from: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-gestion-produit:buildcache
-          cache-to: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-gestion-produit:buildcache,mode=max
+            ${{ secrets.DOCKER_USERNAME }}/vermeg-gestion-produit:latest
+            ${{ secrets.DOCKER_USERNAME }}/vermeg-gestion-produit:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/vermeg-gestion-produit:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/vermeg-gestion-produit:buildcache,mode=max
 
       - name: Build and push GestionUser
         uses: docker/build-push-action@v5
@@ -150,10 +142,10 @@ jobs:
           file: ./GestionUser/Dockerfile
           push: true
           tags: |
-            ${{ env.DOCKER_USERNAME }}/vermeg-gestion-user:latest
-            ${{ env.DOCKER_USERNAME }}/vermeg-gestion-user:${{ github.sha }}
-          cache-from: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-gestion-user:buildcache
-          cache-to: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-gestion-user:buildcache,mode=max
+            ${{ secrets.DOCKER_USERNAME }}/vermeg-gestion-user:latest
+            ${{ secrets.DOCKER_USERNAME }}/vermeg-gestion-user:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/vermeg-gestion-user:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/vermeg-gestion-user:buildcache,mode=max
 
       - name: Build and push Gateway
         uses: docker/build-push-action@v5
@@ -162,10 +154,10 @@ jobs:
           file: ./Gateway/Dockerfile
           push: true
           tags: |
-            ${{ env.DOCKER_USERNAME }}/vermeg-gateway:latest
-            ${{ env.DOCKER_USERNAME }}/vermeg-gateway:${{ github.sha }}
-          cache-from: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-gateway:buildcache
-          cache-to: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-gateway:buildcache,mode=max
+            ${{ secrets.DOCKER_USERNAME }}/vermeg-gateway:latest
+            ${{ secrets.DOCKER_USERNAME }}/vermeg-gateway:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/vermeg-gateway:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/vermeg-gateway:buildcache,mode=max
 
       - name: Build and push Eureka
         uses: docker/build-push-action@v5
@@ -174,22 +166,10 @@ jobs:
           file: ./Eureka/Dockerfile
           push: true
           tags: |
-            ${{ env.DOCKER_USERNAME }}/vermeg-eureka:latest
-            ${{ env.DOCKER_USERNAME }}/vermeg-eureka:${{ github.sha }}
-          cache-from: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-eureka:buildcache
-          cache-to: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-eureka:buildcache,mode=max
-
-      - name: Build and push Recommendation
-        uses: docker/build-push-action@v5
-        with:
-          context: ./Recommendation
-          file: ./Recommendation/Dockerfile
-          push: true
-          tags: |
-            ${{ env.DOCKER_USERNAME }}/vermeg-recommendation:latest
-            ${{ env.DOCKER_USERNAME }}/vermeg-recommendation:${{ github.sha }}
-          cache-from: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-recommendation:buildcache
-          cache-to: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-recommendation:buildcache,mode=max
+            ${{ secrets.DOCKER_USERNAME }}/vermeg-eureka:latest
+            ${{ secrets.DOCKER_USERNAME }}/vermeg-eureka:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/vermeg-eureka:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/vermeg-eureka:buildcache,mode=max
 
       - name: Build and push Frontend
         uses: docker/build-push-action@v5
@@ -198,10 +178,10 @@ jobs:
           file: ./frontend/Dockerfile
           push: true
           tags: |
-            ${{ env.DOCKER_USERNAME }}/vermeg-frontend:latest
-            ${{ env.DOCKER_USERNAME }}/vermeg-frontend:${{ github.sha }}
-          cache-from: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-frontend:buildcache
-          cache-to: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-frontend:buildcache,mode=max
+            ${{ secrets.DOCKER_USERNAME }}/vermeg-frontend:latest
+            ${{ secrets.DOCKER_USERNAME }}/vermeg-frontend:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/vermeg-frontend:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/vermeg-frontend:buildcache,mode=max
 
   # ============================================
   # Security Scan
@@ -227,3 +207,58 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
+
+  # ============================================
+  # Kubernetes Deployment
+  # ============================================
+  k8s-deploy:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    needs: [docker-build-push]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://your-app-domain.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure Kubernetes credentials
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/configmap.yaml
+          kubectl apply -f k8s/secret.yaml
+          kubectl apply -f k8s/mongodb-statefulset.yaml
+          kubectl apply -f k8s/redis-deployment.yaml
+          kubectl apply -f k8s/keycloak-deployment.yaml
+          kubectl apply -f k8s/eureka-deployment.yaml
+          kubectl apply -f k8s/gateway-deployment.yaml
+          kubectl apply -f k8s/gestionuser-deployment.yaml
+          kubectl apply -f k8s/gestionproduit-deployment.yaml
+          kubectl apply -f k8s/frontend-deployment.yaml
+          kubectl apply -f k8s/prometheus-deployment.yaml
+          kubectl apply -f k8s/grafana-deployment.yaml
+
+      - name: Wait for deployment
+        run: |
+          kubectl wait --for=condition=available --timeout=300s deployment/gateway -n vermeg-app
+          kubectl wait --for=condition=available --timeout=300s deployment/gestionuser -n vermeg-app
+          kubectl wait --for=condition=available --timeout=300s deployment/gestionproduit -n vermeg-app
+          kubectl wait --for=condition=available --timeout=300s deployment/frontend -n vermeg-app
+
+      - name: Verify deployment
+        run: |
+          kubectl get pods -n vermeg-app
+          kubectl get services -n vermeg-app
