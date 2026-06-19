@@ -81,10 +81,7 @@
             <app-ui-badge variant="info" size="sm">{{ produit.typeProduit || 'N/A' }}</app-ui-badge>
           </td>
           <td>
-            <span class="status-badge" [ngClass]="getStatusClass(produit.statut)">
-              <span class="status-dot"></span>
-              {{ produit.statut || 'INCONNU' }}
-            </span>
+            <app-ui-badge variant="success" size="sm">{{ produit.statut || 'INCONNU' }}</app-ui-badge>
           </td>
           <td>
             <div class="action-btns">

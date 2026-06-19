@@ -13,6 +13,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { CommonModule } from '@angular/common';
 import { ToastService } from '../../shared/services/toast.service';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
+import { UiBadgeComponent } from '../../shared/components/ui-badge/ui-badge.component';
 
 @Component({
   selector: 'app-produits',
