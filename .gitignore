@@ -23,6 +23,14 @@ start-recommendation.ps1
 start-souscription.ps1
 External Libraries
 create-test-user.http
+rapport_structure_latex.tex
+test_business.json
+test_premium.json
+test_prompt.json
+test_souscription.json
+test_user.json
+test_souscription.json
+
 #README_ARCHITECTURE.md
 # Ignorer les fichiers de configuration IDE
 .idea/
