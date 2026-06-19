@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vermeg-assurance
+  labels:
+    name: vermeg-assurance
+    environment: production

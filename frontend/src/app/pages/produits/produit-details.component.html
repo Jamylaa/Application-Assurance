@@ -1,0 +1,111 @@
+<div class="page-container">
+  <p-toast position="top-right"></p-toast>
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="header-icon"><i class="bi bi-box-seam-fill"></i></div>
+      <div>
+        <h1>Détails produit</h1>
+        <p *ngIf="produit as p">{{ p.nomProduit }}</p>
+        <p *ngIf="!produit">Consultez les informations du produit</p>
+      </div>
+    </div>
+    <div class="page-header-actions">
+      <p-button label="Retour" icon="pi pi-arrow-left" styleClass="p-button-outlined" (click)="back()"></p-button>
+      <p-button label="Modifier" icon="pi pi-pencil" [disabled]="!produitId" (click)="edit()"></p-button>
+    </div>
+  </div>
+
+  <!-- Dashboard Metrics -->
+  <div class="metrics-dashboard" *ngIf="produit">
+    <div class="metric-card rating">
+      <div class="metric-icon"><i class="bi bi-star-fill"></i></div>
+      <div class="metric-content">
+        <span class="metric-label">Note produit</span>
+        <span class="metric-value">{{ productRating }}/100</span>
+      </div>
+    </div>
+    <div class="metric-card packs">
+      <div class="metric-icon"><i class="bi bi-collection"></i></div>
+      <div class="metric-content">
+        <span class="metric-label">Packs associés</span>
+        <span class="metric-value">{{ packsCount }}</span>
+      </div>
+    </div>
+    <div class="metric-card type">
+      <div class="metric-icon"><i class="bi bi-tag"></i></div>
+      <div class="metric-content">
+        <span class="metric-label">Catégorie</span>
+        <span class="metric-value">{{ getProductCategory() }}</span>
+      </div>
+    </div>
+    <div class="metric-card status">
+      <div class="metric-icon"><i class="bi bi-activity"></i></div>
+      <div class="metric-content">
+        <span class="metric-label">Statut</span>
+        <span class="metric-value">{{ produit.statut || '—' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="details-card">
+    <p-card>
+      <ng-container *ngIf="loading; else content">
+        <div class="loading">
+          <p-progressSpinner ariaLabel="loading"></p-progressSpinner>
+        </div>
+      </ng-container>
+
+      <ng-template #content>
+        <ng-container *ngIf="produit as p; else empty">
+          <!-- Informations principales -->
+          <div class="details-section">
+            <h3><i class="bi bi-info-circle"></i> Informations principales</h3>
+            <div class="section-grid">
+              <div class="info-item">
+                <span class="info-label">Nom</span>
+                <span class="info-value primary">{{ p.nomProduit || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Description</span>
+                <span class="info-value">{{ p.description || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Type</span>
+                <span class="info-value type" [ngClass]="getTypeClass(p.typeProduit)">{{ p.typeProduit || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Statut</span>
+                <p-tag [severity]="getStatusSeverity(p.statut)" [value]="p.statut || 'INCONNU'"></p-tag>
+              </div>
+            </div>
+          </div>
+
+          <!-- Métadonnées -->
+          <div class="details-section meta">
+            <h3><i class="bi bi-gear"></i> Métadonnées</h3>
+            <div class="section-grid">
+              <div class="info-item">
+                <span class="info-label">ID</span>
+                <span class="info-value small">{{ p.idProduit || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Date de création</span>
+                <span class="info-value small">{{ p.dateCreation || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Dernière modification</span>
+                <span class="info-value small">{{ p.dateModification || '—' }}</span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #empty>
+          <div class="empty">
+            Produit introuvable.
+          </div>
+        </ng-template>
+      </ng-template>
+    </p-card>
+  </div>
+</div>

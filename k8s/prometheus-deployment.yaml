@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: vermeg-assurance
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    scrape_configs:
+      - job_name: 'prometheus'
+        static_configs:
+          - targets: ['localhost:9090']
+      - job_name: 'gateway'
+        metrics_path: '/actuator/prometheus'
+        static_configs:
+          - targets: ['gateway:9091']
+      - job_name: 'gestionproduit'
+        metrics_path: '/actuator/prometheus'
+        static_configs:
+          - targets: ['gestionproduit:9093']
+      - job_name: 'eureka'
+        metrics_path: '/actuator/prometheus'
+        static_configs:
+          - targets: ['eureka:8761']
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: vermeg-assurance
+  labels:
+    app: prometheus
+spec:
+  ports:
+  - port: 9090
+    name: prometheus
+  selector:
+    app: prometheus
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: vermeg-assurance
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:latest
+        ports:
+        - containerPort: 9090
+          name: prometheus
+        volumeMounts:
+        - name: prometheus-config
+          mountPath: /etc/prometheus/
+        - name: prometheus-data
+          mountPath: /prometheus
+      volumes:
+      - name: prometheus-config
+        configMap:
+          name: prometheus-config
+      - name: prometheus-data
+        emptyDir: {}

@@ -1,0 +1,110 @@
+<div class="dashboard-layout">
+  <!-- Sidebar -->
+  <app-sidebar (sidebarToggle)="onSidebarToggle()"></app-sidebar>
+
+  <!-- Main Content Area -->
+  <main class="main-content" [class.sidebar-collapsed]="isSidebarCollapsed">
+
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <div class="top-bar-inner">
+
+        <div class="top-bar-left">
+          <button class="mobile-menu-toggle" (click)="toggleMobileSidebar()" title="Menu">
+            <i class="bi bi-list"></i>
+          </button>
+          <div class="page-breadcrumb">
+            <div class="page-title-group">
+              <div class="page-icon">
+                <i class="bi" [ngClass]="getCurrentPageIcon()"></i>
+              </div>
+              <div>
+                <h1 class="page-name">{{ getCurrentPageTitle() }}</h1>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="top-bar-right">
+          <!-- Search -->
+          <div class="search-bar" [class.search-open]="searchOpen">
+            <button class="search-trigger" (click)="toggleSearch()" *ngIf="!searchOpen">
+              <i class="bi bi-search"></i>
+            </button>
+            <div class="search-input-wrap" *ngIf="searchOpen">
+              <i class="bi bi-search search-icon"></i>
+              <input #searchInput type="text" class="search-input" placeholder="Rechercher..." [(ngModel)]="searchQuery" (keyup.enter)="performSearch()" (blur)="closeSearch()">
+              <button class="search-close" (click)="closeSearch()">
+                <i class="bi bi-x"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Notification Bell -->
+          <button class="icon-btn notif-btn" title="Notifications" (click)="toggleNotificationDropdown()">
+            <i class="bi bi-bell"></i>
+            <span class="notif-badge" *ngIf="unreadCount > 0">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+          </button>
+
+          <!-- Notification Dropdown -->
+          <div class="notification-dropdown" *ngIf="showNotificationDropdown" (click)="$event.stopPropagation()">
+            <div class="notification-header">
+              <h3>Notifications</h3>
+              <div class="notification-actions">
+                <button class="action-link" (click)="markAllNotificationsAsRead()" *ngIf="unreadCount > 0">
+                  Tout marquer comme lu
+                </button>
+                <button class="action-link" (click)="clearAllNotifications()" *ngIf="notifications.length > 0">
+                  Effacer tout
+                </button>
+              </div>
+            </div>
+
+            <div class="notification-list" *ngIf="notifications.length > 0">
+              <div
+                class="notification-item"
+                *ngFor="let notification of notifications"
+                [class.unread]="!notification.read"
+                (click)="markNotificationAsRead(notification.id)">
+                <div class="notification-icon" [style.background-color]="getNotificationColor(notification.type)">
+                  <i class="bi" [ngClass]="getNotificationIcon(notification.type)"></i>
+                </div>
+                <div class="notification-content">
+                  <div class="notification-title">{{ notification.title }}</div>
+                  <div class="notification-message">{{ notification.message }}</div>
+                  <div class="notification-time">{{ formatNotificationTime(notification.timestamp) }}</div>
+                </div>
+                <button class="notification-delete" (click)="deleteNotification(notification.id); $event.stopPropagation()">
+                  <i class="bi bi-x"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="notification-empty" *ngIf="notifications.length === 0">
+              <i class="bi bi-bell-slash"></i>
+              <p>Aucune notification</p>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="top-bar-divider"></div>
+
+          </div>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <div class="content-area">
+      <div class="content-wrapper">
+        <app-breadcrumb></app-breadcrumb>
+        <router-outlet></router-outlet>
+      </div>
+    </div>
+  </main>
+
+  <!-- Mobile Overlay -->
+  <div class="mobile-overlay" *ngIf="isMobileMenuOpen" (click)="closeMobileSidebar()"></div>
+
+  <!-- Click-outside to close dropdown -->
+  <div class="dropdown-overlay" *ngIf="showUserDropdown" (click)="closeDropdown()"></div>
+</div>

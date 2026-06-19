@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: eureka
+  namespace: vermeg-assurance
+  labels:
+    app: eureka
+spec:
+  ports:
+  - port: 8761
+    name: eureka
+  selector:
+    app: eureka
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eureka
+  namespace: vermeg-assurance
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eureka
+  template:
+    metadata:
+      labels:
+        app: eureka
+    spec:
+      containers:
+      - name: eureka
+        image: vermeg-eureka:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8761
+          name: eureka
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          valueFrom:
+            configMapKeyRef:
+              name: vermeg-config
+              key: SPRING_PROFILES_ACTIVE
+        - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+          value: "http://eureka:8761/eureka"
+        - name: JAVA_OPTS
+          value: "-Xms512m -Xmx1024m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8761
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8761
+          initialDelaySeconds: 30
+          periodSeconds: 10

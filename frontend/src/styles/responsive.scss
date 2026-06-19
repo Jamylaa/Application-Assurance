@@ -1,0 +1,678 @@
+@import './design-system.scss';
+
+// ============================================
+// RESPONSIVE DESIGN SYSTEM
+// Design responsive professionnel et cohérent
+// ============================================
+
+// ============================================
+// GLOBAL RESPONSIVE UTILITIES
+// ============================================
+
+// Container system
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 $spacing-4;
+
+  @include respond-below('md') {
+    padding: 0 $spacing-3;
+  }
+
+  @include respond-below('sm') {
+    padding: 0 $spacing-2;
+  }
+}
+
+.container-fluid {
+  width: 100%;
+  padding: 0 $spacing-4;
+
+  @include respond-below('md') {
+    padding: 0 $spacing-3;
+  }
+
+  @include respond-below('sm') {
+    padding: 0 $spacing-2;
+  }
+}
+
+// Grid system responsive
+.responsive-grid {
+  display: grid;
+  gap: $spacing-6;
+
+  &--cols-1 {
+    grid-template-columns: 1fr;
+  }
+
+  &--cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+
+    @include respond-below('md') {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &--cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+
+    @include respond-below('lg') {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include respond-below('md') {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &--cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+
+    @include respond-below('xl') {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @include respond-below('lg') {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include respond-below('md') {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &--auto {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+
+    @include respond-below('sm') {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// Flexbox responsive utilities
+.flex-responsive {
+  display: flex;
+  gap: $spacing-4;
+
+  @include respond-below('md') {
+    flex-direction: column;
+  }
+
+  &--wrap {
+    flex-wrap: wrap;
+  }
+
+  &--center {
+    @include flex-center;
+  }
+
+  &--between {
+    @include flex-between;
+  }
+
+  &--column {
+    flex-direction: column;
+  }
+}
+
+// ============================================
+// RESPONSIVE TYPOGRAPHY
+// ============================================
+
+.responsive-text {
+  &--h1 {
+    font-size: $font-size-5xl;
+    line-height: $line-height-tight;
+
+    @include respond-below('lg') {
+      font-size: $font-size-4xl;
+    }
+
+    @include respond-below('md') {
+      font-size: $font-size-3xl;
+    }
+
+    @include respond-below('sm') {
+      font-size: $font-size-2xl;
+    }
+  }
+
+  &--h2 {
+    font-size: $font-size-4xl;
+    line-height: $line-height-tight;
+
+    @include respond-below('lg') {
+      font-size: $font-size-3xl;
+    }
+
+    @include respond-below('md') {
+      font-size: $font-size-2xl;
+    }
+
+    @include respond-below('sm') {
+      font-size: $font-size-xl;
+    }
+  }
+
+  &--h3 {
+    font-size: $font-size-2xl;
+    line-height: $line-height-tight;
+
+    @include respond-below('md') {
+      font-size: $font-size-xl;
+    }
+
+    @include respond-below('sm') {
+      font-size: $font-size-lg;
+    }
+  }
+
+  &--body {
+    font-size: $font-size-base;
+    line-height: $line-height-normal;
+
+    @include respond-below('sm') {
+      font-size: $font-size-sm;
+    }
+  }
+
+  &--small {
+    font-size: $font-size-sm;
+    line-height: $line-height-normal;
+
+    @include respond-below('sm') {
+      font-size: $font-size-xs;
+    }
+  }
+}
+
+// ============================================
+// RESPONSIVE SPACING
+// ============================================
+
+.responsive-spacing {
+  &--padding {
+    padding: $spacing-8;
+
+    @include respond-below('lg') {
+      padding: $spacing-6;
+    }
+
+    @include respond-below('md') {
+      padding: $spacing-4;
+    }
+
+    @include respond-below('sm') {
+      padding: $spacing-3;
+    }
+  }
+
+  &--padding-x {
+    padding-left: $spacing-8;
+    padding-right: $spacing-8;
+
+    @include respond-below('lg') {
+      padding-left: $spacing-6;
+      padding-right: $spacing-6;
+    }
+
+    @include respond-below('md') {
+      padding-left: $spacing-4;
+      padding-right: $spacing-4;
+    }
+
+    @include respond-below('sm') {
+      padding-left: $spacing-3;
+      padding-right: $spacing-3;
+    }
+  }
+
+  &--padding-y {
+    padding-top: $spacing-8;
+    padding-bottom: $spacing-8;
+
+    @include respond-below('lg') {
+      padding-top: $spacing-6;
+      padding-bottom: $spacing-6;
+    }
+
+    @include respond-below('md') {
+      padding-top: $spacing-4;
+      padding-bottom: $spacing-4;
+    }
+
+    @include respond-below('sm') {
+      padding-top: $spacing-3;
+      padding-bottom: $spacing-3;
+    }
+  }
+
+  &--margin {
+    margin: $spacing-8;
+
+    @include respond-below('lg') {
+      margin: $spacing-6;
+    }
+
+    @include respond-below('md') {
+      margin: $spacing-4;
+    }
+
+    @include respond-below('sm') {
+      margin: $spacing-3;
+    }
+  }
+
+  &--margin-x {
+    margin-left: $spacing-8;
+    margin-right: $spacing-8;
+
+    @include respond-below('lg') {
+      margin-left: $spacing-6;
+      margin-right: $spacing-6;
+    }
+
+    @include respond-below('md') {
+      margin-left: $spacing-4;
+      margin-right: $spacing-4;
+    }
+
+    @include respond-below('sm') {
+      margin-left: $spacing-3;
+      margin-right: $spacing-3;
+    }
+  }
+}
+
+// ============================================
+// RESPONSIVE COMPONENTS
+// ============================================
+
+// Responsive cards
+.responsive-card {
+  @include card-style();
+
+  @include respond-below('md') {
+    padding: $spacing-4;
+    border-radius: $radius-xl;
+  }
+
+  @include respond-below('sm') {
+    padding: $spacing-3;
+    border-radius: $radius-lg;
+  }
+
+  &--grid {
+    display: grid;
+    gap: $spacing-6;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+
+    @include respond-below('lg') {
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: $spacing-4;
+    }
+
+    @include respond-below('md') {
+      grid-template-columns: 1fr;
+      gap: $spacing-4;
+    }
+  }
+}
+
+// Responsive buttons
+.responsive-button {
+  @include respond-below('md') {
+    padding: $spacing-3 $spacing-5;
+    font-size: $font-size-base;
+  }
+
+  @include respond-below('sm') {
+    padding: $spacing-2 $spacing-4;
+    font-size: $font-size-sm;
+  }
+
+  &--full-mobile {
+    @include respond-below('md') {
+      width: 100%;
+    }
+  }
+}
+
+// Responsive tables
+.responsive-table {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  table {
+    min-width: 600px;
+  }
+
+  @include respond-below('md') {
+    table {
+      min-width: 100%;
+      font-size: $font-size-xs;
+    }
+
+    th, td {
+      padding: $spacing-2 $spacing-3;
+    }
+  }
+
+  @include respond-below('sm') {
+    table {
+      font-size: 0.6875rem;
+    }
+
+    th, td {
+      padding: $spacing-1 $spacing-2;
+    }
+  }
+}
+
+// Responsive forms
+.responsive-form {
+  display: grid;
+  gap: $spacing-6;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+
+  @include respond-below('md') {
+    grid-template-columns: 1fr;
+    gap: $spacing-4;
+  }
+
+  @include respond-below('sm') {
+    gap: $spacing-3;
+  }
+
+  &--full-width-mobile {
+    @include respond-below('md') {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// Responsive dashboard
+.responsive-dashboard {
+  .stats-grid {
+    display: grid;
+    gap: $spacing-6;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+
+    @include respond-below('xl') {
+      grid-template-columns: repeat(2, 1fr);
+      gap: $spacing-4;
+    }
+
+    @include respond-below('md') {
+      grid-template-columns: 1fr;
+      gap: $spacing-4;
+    }
+  }
+
+  .charts-section {
+    display: grid;
+    gap: $spacing-6;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+
+    @include respond-below('lg') {
+      grid-template-columns: 1fr;
+      gap: $spacing-4;
+    }
+  }
+
+  .quick-actions {
+    display: grid;
+    gap: $spacing-4;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+
+    @include respond-below('md') {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// ============================================
+// MOBILE-SPECIFIC ENHANCEMENTS
+// ============================================
+
+// Touch targets for mobile
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+
+  @include respond-above('md') {
+    min-width: auto;
+    min-height: auto;
+  }
+}
+
+// Swipe gestures for mobile
+.swipe-container {
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+
+  @include respond-above('md') {
+    overflow: visible;
+  }
+}
+
+// Mobile navigation
+.mobile-nav {
+  display: none;
+
+  @include respond-below('lg') {
+    display: block;
+  }
+}
+
+.desktop-nav {
+  display: block;
+
+  @include respond-below('lg') {
+    display: none;
+  }
+}
+
+// ============================================
+// ORIENTATION-SPECIFIC STYLES
+// ============================================
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .compact-landscape {
+    padding: $spacing-2 $spacing-4;
+
+    .responsive-text--h1 {
+      font-size: $font-size-2xl;
+    }
+
+    .responsive-text--h2 {
+      font-size: $font-size-xl;
+    }
+  }
+}
+
+// ============================================
+// PRINT STYLES
+// ============================================
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  body {
+    background: white;
+    color: black;
+  }
+
+  .container {
+    max-width: 100%;
+    padding: 0;
+  }
+
+  a {
+    text-decoration: underline;
+    color: black;
+  }
+
+  .card,
+  .table {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}
+
+// ============================================
+// ACCESSIBILITY ENHANCEMENTS
+// ============================================
+
+// Skip to content link (for keyboard navigation)
+.skip-to-content {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: $color-primary;
+  color: white;
+  padding: $spacing-2 $spacing-4;
+  z-index: $z-index-tooltip;
+  transition: top $transition-base;
+
+  &:focus {
+    top: 0;
+  }
+}
+
+// Reduced motion preference
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// High contrast mode
+@media (prefers-contrast: high) {
+  .ui-card,
+  .ui-button,
+  .table {
+    border-width: 2px;
+  }
+
+  .ui-button--primary {
+    background: $color-primary;
+    color: white;
+  }
+}
+
+// ============================================
+// PERFORMANCE OPTIMIZATIONS
+// ============================================
+
+// GPU acceleration for animations
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+// Lazy loading utilities
+.lazy-load {
+  opacity: 0;
+  transition: opacity $transition-slow;
+
+  &.loaded {
+    opacity: 1;
+  }
+}
+
+// ============================================
+// UTILITY CLASSES
+// ============================================
+
+.hide-mobile {
+  @include respond-below('md') {
+    display: none !important;
+  }
+}
+
+.hide-desktop {
+  @include respond-above('md') {
+    display: none !important;
+  }
+}
+
+.show-mobile-only {
+  display: none;
+
+  @include respond-below('md') {
+    display: block !important;
+  }
+}
+
+.text-responsive {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+}
+
+.width-responsive {
+  width: clamp(280px, 80vw, 1200px);
+}
+
+// ============================================
+// BREAKPOINT INDICATORS (for development)
+// ============================================
+
+.breakpoint-indicator {
+  display: none;
+  position: fixed;
+  bottom: $spacing-2;
+  right: $spacing-2;
+  background: $color-error;
+  color: white;
+  padding: $spacing-1 $spacing-2;
+  border-radius: $radius-md;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  z-index: 9999;
+
+  @include respond-below('sm') {
+    display: block;
+    content: 'XS';
+  }
+
+  @include respond-above('sm') {
+    @include respond-below('md') {
+      display: block;
+      content: 'SM';
+    }
+  }
+
+  @include respond-above('md') {
+    @include respond-below('lg') {
+      display: block;
+      content: 'MD';
+    }
+  }
+
+  @include respond-above('lg') {
+    @include respond-below('xl') {
+      display: block;
+      content: 'LG';
+    }
+  }
+
+  @include respond-above('xl') {
+    display: block;
+    content: 'XL';
+  }
+}

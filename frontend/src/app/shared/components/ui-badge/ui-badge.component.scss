@@ -1,0 +1,319 @@
+@import '../../../../styles/design-system.scss';
+
+.ui-badge {
+  @include flex-center;
+  gap: $spacing-1;
+  display: inline-flex;
+  font-family: $font-family-base;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wider;
+  border-radius: $radius-full;
+  white-space: nowrap;
+  transition: all $transition-base;
+  user-select: none;
+
+  // Outlined variant
+  &.badge-outlined {
+    background: transparent;
+    border-width: 1px;
+    border-style: solid;
+  }
+
+  // Dot variant
+  &.badge-dot {
+    padding: 0;
+    min-width: 8px;
+    min-height: 8px;
+  }
+
+  // Size variants
+  &--xs {
+    padding: $spacing-1 $spacing-2;
+    font-size: 0.625rem;
+    min-height: 16px;
+
+    &.badge-dot {
+      width: 6px;
+      height: 6px;
+    }
+  }
+
+  &--sm {
+    padding: $spacing-1 $spacing-2;
+    font-size: 0.6875rem;
+    min-height: 20px;
+
+    &.badge-dot {
+      width: 8px;
+      height: 8px;
+    }
+  }
+
+  &--md {
+    padding: $spacing-1 $spacing-3;
+    font-size: 0.75rem;
+    min-height: 24px;
+
+    &.badge-dot {
+      width: 10px;
+      height: 10px;
+    }
+  }
+
+  &--lg {
+    padding: $spacing-2 $spacing-4;
+    font-size: 0.8125rem;
+    min-height: 28px;
+
+    &.badge-dot {
+      width: 12px;
+      height: 12px;
+    }
+  }
+
+  // Color variants
+  &--primary {
+    background: rgba(99, 102, 241, 0.1);
+    color: $color-primary;
+    border-color: rgba(99, 102, 241, 0.3);
+
+    &.badge-outlined {
+      background: transparent;
+      border-color: $color-primary;
+    }
+
+    &.badge-dot {
+      background: $color-primary;
+    }
+  }
+
+  &--secondary {
+    background: rgba(6, 182, 212, 0.1);
+    color: $color-secondary;
+    border-color: rgba(6, 182, 212, 0.3);
+
+    &.badge-outlined {
+      background: transparent;
+      border-color: $color-secondary;
+    }
+
+    &.badge-dot {
+      background: $color-secondary;
+    }
+  }
+
+  &--success {
+    background: rgba(16, 185, 129, 0.1);
+    color: $color-success;
+    border-color: rgba(16, 185, 129, 0.3);
+
+    &.badge-outlined {
+      background: transparent;
+      border-color: $color-success;
+    }
+
+    &.badge-dot {
+      background: $color-success;
+    }
+  }
+
+  &--warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: $color-warning;
+    border-color: rgba(245, 158, 11, 0.3);
+
+    &.badge-outlined {
+      background: transparent;
+      border-color: $color-warning;
+    }
+
+    &.badge-dot {
+      background: $color-warning;
+    }
+  }
+
+  &--error {
+    background: rgba(239, 68, 68, 0.1);
+    color: $color-error;
+    border-color: rgba(239, 68, 68, 0.3);
+
+    &.badge-outlined {
+      background: transparent;
+      border-color: $color-error;
+    }
+
+    &.badge-dot {
+      background: $color-error;
+    }
+  }
+
+  &--info {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3B82F6;
+    border-color: rgba(59, 130, 246, 0.3);
+
+    &.badge-outlined {
+      background: transparent;
+      border-color: #3B82F6;
+    }
+
+    &.badge-dot {
+      background: #3B82F6;
+    }
+  }
+
+  &--neutral {
+    background: rgba(100, 116, 139, 0.1);
+    color: $color-text-secondary;
+    border-color: rgba(100, 116, 139, 0.3);
+
+    &.badge-outlined {
+      background: transparent;
+      border-color: $color-text-secondary;
+    }
+
+    &.badge-dot {
+      background: $color-text-secondary;
+    }
+  }
+}
+
+// Badge content
+.badge-content {
+  line-height: 1;
+}
+
+// Badge icon
+.badge-icon {
+  font-size: 1em;
+  line-height: 1;
+}
+
+// Dot indicator
+.badge-dot-indicator {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+// Dark mode
+.my-app-dark .ui-badge {
+  &--primary {
+    background: rgba(99, 102, 241, 0.2);
+    color: $primary-400;
+    border-color: rgba(99, 102, 241, 0.4);
+
+    &.badge-outlined {
+      background: transparent;
+      border-color: $primary-400;
+    }
+
+    &.badge-dot {
+      background: $primary-400;
+    }
+  }
+
+  &--secondary {
+    background: rgba(6, 182, 212, 0.2);
+    color: $secondary-400;
+    border-color: rgba(6, 182, 212, 0.4);
+
+    &.badge-outlined {
+      background: transparent;
+      border-color: $secondary-400;
+    }
+
+    &.badge-dot {
+      background: $secondary-400;
+    }
+  }
+
+  &--success {
+    background: rgba(16, 185, 129, 0.2);
+    color: $success-400;
+    border-color: rgba(16, 185, 129, 0.4);
+
+    &.badge-outlined {
+      background: transparent;
+      border-color: $success-400;
+    }
+
+    &.badge-dot {
+      background: $success-400;
+    }
+  }
+
+  &--warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: $warning-400;
+    border-color: rgba(245, 158, 11, 0.4);
+
+    &.badge-outlined {
+      background: transparent;
+      border-color: $warning-400;
+    }
+
+    &.badge-dot {
+      background: $warning-400;
+    }
+  }
+
+  &--error {
+    background: rgba(239, 68, 68, 0.2);
+    color: $error-400;
+    border-color: rgba(239, 68, 68, 0.4);
+
+    &.badge-outlined {
+      background: transparent;
+      border-color: $error-400;
+    }
+
+    &.badge-dot {
+      background: $error-400;
+    }
+  }
+
+  &--info {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60A5FA;
+    border-color: rgba(59, 130, 246, 0.4);
+
+    &.badge-outlined {
+      background: transparent;
+      border-color: #60A5FA;
+    }
+
+    &.badge-dot {
+      background: #60A5FA;
+    }
+  }
+
+  &--neutral {
+    background: rgba(148, 163, 184, 0.2);
+    color: $neutral-400;
+    border-color: rgba(148, 163, 184, 0.4);
+
+    &.badge-outlined {
+      background: transparent;
+      border-color: $neutral-400;
+    }
+
+    &.badge-dot {
+      background: $neutral-400;
+    }
+  }
+}
+
+// Responsive
+@include respond-below('md') {
+  .ui-badge {
+    &--lg {
+      padding: $spacing-1 $spacing-3;
+      font-size: 0.75rem;
+      min-height: 24px;
+    }
+  }
+}

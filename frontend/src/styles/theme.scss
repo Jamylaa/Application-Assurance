@@ -1,0 +1,93 @@
+@import './theme-variables.scss';
+
+// Thème PrimeNG personnalisé
+:root {
+  font-family: var(--font-family);
+  --text-color: #495057;
+  --text-color-secondary: #6c757d;
+  --border-color: #dee2e6;
+}
+
+// Configuration PrimeNG personnalisée
+.p-toast {
+  .p-toast-message {
+    font-family: var(--font-family);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-md);
+  }
+  
+  &.p-toast-success {
+    background: var(--success-color);
+    color: white;
+  }
+  
+  &.p-toast-error {
+    background: var(--danger-color);
+    color: white;
+  }
+  
+  &.p-toast-info {
+    background: var(--info-color);
+    color: white;
+  }
+}
+
+.p-button {
+  font-family: var(--font-family);
+  border-radius: var(--border-radius-md);
+  transition: var(--transition-normal);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+.p-card {
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  
+  .p-card-header {
+    background: var(--surface-secondary);
+    border-bottom: 1px solid var(--border-color);
+  }
+}
+
+.p-table {
+  .p-datatable-thead > tr > th {
+    background: var(--surface-secondary);
+    font-weight: 600;
+    color: var(--text-color);
+  }
+  
+  .p-datatable-tbody > tr {
+    &:hover {
+      background: var(--surface-tertiary);
+    }
+  }
+}
+
+.p-paginator {
+  .p-paginator-page {
+    border-radius: var(--border-radius-sm);
+    font-family: var(--font-family);
+  }
+  
+  .p-paginator-pages {
+    .p-paginator-page {
+      transition: var(--transition-normal);
+      
+      &:hover {
+        background: var(--primary-light);
+      }
+    }
+  }
+}
+
+// Mode Dark
+[data-theme="dark"] {
+  --text-color: #e9ecef;
+  --text-color-secondary: #adb5bd;
+  --border-color: #495057;
+}

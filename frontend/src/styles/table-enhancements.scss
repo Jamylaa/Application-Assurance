@@ -1,0 +1,569 @@
+@import './design-system.scss';
+
+// ============================================
+// PRIMENG TABLE ENHANCEMENTS
+// Styles professionnels pour les tableaux PrimeNG
+// ============================================
+
+// Container du tableau
+.p-table {
+  border-radius: $radius-2xl;
+  overflow: hidden;
+  box-shadow: $shadow-md;
+  background: $glass-bg-light;
+  backdrop-filter: $glass-blur;
+  border: 1px solid $glass-border-light;
+}
+
+// En-tête du tableau
+.p-table-thead {
+  background: linear-gradient(135deg, $primary-50 0%, $primary-100 100%);
+
+  > tr {
+    > th {
+      background: transparent;
+      color: $color-text-primary;
+      font-family: $font-family-heading;
+      font-weight: $font-weight-bold;
+      font-size: $font-size-sm;
+      text-transform: uppercase;
+      letter-spacing: $letter-spacing-wider;
+      padding: $spacing-4 $spacing-5;
+      border-bottom: 2px solid $color-border-light;
+      position: relative;
+      transition: all $transition-base;
+
+      &:hover {
+        background: rgba(99, 102, 241, 0.05);
+      }
+
+      // Tri
+      &.p-sortable-column {
+        cursor: pointer;
+        user-select: none;
+
+        &:hover {
+          background: rgba(99, 102, 241, 0.08);
+        }
+
+        &.p-highlight {
+          color: $color-primary;
+          background: rgba(99, 102, 241, 0.1);
+        }
+
+        .p-sortable-column-icon {
+          margin-left: $spacing-2;
+          color: $color-text-tertiary;
+          transition: color $transition-base;
+        }
+
+        &.p-highlight .p-sortable-column-icon {
+          color: $color-primary;
+        }
+      }
+
+      // Filtre
+      .p-column-filter {
+        margin-top: $spacing-2;
+
+        .p-column-filter-element {
+          @include input-style();
+          padding: $spacing-2 $spacing-3;
+          font-size: $font-size-xs;
+        }
+
+        .p-column-filter-menu-button,
+        .p-column-filter-clear-button {
+          background: transparent;
+          border: none;
+          color: $color-text-tertiary;
+          padding: $spacing-1;
+          border-radius: $radius-md;
+          transition: all $transition-base;
+
+          &:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: $color-primary;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Corps du tableau
+.p-table-tbody {
+  > tr {
+    transition: all $transition-fast;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(99, 102, 241, 0.03);
+      transform: scale(1.005);
+    }
+
+    &.p-highlight {
+      background: rgba(99, 102, 241, 0.08);
+    }
+
+    &.p-selectable-row {
+      &:hover {
+        background: rgba(99, 102, 241, 0.05);
+      }
+    }
+
+    > td {
+      padding: $spacing-4 $spacing-5;
+      border-bottom: 1px solid $color-border-light;
+      color: $color-text-primary;
+      font-size: $font-size-sm;
+      line-height: $line-height-normal;
+      vertical-align: middle;
+
+      &:first-child {
+        border-top-left-radius: $radius-md;
+        border-bottom-left-radius: $radius-md;
+      }
+
+      &:last-child {
+        border-top-right-radius: $radius-md;
+        border-bottom-right-radius: $radius-md;
+      }
+    }
+  }
+}
+
+// Pied du tableau
+.p-table-tfoot {
+  background: $color-background-secondary;
+  border-top: 2px solid $color-border-light;
+
+  > tr {
+    > td {
+      background: transparent;
+      color: $color-text-secondary;
+      font-weight: $font-weight-semibold;
+      font-size: $font-size-sm;
+      padding: $spacing-4 $spacing-5;
+      border-bottom: none;
+    }
+  }
+}
+
+// Pagination
+.p-paginator {
+  background: $color-background-secondary;
+  border: none;
+  border-top: 1px solid $color-border-light;
+  padding: $spacing-4 $spacing-5;
+  @include flex-between;
+
+  .p-paginator-first,
+  .p-paginator-prev,
+  .p-paginator-next,
+  .p-paginator-last {
+    background: $color-background-primary;
+    border: 1px solid $color-border-medium;
+    color: $color-text-primary;
+    min-width: 36px;
+    height: 36px;
+    border-radius: $radius-md;
+    margin: 0 $spacing-1;
+    transition: all $transition-base;
+
+    &:hover:not(.p-disabled) {
+      background: $color-primary-light;
+      border-color: $color-primary;
+      color: $color-primary;
+      transform: translateY(-2px);
+      box-shadow: $shadow-sm;
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    &.p-disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .p-paginator-pages {
+    @include flex-center;
+    gap: $spacing-1;
+
+    .p-paginator-page {
+      background: $color-background-primary;
+      border: 1px solid $color-border-medium;
+      color: $color-text-primary;
+      min-width: 36px;
+      height: 36px;
+      border-radius: $radius-md;
+      margin: 0;
+      transition: all $transition-base;
+      font-weight: $font-weight-medium;
+
+      &:hover:not(.p-highlight) {
+        background: $color-primary-light;
+        border-color: $color-primary;
+        color: $color-primary;
+        transform: translateY(-2px);
+      }
+
+      &.p-highlight {
+        background: $gradient-primary;
+        border-color: $color-primary;
+        color: white;
+        box-shadow: $shadow-colored-primary;
+      }
+    }
+  }
+
+  .p-paginator-current {
+    color: $color-text-secondary;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+  }
+
+  .p-dropdown {
+    background: $color-background-primary;
+    border: 1px solid $color-border-medium;
+    border-radius: $radius-md;
+    min-width: 100px;
+
+    &:not(.p-disabled):hover {
+      border-color: $color-border-dark;
+    }
+
+    .p-dropdown-label {
+      color: $color-text-primary;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+    }
+
+    .p-dropdown-trigger {
+      color: $color-text-tertiary;
+    }
+  }
+}
+
+// Checkbox dans le tableau
+.p-table .p-checkbox {
+  .p-checkbox-box {
+    border: 2px solid $color-border-medium;
+    border-radius: $radius-md;
+    background: $color-background-primary;
+    transition: all $transition-base;
+
+    &:not(.p-highlight):hover {
+      border-color: $color-primary;
+    }
+
+    &.p-highlight {
+      background: $gradient-primary;
+      border-color: $color-primary;
+    }
+
+    .p-checkbox-icon {
+      color: white;
+      font-size: 0.75rem;
+    }
+  }
+}
+
+// Tags/Labels dans le tableau
+.p-tag {
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wider;
+  padding: $spacing-1 $spacing-3;
+
+  &.p-tag-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: $color-success;
+  }
+
+  &.p-tag-info {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3B82F6;
+  }
+
+  &.p-tag-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: $color-warning;
+  }
+
+  &.p-tag-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: $color-error;
+  }
+
+  &.p-tag-value {
+    background: rgba(99, 102, 241, 0.1);
+    color: $color-primary;
+  }
+}
+
+// Actions dans le tableau
+.table-actions {
+  @include flex-center;
+  gap: $spacing-2;
+
+  .action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: $radius-md;
+    border: none;
+    background: transparent;
+    color: $color-text-tertiary;
+    cursor: pointer;
+    transition: all $transition-base;
+    @include flex-center;
+
+    &:hover {
+      background: rgba(99, 102, 241, 0.1);
+      color: $color-primary;
+      transform: scale(1.1);
+    }
+
+    &.edit-btn:hover {
+      background: rgba(59, 130, 246, 0.1);
+      color: #3B82F6;
+    }
+
+    &.delete-btn:hover {
+      background: rgba(239, 68, 68, 0.1);
+      color: $color-error;
+    }
+
+    &.view-btn:hover {
+      background: rgba(16, 185, 129, 0.1);
+      color: $color-success;
+    }
+  }
+}
+
+// Recherche globale
+.table-search {
+  position: relative;
+  width: 300px;
+
+  .search-icon {
+    position: absolute;
+    left: $spacing-4;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $color-text-tertiary;
+    font-size: 1rem;
+  }
+
+  input {
+    width: 100%;
+    padding: $spacing-3 $spacing-4 $spacing-3 $spacing-10;
+    border: 1px solid $color-border-medium;
+    border-radius: $radius-lg;
+    font-size: $font-size-sm;
+    font-family: $font-family-base;
+    transition: all $transition-base;
+    background: $color-background-primary;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    &::placeholder {
+      color: $color-text-tertiary;
+    }
+  }
+}
+
+// Empty state
+.table-empty {
+  @include flex-center;
+  flex-direction: column;
+  gap: $spacing-4;
+  padding: $spacing-16 $spacing-8;
+  text-align: center;
+
+  .empty-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: $radius-2xl;
+    background: rgba(99, 102, 241, 0.1);
+    @include flex-center;
+    color: $color-primary;
+    font-size: 2rem;
+    margin-bottom: $spacing-2;
+  }
+
+  .empty-title {
+    font-family: $font-family-heading;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: $color-text-primary;
+    margin: 0;
+  }
+
+  .empty-description {
+    font-size: $font-size-base;
+    color: $color-text-secondary;
+    margin: 0;
+    max-width: 400px;
+  }
+
+  .empty-action {
+    margin-top: $spacing-4;
+  }
+}
+
+// Loading state
+.table-loading {
+  @include flex-center;
+  padding: $spacing-16;
+}
+
+// Responsive table
+.p-table-responsive-scroll {
+  overflow-x: auto;
+  border-radius: $radius-2xl;
+
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $color-background-secondary;
+    border-radius: $radius-full;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $color-border-dark;
+    border-radius: $radius-full;
+
+    &:hover {
+      background: $color-text-tertiary;
+    }
+  }
+}
+
+// Dark mode
+.my-app-dark .p-table {
+  background: $glass-bg-dark;
+  border-color: $glass-border-dark;
+}
+
+.my-app-dark .p-table-thead {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(99, 102, 241, 0.1) 100%);
+
+  > tr > th {
+    color: $neutral-100;
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+
+    &:hover {
+      background: rgba(99, 102, 241, 0.15);
+    }
+  }
+}
+
+.my-app-dark .p-table-tbody > tr {
+  &:hover {
+    background: rgba(99, 102, 241, 0.1);
+  }
+
+  > td {
+    color: $neutral-100;
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.my-app-dark .p-table-tfoot {
+  background: rgba(30, 30, 50, 0.5);
+  border-top-color: rgba(255, 255, 255, 0.1);
+
+  > tr > td {
+    color: $neutral-400;
+  }
+}
+
+.my-app-dark .p-paginator {
+  background: rgba(30, 30, 50, 0.5);
+  border-top-color: rgba(255, 255, 255, 0.1);
+
+  .p-paginator-first,
+  .p-paginator-prev,
+  .p-paginator-next,
+  .p-paginator-last {
+    background: rgba(40, 40, 60, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: $neutral-100;
+
+    &:hover:not(.p-disabled) {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: $primary-400;
+      color: $primary-400;
+    }
+  }
+
+  .p-paginator-pages .p-paginator-page {
+    background: rgba(40, 40, 60, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: $neutral-100;
+
+    &:hover:not(.p-highlight) {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: $primary-400;
+      color: $primary-400;
+    }
+
+    &.p-highlight {
+      background: $gradient-primary;
+      border-color: $color-primary;
+      color: white;
+    }
+  }
+
+  .p-paginator-current {
+    color: $neutral-400;
+  }
+}
+
+.my-app-dark .table-search input {
+  background: rgba(40, 40, 60, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: $neutral-100;
+
+  &:focus {
+    border-color: $primary-400;
+  }
+
+  &::placeholder {
+    color: $neutral-500;
+  }
+}
+
+// Responsive
+@include respond-below('md') {
+  .table-search {
+    width: 100%;
+  }
+
+  .p-table-thead > tr > th {
+    padding: $spacing-3 $spacing-4;
+    font-size: $font-size-xs;
+  }
+
+  .p-table-tbody > tr > td {
+    padding: $spacing-3 $spacing-4;
+    font-size: $font-size-xs;
+  }
+
+  .table-actions .action-btn {
+    width: 28px;
+    height: 28px;
+  }
+}

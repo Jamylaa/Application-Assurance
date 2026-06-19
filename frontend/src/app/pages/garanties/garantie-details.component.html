@@ -1,0 +1,152 @@
+<div class="page-container">
+  <p-toast position="top-right"></p-toast>
+  <div class="page-header garanties-header">
+    <div class="page-header-left">
+      <div class="header-icon"><i class="bi bi-shield-fill-check"></i></div>
+      <div>
+        <h1>Détails garantie</h1>
+        <p *ngIf="garantie as g">{{ g.nomGarantie }}</p>
+        <p *ngIf="!garantie">Consultez les informations de la garantie</p>
+      </div>
+    </div>
+    <div class="page-header-actions">
+      <p-button label="Retour" icon="pi pi-arrow-left" styleClass="p-button-outlined" (click)="back()"></p-button>
+      <p-button label="Modifier" icon="pi pi-pencil" [disabled]="!garantieId" (click)="edit()"></p-button>
+    </div>
+  </div>
+
+  <!-- Dashboard Metrics -->
+  <div class="metrics-dashboard" *ngIf="garantie">
+    <div class="metric-card rating">
+      <div class="metric-icon"><i class="bi bi-star-fill"></i></div>
+      <div class="metric-content">
+        <span class="metric-label">Note garantie</span>
+        <span class="metric-value">{{ garantieRating }}/100</span>
+      </div>
+    </div>
+    <div class="metric-card packs">
+      <div class="metric-icon"><i class="bi bi-collection"></i></div>
+      <div class="metric-content">
+        <span class="metric-label">Packs associés</span>
+        <span class="metric-value">{{ packsCount }}</span>
+      </div>
+    </div>
+    <div class="metric-card taux">
+      <div class="metric-icon"><i class="bi bi-percent"></i></div>
+      <div class="metric-content">
+        <span class="metric-label">Catégorie taux</span>
+        <span class="metric-value">{{ getTauxCategory() }}</span>
+      </div>
+    </div>
+    <div class="metric-card plafond">
+      <div class="metric-icon"><i class="bi bi-shield"></i></div>
+      <div class="metric-content">
+        <span class="metric-label">Niveau plafond</span>
+        <span class="metric-value">{{ getPlafondCategory() }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="details-card">
+    <p-card>
+      <ng-container *ngIf="loading; else content">
+        <div class="loading">
+          <p-progressSpinner ariaLabel="loading"></p-progressSpinner>
+        </div>
+      </ng-container>
+
+      <ng-template #content>
+        <ng-container *ngIf="garantie as g; else empty">
+          <!-- Informations principales -->
+          <div class="details-section">
+            <h3><i class="bi bi-info-circle"></i> Informations principales</h3>
+            <div class="section-grid">
+              <div class="info-item">
+                <span class="info-label">Nom</span>
+                <span class="info-value primary">{{ g.nomGarantie || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Description</span>
+                <span class="info-value">{{ g.description || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Domaine</span>
+                <span class="info-value">{{ getDomaineOrTypeLabel(g) }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Statut</span>
+                <p-tag [severity]="getStatusSeverity(g.statut)" [value]="g.statut || 'INCONNU'"></p-tag>
+              </div>
+            </div>
+          </div>
+
+          <!-- Remboursement avec métriques visuelles -->
+          <div class="details-section">
+            <h3><i class="bi bi-percent"></i> Remboursement</h3>
+            <div class="section-grid">
+              <div class="info-item highlight">
+                <span class="info-label">Taux</span>
+                <span class="info-value taux">{{ ((g.tauxRemboursement ?? 0) * 100) | number:'1.0-0' }}%</span>
+                <div class="taux-indicator">
+                  <div class="taux-bar" [style.width.%]="((g.tauxRemboursement ?? 0) * 100)"></div>
+                </div>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Type montant</span>
+                <span class="info-value">{{ g.typeMontant || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Franchise</span>
+                <span class="info-value">{{ g.franchise ?? '—' }} €</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Type plafond</span>
+                <span class="info-value">{{ g.typePlafond || '—' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plafonds avec métriques visuelles -->
+          <div class="details-section">
+            <h3><i class="bi bi-shield"></i> Plafonds</h3>
+            <div class="section-grid">
+              <div class="info-item">
+                <span class="info-label">Annuel</span>
+                <span class="info-value">{{ g.plafondAnnuel ?? '—' }} €</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Mensuel</span>
+                <span class="info-value">{{ g.plafondMensuel ?? '—' }} €</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Par acte</span>
+                <span class="info-value">{{ g.plafondParActe ?? '—' }} €</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Durée contrat</span>
+                <span class="info-value">{{ g.dureeMinContrat ?? '—' }} – {{ g.dureeMaxContrat ?? '—' }} mois</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Métadonnées -->
+          <div class="details-section meta">
+            <h3><i class="bi bi-gear"></i> Métadonnées</h3>
+            <div class="section-grid">
+              <div class="info-item">
+                <span class="info-label">ID</span>
+                <span class="info-value small">{{ g.idGarantie || '—' }}</span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #empty>
+          <div class="empty">
+            Garantie introuvable.
+          </div>
+        </ng-template>
+      </ng-template>
+    </p-card>
+  </div>
+</div>

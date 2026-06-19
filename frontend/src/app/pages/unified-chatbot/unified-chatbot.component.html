@@ -1,0 +1,193 @@
+<div class="unified-chatbot-container">
+  <p-toast position="top-right"></p-toast>
+
+  <!-- Header -->
+  <div class="chatbot-header">
+    <div class="header-left">
+      <button class="back-btn" (click)="goBack()">
+        <i class="bi bi-arrow-left"></i>
+      </button>
+      <div class="chatbot-info">
+        <h1 class="chatbot-title">
+          <i class="bi bi-robot"></i>
+          {{ chatbotConfig.title }}
+        </h1>
+        <p class="chatbot-subtitle">{{ chatbotConfig.subtitle }}</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="clear-btn" (click)="clearChat()">
+        <i class="bi bi-trash3"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Features Banner -->
+  <div class="features-banner">
+    <div class="features-grid">
+      <div *ngFor="let feature of chatbotConfig.features" class="feature-item">
+        <i class="bi bi-check-circle-fill"></i>
+        <span>{{ feature }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-suggestions" *ngIf="suggestionPrompts.length">
+    <span class="chat-suggestions-label">Exemples</span>
+    <div class="chat-suggestions-chips">
+      <button
+        type="button"
+        class="suggestion-chip"
+        *ngFor="let s of suggestionPrompts"
+        (click)="applySuggestion(s)"
+        [disabled]="isLoading"
+      >
+        {{ s }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages Container -->
+  <div class="chat-messages" #messagesContainer>
+    <div
+      *ngFor="let message of messages; trackBy: trackByMessageId"
+      class="message"
+      [class.user-message]="message.sender === 'user'"
+      [class.bot-message]="message.sender === 'bot'"
+    >
+      <!-- Avatar -->
+      <div class="message-avatar">
+        <i *ngIf="message.sender === 'user'" class="bi bi-person-fill"></i>
+        <i *ngIf="message.sender === 'bot'" class="bi bi-robot"></i>
+      </div>
+
+      <!-- Message Content -->
+      <div class="message-content">
+        <!-- Message Header for Bot -->
+        <div *ngIf="message.sender === 'bot' && message.intent" class="message-header">
+          <p-tag [value]="getIntentLabel(message.intent)" [severity]="getIntentSeverity(message.intent)"></p-tag>
+          <i class="bi {{ getIntentIcon(message.intent) }}"></i>
+        </div>
+
+        <!-- Message Text -->
+        <div class="message-text" [innerHTML]="formatMessage(message.text)"></div>
+
+        <!-- Recommendations Display -->
+        <ng-container *ngIf="getRecommendations(message).length > 0">
+          <div class="recommendations-container">
+            <div class="recommendations-header">
+              <i class="bi bi-lightbulb"></i>
+              <span>Recommandations</span>
+            </div>
+            <div *ngIf="getExplanation(message)" class="recommendations-explanation">
+              {{ getExplanation(message) }}
+            </div>
+            <div *ngFor="let rec of getRecommendations(message); let i = index" class="recommendation-card">
+              <div class="recommendation-header">
+                <span class="recommendation-number">{{ i + 1 }}.</span>
+                <span class="recommendation-title">{{ rec.nom }}</span>
+              </div>
+              <div class="recommendation-details">
+                <div *ngIf="rec.compatibilityScore" class="recommendation-item">
+                  <i class="bi bi-percent"></i>
+                  <span>Score de compatibilité: {{ rec.compatibilityScore.toFixed(1) }}%</span>
+                </div>
+                <div *ngIf="rec.monthlyPrice" class="recommendation-item">
+                  <i class="bi bi-currency-euro"></i>
+                  <span>Prix mensuel: {{ rec.monthlyPrice }}€</span>
+                </div>
+                <div *ngIf="rec.coverageLevel" class="recommendation-item">
+                  <i class="bi bi-shield-check"></i>
+                  <span>Niveau de couverture: {{ rec.coverageLevel }}</span>
+                </div>
+                <div *ngIf="rec.description" class="recommendation-item">
+                  <i class="bi bi-info-circle"></i>
+                  <span>{{ rec.description }}</span>
+                </div>
+                <div *ngIf="rec.whyRecommended" class="recommendation-item">
+                  <i class="bi bi-check-circle"></i>
+                  <span>{{ rec.whyRecommended }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Message Time -->
+        <div class="message-time">{{ formatTime(message.timestamp) }}</div>
+
+        <!-- Actions -->
+        <div *ngIf="message.actions && message.actions.length > 0" class="message-actions">
+          <div class="actions-container">
+            <button
+              *ngFor="let action of message.actions; trackBy: trackByActionLabel"
+              class="action-btn"
+              (click)="executeAction(action)"
+              [class.primary]="action.type === 'CREATE' || action.type === 'NAVIGATE'"
+              [class.secondary]="action.type === 'LIST'"
+            >
+              <i class="bi" [ngClass]="getActionIcon(action.type)"></i>
+              {{ action.label }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div *ngIf="isLoading" class="message bot-message">
+      <div class="message-avatar">
+        <i class="bi bi-robot"></i>
+      </div>
+      <div class="message-content">
+        <div class="typing-indicator">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input Area -->
+  <div class="chat-input-container">
+    <div class="input-wrapper">
+      <textarea
+        pInputTextarea
+        [(ngModel)]="currentMessage"
+        (keydown)="onKeyDown($event)"
+        placeholder="Tapez votre message ici..."
+        [autoResize]="true"
+        rows="1"
+        [disabled]="isLoading"
+      ></textarea>
+      <button
+        class="send-btn"
+        (click)="sendMessage()"
+        [disabled]="!currentMessage.trim() || isLoading"
+      >
+        <i *ngIf="!isLoading" class="bi bi-send-fill"></i>
+        <i *ngIf="isLoading" class="bi bi-hourglass-split"></i>
+      </button>
+    </div>
+
+    <!-- Quick Actions -->
+    <!--<div class="quick-actions">
+      <div class="quick-actions-title">
+        <i class="bi bi-lightning-charge-fill"></i>
+        Actions rapides
+      </div>
+      <div class="quick-actions-grid">
+        <button
+          *ngFor="let intent of chatbotConfig.intents; trackBy: trackByIntentLabel"
+          class="quick-action-btn"
+          (click)="currentMessage = getIntentExample(intent.label); sendMessage()"
+          [disabled]="isLoading"
+        >
+          <i class="bi {{ intent.icon }}"></i>
+          <span>{{ intent.description }}</span>
+        </button>
+      </div>
+    </div>-->
+  </div>
+</div>

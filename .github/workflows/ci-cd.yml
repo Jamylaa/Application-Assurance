@@ -1,0 +1,229 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  JAVA_VERSION: '21'
+  NODE_VERSION: '20'
+  DOCKER_REGISTRY: docker.io
+  # These will be set as secrets in GitHub
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+jobs:
+  # ============================================
+  # Backend Build and Test
+  # ============================================
+  backend-build:
+    name: Backend Build & Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build GestionProduit
+        run: |
+          cd GestionProduit
+          mvn clean compile -DskipTests
+
+      - name: Run Backend Tests
+        run: |
+          cd GestionProduit
+          mvn test
+
+      - name: Build GestionUser
+        run: |
+          cd GestionUser
+          mvn clean compile -DskipTests
+
+      - name: Build Gateway
+        run: |
+          cd Gateway
+          mvn clean compile -DskipTests
+
+      - name: Build Eureka
+        run: |
+          cd Eureka
+          mvn clean compile -DskipTests
+
+      - name: Build Recommendation
+        run: |
+          cd Recommendation
+          mvn clean compile -DskipTests
+
+  # ============================================
+  # Frontend Build and Test
+  # ============================================
+  frontend-build:
+    name: Frontend Build & Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run lint
+        run: |
+          cd frontend
+          npm run lint --if-present
+
+      - name: Run tests
+        run: |
+          cd frontend
+          npm test -- --watch=false --browsers=ChromeHeadless --code-coverage
+
+      - name: Build Angular
+        run: |
+          cd frontend
+          npm run build -- --configuration production
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 7
+
+  # ============================================
+  # Docker Build and Push
+  # ============================================
+  docker-build-push:
+    name: Docker Build & Push
+    runs-on: ubuntu-latest
+    needs: [backend-build, frontend-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_PASSWORD }}
+
+      - name: Build and push GestionProduit
+        uses: docker/build-push-action@v5
+        with:
+          context: ./GestionProduit
+          file: ./GestionProduit/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_USERNAME }}/vermeg-gestion-produit:latest
+            ${{ env.DOCKER_USERNAME }}/vermeg-gestion-produit:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-gestion-produit:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-gestion-produit:buildcache,mode=max
+
+      - name: Build and push GestionUser
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./GestionUser/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_USERNAME }}/vermeg-gestion-user:latest
+            ${{ env.DOCKER_USERNAME }}/vermeg-gestion-user:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-gestion-user:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-gestion-user:buildcache,mode=max
+
+      - name: Build and push Gateway
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Gateway/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_USERNAME }}/vermeg-gateway:latest
+            ${{ env.DOCKER_USERNAME }}/vermeg-gateway:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-gateway:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-gateway:buildcache,mode=max
+
+      - name: Build and push Eureka
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Eureka
+          file: ./Eureka/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_USERNAME }}/vermeg-eureka:latest
+            ${{ env.DOCKER_USERNAME }}/vermeg-eureka:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-eureka:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-eureka:buildcache,mode=max
+
+      - name: Build and push Recommendation
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Recommendation
+          file: ./Recommendation/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_USERNAME }}/vermeg-recommendation:latest
+            ${{ env.DOCKER_USERNAME }}/vermeg-recommendation:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-recommendation:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-recommendation:buildcache,mode=max
+
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_USERNAME }}/vermeg-frontend:latest
+            ${{ env.DOCKER_USERNAME }}/vermeg-frontend:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-frontend:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_USERNAME }}/vermeg-frontend:buildcache,mode=max
+
+  # ============================================
+  # Security Scan
+  # ============================================
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: [backend-build, frontend-build]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'

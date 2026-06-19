@@ -1,0 +1,82 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: ./frontend
+      run: npm ci
+    
+    - name: Run linter
+      working-directory: ./frontend
+      run: npm run lint --if-present
+    
+    - name: Run tests
+      working-directory: ./frontend
+      run: npm test -- --watch=false --browsers=ChromeHeadless
+    
+    - name: Build Angular app
+      working-directory: ./frontend
+      run: npm run build -- --configuration production
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-build
+        path: frontend/dist/
+    
+    - name: Build Docker image
+      if: github.ref == 'refs/heads/main'
+      run: |
+        docker build -t vermeg-assurance-frontend:${{ github.sha }} ./frontend
+        docker tag vermeg-assurance-frontend:${{ github.sha }} vermeg-assurance-frontend:latest
+    
+    - name: Login to Docker Hub
+      if: github.ref == 'refs/heads/main'
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    
+    - name: Push Docker image
+      if: github.ref == 'refs/heads/main'
+      run: |
+        docker push vermeg-assurance-frontend:${{ github.sha }}
+        docker push vermeg-assurance-frontend:latest
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Configure kubectl
+      uses: azure/k8s-set-context@v4
+      with:
+        kubeconfig: ${{ secrets.KUBE_CONFIG }}
+    
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl set image deployment/frontend frontend=vermeg-assurance-frontend:latest -n vermeg-assurance
+        kubectl rollout status deployment/frontend -n vermeg-assurance

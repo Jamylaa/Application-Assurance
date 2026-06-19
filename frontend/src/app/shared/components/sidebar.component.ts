@@ -1,0 +1,93 @@
+import { Component, EventEmitter, Output } from '@angular/core';
+import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { ThemeService } from '../../core/theme.service';
+import { TranslationService } from '../../services/translation.service';
+
+@Component({
+  selector: 'app-sidebar',
+  templateUrl: './sidebar.component.html',
+  styleUrls: ['./sidebar.component.css'],
+  standalone: true,
+  imports: [CommonModule]
+})
+export class SidebarComponent {
+  @Output() sidebarToggle = new EventEmitter<void>();
+
+  isCollapsed = false;
+  isDarkMode = false;
+  currentUser: any = null;
+  currentLanguage = 'fr';
+
+  constructor(
+    private router: Router, 
+    private themeService: ThemeService,
+    private translationService: TranslationService
+  ) {
+    this.loadUserData();
+    this.initializeLanguage();
+    this.themeService.theme$.subscribe(theme => {
+      this.isDarkMode = theme === 'dark';
+    });
+    this.translationService.currentLang$.subscribe(lang => {
+      this.currentLanguage = lang;
+    });
+  }
+
+  loadUserData(): void {
+    const userData = localStorage.getItem('currentUser');
+    if (userData) {
+      this.currentUser = JSON.parse(userData);
+    }
+  }
+
+  toggleSidebar(): void {
+    this.isCollapsed = !this.isCollapsed;
+    this.sidebarToggle.emit();
+  }
+
+  toggleTheme(): void {
+    this.themeService.toggle();
+  }
+
+  toggleLanguage(): void {
+    const newLang = this.currentLanguage === 'fr' ? 'en' : 'fr';
+    this.translationService.setLanguage(newLang);
+  }
+
+  initializeLanguage(): void {
+    this.translationService.initializeLanguage();
+    this.currentLanguage = this.translationService.getCurrentLanguage();
+  }
+
+  navigateTo(route: string): void {
+    this.router.navigate([route]);
+  }
+
+  navigateToDashboard(): void {
+    this.router.navigate(['/dashboard']);
+  }
+
+  logout(): void {
+    localStorage.clear();
+    this.router.navigate(['/auth/login']);
+  }
+
+  isActiveRoute(route: string): boolean {
+    return this.router.url.startsWith(route);
+  }
+
+  getUserInitials(): string {
+    if (!this.currentUser?.username) return 'U';
+    return this.currentUser.username
+      .split(' ')
+      .map((s: string) => s[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  }
+
+  getUserRole(): string {
+    return this.currentUser?.role || 'Utilisateur';
+  }
+}

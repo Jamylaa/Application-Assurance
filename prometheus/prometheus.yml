@@ -1,0 +1,72 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'vermeg-monitor'
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # API Gateway
+  - job_name: 'gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['gateway:9091']
+        labels:
+          service: 'gateway'
+          application: 'api-gateway'
+
+  # Gestion Produit
+  - job_name: 'gestionproduit'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['gestionproduit:9093']
+        labels:
+          service: 'gestion-produit'
+          application: 'gestion-produit'
+
+  # Gestion User
+  - job_name: 'gestionuser'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['gestionuser:9092']
+        labels:
+          service: 'gestion-user'
+          application: 'gestion-user'
+
+  # Recommendation Service
+  - job_name: 'recommendation'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['recommendation:9095']
+        labels:
+          service: 'recommendation'
+          application: 'recommendation'
+
+  # Eureka Server
+  - job_name: 'eureka'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['eureka:8761']
+        labels:
+          service: 'eureka'
+          application: 'eureka-server'
+
+  # MongoDB Exporter (optional)
+  - job_name: 'mongodb'
+    static_configs:
+      - targets: ['mongodb:27017']
+        labels:
+          service: 'mongodb'
+          application: 'mongodb'
+
+  # Redis Exporter (optional)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+        labels:
+          service: 'redis'
+          application: 'redis'

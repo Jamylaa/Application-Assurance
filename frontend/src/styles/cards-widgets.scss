@@ -1,0 +1,864 @@
+@import './design-system.scss';
+
+// ============================================
+// CARDS & WIDGETS ENHANCEMENTS
+// Design moderne pour les cartes et widgets statistiques
+// ============================================
+
+// ============================================
+// STAT CARD - Cartes statistiques
+// ============================================
+
+.stat-card {
+  @include card-style();
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all $transition-smooth;
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  &:hover {
+    @include card-hover();
+  }
+
+  &--primary {
+    border-color: rgba(99, 102, 241, 0.2);
+
+    &:hover {
+      border-color: rgba(99, 102, 241, 0.5);
+      box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+    }
+  }
+
+  &--success {
+    border-color: rgba(16, 185, 129, 0.2);
+
+    &:hover {
+      border-color: rgba(16, 185, 129, 0.5);
+      box-shadow: 0 20px 40px rgba(16, 185, 129, 0.2);
+    }
+  }
+
+  &--warning {
+    border-color: rgba(245, 158, 11, 0.2);
+
+    &:hover {
+      border-color: rgba(245, 158, 11, 0.5);
+      box-shadow: 0 20px 40px rgba(245, 158, 11, 0.2);
+    }
+  }
+
+  &--error {
+    border-color: rgba(239, 68, 68, 0.2);
+
+    &:hover {
+      border-color: rgba(239, 68, 68, 0.5);
+      box-shadow: 0 20px 40px rgba(239, 68, 68, 0.2);
+    }
+  }
+}
+
+.stat-card-content {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+  padding: $spacing-6;
+  position: relative;
+  z-index: 1;
+}
+
+.stat-icon-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.stat-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: $radius-xl;
+  @include flex-center;
+  font-size: 1.75rem;
+  color: white;
+  box-shadow: $shadow-md;
+  position: relative;
+  overflow: hidden;
+  transition: transform $transition-base;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  &--primary {
+    background: $gradient-primary;
+    box-shadow: $shadow-colored-primary;
+  }
+
+  &--success {
+    background: $gradient-success;
+    box-shadow: $shadow-colored-success;
+  }
+
+  &--warning {
+    background: $gradient-warning;
+    box-shadow: $shadow-colored-warning;
+  }
+
+  &--error {
+    background: $gradient-error;
+    box-shadow: $shadow-colored-error;
+  }
+
+  &--info {
+    background: $gradient-secondary;
+    box-shadow: $shadow-colored-secondary;
+  }
+}
+
+.stat-card:hover .stat-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.stat-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-value {
+  font-family: $font-family-heading;
+  font-size: $font-size-4xl;
+  font-weight: $font-weight-extrabold;
+  color: $color-text-primary;
+  line-height: $line-height-tight;
+  margin-bottom: $spacing-1;
+  letter-spacing: $letter-spacing-tight;
+  animation: countUp 0.8s ease both;
+
+  &--sm {
+    font-size: $font-size-3xl;
+  }
+
+  &--lg {
+    font-size: $font-size-5xl;
+  }
+}
+
+.stat-label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-2;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wider;
+}
+
+.stat-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-1;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  padding: $spacing-1 $spacing-2;
+  border-radius: $radius-full;
+
+  &--up {
+    background: rgba(16, 185, 129, 0.1);
+    color: $color-success;
+
+    i {
+      color: $color-success;
+    }
+  }
+
+  &--down {
+    background: rgba(239, 68, 68, 0.1);
+    color: $color-error;
+
+    i {
+      color: $color-error;
+    }
+  }
+
+  &--neutral {
+    background: rgba(100, 116, 139, 0.1);
+    color: $color-text-secondary;
+
+    i {
+      color: $color-text-secondary;
+    }
+  }
+}
+
+.stat-card-footer {
+  padding: $spacing-4 $spacing-6;
+  border-top: 1px solid $color-border-light;
+  background: $color-background-secondary;
+  transition: all $transition-base;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-3;
+
+  .stat-footer-text {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    color: $color-text-tertiary;
+    flex: 1;
+  }
+
+  .stat-footer-action {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: $color-primary;
+    text-decoration: none;
+    transition: all $transition-base;
+
+    &:hover {
+      color: $color-primary-hover;
+    }
+  }
+}
+
+.stat-card:hover .stat-card-footer {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
+  border-top-color: rgba(99, 102, 241, 0.2);
+}
+
+// ============================================
+// PROGRESS CARD - Cartes avec barre de progression
+// ============================================
+
+.progress-card {
+  @include card-style();
+  padding: $spacing-6;
+
+  .progress-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-4;
+  }
+
+  .progress-title {
+    font-family: $font-family-heading;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    color: $color-text-primary;
+    margin: 0;
+  }
+
+  .progress-value {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: $color-primary;
+  }
+
+  .progress-bar-wrapper {
+    height: 12px;
+    background: $color-background-tertiary;
+    border-radius: $radius-full;
+    overflow: hidden;
+    margin-bottom: $spacing-3;
+  }
+
+  .progress-bar {
+    height: 100%;
+    border-radius: $radius-full;
+    transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: shimmer 2s infinite;
+    }
+
+    &--primary {
+      background: $gradient-primary;
+    }
+
+    &--success {
+      background: $gradient-success;
+    }
+
+    &--warning {
+      background: $gradient-warning;
+    }
+
+    &--error {
+      background: $gradient-error;
+    }
+  }
+
+  .progress-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+  }
+}
+
+// ============================================
+// METRIC CARD - Cartes de métriques avancées
+// ============================================
+
+.metric-card {
+  @include card-style();
+  padding: $spacing-5;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: $gradient-primary;
+    opacity: 0;
+    transition: opacity $transition-base;
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
+
+  .metric-header {
+    display: flex;
+    align-items: center;
+    gap: $spacing-3;
+    margin-bottom: $spacing-4;
+  }
+
+  .metric-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: $radius-lg;
+    background: rgba(99, 102, 241, 0.1);
+    @include flex-center;
+    color: $color-primary;
+    font-size: 1.25rem;
+    transition: all $transition-base;
+
+    &:hover {
+      background: rgba(99, 102, 241, 0.2);
+      transform: scale(1.1);
+    }
+  }
+
+  .metric-title {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-text-secondary;
+    margin: 0;
+  }
+
+  .metric-value {
+    font-family: $font-family-heading;
+    font-size: $font-size-3xl;
+    font-weight: $font-weight-extrabold;
+    color: $color-text-primary;
+    margin-bottom: $spacing-4;
+    letter-spacing: $letter-spacing-tight;
+  }
+
+  .metric-change {
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-1;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    padding: $spacing-1 $spacing-2;
+    border-radius: $radius-full;
+
+    &--positive {
+      background: rgba(16, 185, 129, 0.1);
+      color: $color-success;
+    }
+
+    &--negative {
+      background: rgba(239, 68, 68, 0.1);
+      color: $color-error;
+    }
+  }
+
+  .metric-description {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    margin-top: $spacing-3;
+  }
+}
+
+// ============================================
+// CHART CARD - Cartes pour graphiques
+// ============================================
+
+.chart-card {
+  @include card-style();
+  padding: $spacing-6;
+  position: relative;
+  overflow: hidden;
+
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-6;
+  }
+
+  .chart-title-group {
+    display: flex;
+    align-items: center;
+    gap: $spacing-3;
+  }
+
+  .chart-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: $radius-xl;
+    background: rgba(99, 102, 241, 0.1);
+    @include flex-center;
+    color: $color-primary;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  .chart-title {
+    font-family: $font-family-heading;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    color: $color-text-primary;
+    margin: 0;
+    letter-spacing: $letter-spacing-tight;
+  }
+
+  .chart-subtitle {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    margin: 0;
+  }
+
+  .chart-actions {
+    display: flex;
+    gap: $spacing-1;
+  }
+
+  .chart-action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: $radius-md;
+    background: $color-background-secondary;
+    border: 1px solid $color-border-medium;
+    color: $color-text-tertiary;
+    cursor: pointer;
+    transition: all $transition-base;
+    @include flex-center;
+
+    &:hover {
+      background: $color-primary-light;
+      border-color: $color-primary;
+      color: $color-primary;
+      transform: scale(1.05);
+    }
+  }
+
+  .chart-container {
+    min-height: 300px;
+    position: relative;
+
+    canvas {
+      max-width: 100%;
+    }
+  }
+
+  .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-3;
+    margin-top: $spacing-4;
+    padding-top: $spacing-4;
+    border-top: 1px solid $color-border-light;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: $spacing-2;
+    font-size: $font-size-xs;
+    color: $color-text-secondary;
+  }
+
+  .legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: $radius-sm;
+  }
+}
+
+// ============================================
+// ACTIVITY CARD - Cartes d'activité
+// ============================================
+
+.activity-card {
+  @include card-style();
+  padding: $spacing-6;
+
+  .activity-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-5;
+  }
+
+  .activity-title {
+    font-family: $font-family-heading;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    color: $color-text-primary;
+    margin: 0;
+  }
+
+  .activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  .activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: $spacing-3;
+    padding: $spacing-3;
+    border-radius: $radius-lg;
+    transition: all $transition-base;
+
+    &:hover {
+      background: $color-background-secondary;
+    }
+  }
+
+  .activity-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: $radius-lg;
+    background: rgba(99, 102, 241, 0.1);
+    @include flex-center;
+    color: $color-primary;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .activity-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .activity-text {
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+    margin: 0 0 $spacing-1;
+    line-height: $line-height-normal;
+  }
+
+  .activity-time {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    margin: 0;
+  }
+}
+
+// ============================================
+// LIST CARD - Cartes avec liste
+// ============================================
+
+.list-card {
+  @include card-style();
+  padding: $spacing-6;
+
+  .list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-5;
+  }
+
+  .list-title {
+    font-family: $font-family-heading;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    color: $color-text-primary;
+    margin: 0;
+  }
+
+  .list-content {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-2;
+  }
+
+  .list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-3;
+    border-radius: $radius-lg;
+    transition: all $transition-base;
+    cursor: pointer;
+
+    &:hover {
+      background: $color-background-secondary;
+      transform: translateX(4px);
+    }
+  }
+
+  .list-item-content {
+    display: flex;
+    align-items: center;
+    gap: $spacing-3;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .list-item-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: $radius-md;
+    background: rgba(99, 102, 241, 0.1);
+    @include flex-center;
+    color: $color-primary;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+  }
+
+  .list-item-text {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-text-primary;
+    @include truncate-text;
+  }
+
+  .list-item-meta {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    font-weight: $font-weight-medium;
+  }
+
+  .list-item-action {
+    opacity: 0;
+    transition: opacity $transition-base;
+  }
+
+  .list-item:hover .list-item-action {
+    opacity: 1;
+  }
+}
+
+// ============================================
+// INFO CARD - Cartes d'information
+// ============================================
+
+.info-card {
+  @include card-style();
+  padding: $spacing-6;
+  border-left: 4px solid $color-primary;
+
+  &--success {
+    border-left-color: $color-success;
+  }
+
+  &--warning {
+    border-left-color: $color-warning;
+  }
+
+  &--error {
+    border-left-color: $color-error;
+  }
+
+  .info-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: $radius-xl;
+    background: rgba(99, 102, 241, 0.1);
+    @include flex-center;
+    color: $color-primary;
+    font-size: 1.5rem;
+    margin-bottom: $spacing-4;
+
+    &--success {
+      background: rgba(16, 185, 129, 0.1);
+      color: $color-success;
+    }
+
+    &--warning {
+      background: rgba(245, 158, 11, 0.1);
+      color: $color-warning;
+    }
+
+    &--error {
+      background: rgba(239, 68, 68, 0.1);
+      color: $color-error;
+    }
+  }
+
+  .info-title {
+    font-family: $font-family-heading;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    color: $color-text-primary;
+    margin: 0 0 $spacing-2;
+  }
+
+  .info-description {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    margin: 0;
+    line-height: $line-height-relaxed;
+  }
+
+  .info-actions {
+    margin-top: $spacing-4;
+    display: flex;
+    gap: $spacing-2;
+  }
+}
+
+// ============================================
+// DARK MODE
+// ============================================
+
+.my-app-dark .stat-card,
+.my-app-dark .progress-card,
+.my-app-dark .metric-card,
+.my-app-dark .chart-card,
+.my-app-dark .activity-card,
+.my-app-dark .list-card,
+.my-app-dark .info-card {
+  background: $glass-bg-dark;
+  border-color: $glass-border-dark;
+}
+
+.my-app-dark .stat-value,
+.my-app-dark .metric-value,
+.my-app-dark .chart-title,
+.my-app-dark .activity-title,
+.my-app-dark .list-title,
+.my-app-dark .info-title,
+.my-app-dark .progress-title {
+  color: $neutral-100;
+}
+
+.my-app-dark .stat-label,
+.my-app-dark .metric-title,
+.my-app-dark .chart-subtitle,
+.my-app-dark .activity-time,
+.my-app-dark .list-item-meta,
+.my-app-dark .info-description {
+  color: $neutral-400;
+}
+
+.my-app-dark .stat-card-footer,
+.my-app-dark .progress-footer {
+  background: rgba(40, 40, 60, 0.5);
+  border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+.my-app-dark .stat-footer-text,
+.my-app-dark .metric-description {
+  color: $neutral-500;
+}
+
+.my-app-dark .activity-item:hover,
+.my-app-dark .list-item:hover {
+  background: rgba(40, 40, 60, 0.5);
+}
+
+.my-app-dark .chart-legend {
+  border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+.my-app-dark .legend-item {
+  color: $neutral-400;
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+
+@include respond-below('lg') {
+  .stat-card-content {
+    padding: $spacing-5;
+  }
+
+  .stat-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 1.5rem;
+  }
+
+  .stat-value {
+    font-size: $font-size-3xl;
+  }
+
+  .chart-card,
+  .activity-card,
+  .list-card {
+    padding: $spacing-5;
+  }
+}
+
+@include respond-below('md') {
+  .stat-card-content {
+    flex-direction: column;
+    text-align: center;
+    gap: $spacing-3;
+  }
+
+  .stat-card-footer {
+    flex-direction: column;
+    text-align: center;
+    gap: $spacing-2;
+  }
+
+  .stat-value {
+    font-size: $font-size-2xl;
+  }
+
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $spacing-3;
+  }
+
+  .chart-container {
+    min-height: 250px;
+  }
+}
+
+@include respond-below('sm') {
+  .progress-card,
+  .metric-card,
+  .chart-card,
+  .activity-card,
+  .list-card,
+  .info-card {
+    padding: $spacing-4;
+  }
+
+  .stat-card-footer {
+    padding: $spacing-3 $spacing-4;
+  }
+}

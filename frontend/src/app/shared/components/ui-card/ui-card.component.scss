@@ -1,0 +1,286 @@
+@import '../../../../styles/design-system.scss';
+
+.ui-card {
+  @include card-style();
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  transition: all $transition-smooth;
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  // Variantes
+  &.hoverable:hover {
+    @include card-hover();
+  }
+
+  &.clickable {
+    cursor: pointer;
+
+    &:active {
+      transform: translateY(-4px) scale(1.01);
+    }
+  }
+
+  &.loading {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  // Variantes de couleur
+  &--variant-primary {
+    border-color: rgba(99, 102, 241, 0.3);
+
+    &:hover {
+      border-color: rgba(99, 102, 241, 0.5);
+      box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+    }
+  }
+
+  &--variant-success {
+    border-color: rgba(16, 185, 129, 0.3);
+
+    &:hover {
+      border-color: rgba(16, 185, 129, 0.5);
+      box-shadow: 0 20px 40px rgba(16, 185, 129, 0.15);
+    }
+  }
+
+  &--variant-warning {
+    border-color: rgba(245, 158, 11, 0.3);
+
+    &:hover {
+      border-color: rgba(245, 158, 11, 0.5);
+      box-shadow: 0 20px 40px rgba(245, 158, 11, 0.15);
+    }
+  }
+
+  &--variant-error {
+    border-color: rgba(239, 68, 68, 0.3);
+
+    &:hover {
+      border-color: rgba(239, 68, 68, 0.5);
+      box-shadow: 0 20px 40px rgba(239, 68, 68, 0.15);
+    }
+  }
+
+  // Padding variants
+  &--padding-none {
+    padding: 0;
+  }
+
+  &--padding-sm {
+    padding: $spacing-3;
+  }
+
+  &--padding-md {
+    padding: $spacing-5;
+  }
+
+  &--padding-lg {
+    padding: $spacing-8;
+  }
+
+  // Shadow variants
+  &--shadow-none {
+    box-shadow: none;
+  }
+
+  &--shadow-sm {
+    box-shadow: $shadow-sm;
+  }
+
+  &--shadow-md {
+    box-shadow: $shadow-md;
+  }
+
+  &--shadow-lg {
+    box-shadow: $shadow-lg;
+  }
+
+  &--shadow-xl {
+    box-shadow: $shadow-xl;
+  }
+}
+
+// Loading State
+.card-loading {
+  @include flex-center;
+  flex-direction: column;
+  gap: $spacing-3;
+  padding: $spacing-8;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  z-index: 10;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(99, 102, 241, 0.2);
+  border-top-color: $color-primary;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  color: $color-text-secondary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+}
+
+// Card Header
+.card-header {
+  @include flex-between;
+  gap: $spacing-4;
+  margin-bottom: $spacing-5;
+  position: relative;
+  z-index: 1;
+}
+
+.card-icon-wrapper {
+  flex-shrink: 0;
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: $radius-lg;
+  @include flex-center;
+  font-size: 1.25rem;
+  color: white;
+  box-shadow: $shadow-md;
+  position: relative;
+  overflow: hidden;
+  transition: transform $transition-base;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  &--default {
+    background: $gradient-primary;
+  }
+
+  &--primary {
+    background: $gradient-primary;
+  }
+
+  &--success {
+    background: $gradient-success;
+  }
+
+  &--warning {
+    background: $gradient-warning;
+  }
+
+  &--error {
+    background: $gradient-error;
+  }
+}
+
+.ui-card:hover .card-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.card-title-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-title {
+  font-family: $font-family-heading;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin: 0 0 $spacing-1;
+  letter-spacing: $letter-spacing-tight;
+  line-height: $line-height-tight;
+}
+
+.card-subtitle {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin: 0;
+  font-weight: $font-weight-normal;
+  line-height: $line-height-normal;
+}
+
+// Card Content
+.card-content {
+  position: relative;
+  z-index: 1;
+}
+
+// Card Footer
+.card-footer {
+  margin-top: $spacing-5;
+  padding-top: $spacing-5;
+  border-top: 1px solid $color-border-light;
+  position: relative;
+  z-index: 1;
+}
+
+// Dark Mode
+.my-app-dark .ui-card {
+  background: rgba(30, 30, 50, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.my-app-dark .card-loading {
+  background: rgba(30, 30, 50, 0.9);
+}
+
+.my-app-dark .loading-spinner {
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+.my-app-dark .card-title {
+  color: $neutral-100;
+}
+
+.my-app-dark .card-subtitle {
+  color: $neutral-400;
+}
+
+.my-app-dark .card-footer {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+// Responsive
+@include respond-below('md') {
+  .ui-card {
+    border-radius: $radius-xl;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $spacing-3;
+  }
+
+  .card-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .card-title {
+    font-size: $font-size-lg;
+  }
+}

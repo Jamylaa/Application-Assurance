@@ -1,0 +1,230 @@
+<div class="auth-wrapper">
+
+  <!-- LEFT PANEL -->
+  <div class="auth-left">
+
+    <div class="auth-left-inner">
+
+      <!-- Logo -->
+      <div class="auth-brand">
+
+        <div class="brand-logo-icon">
+          <i class="bi bi-shield-fill-check"></i>
+        </div>
+
+        <span class="brand-logo-text">
+          Vermeg
+        </span>
+
+      </div>
+
+      <!-- Headline -->
+      <div class="auth-hero">
+
+        <h2 class="auth-hero-title">
+          Gérez votre assurance<br>
+
+          <span class="highlight">
+            en toute sérénité
+          </span>
+
+        </h2>
+
+        <p class="auth-hero-desc">
+          Plateforme complète de gestion de produits,
+          packs et garanties d'assurance,
+          conçue pour les professionnels.
+        </p>
+
+      </div>
+
+      <!-- Feature Cards -->
+      <div class="feature-list">
+
+        <div class="feature-item">
+
+          <div class="feature-icon">
+            <i class="bi bi-shield-fill-check"></i>
+          </div>
+
+          <div class="feature-text">
+
+            <span class="feature-title">
+              Garanties avancées
+            </span>
+
+            <span class="feature-desc">
+              Gérez vos garanties avec précision
+            </span>
+
+          </div>
+
+        </div>
+
+        <div class="feature-item">
+
+          <div class="feature-icon">
+            <i class="bi bi-collection-fill"></i>
+          </div>
+
+          <div class="feature-text">
+
+            <span class="feature-title">
+              Packs personnalisables
+            </span>
+
+            <span class="feature-desc">
+              Créez des offres sur mesure
+            </span>
+
+          </div>
+
+        </div>
+
+        <div class="feature-item">
+
+          <div class="feature-icon">
+            <i class="bi bi-graph-up-arrow"></i>
+          </div>
+
+          <div class="feature-text">
+
+            <span class="feature-title">
+              Tableau de bord intelligent
+            </span>
+
+            <span class="feature-desc">
+              Visualisez vos KPIs en temps réel
+            </span>
+
+          </div>
+
+        </div>
+
+        <div class="feature-item">
+
+          <div class="feature-icon">
+            <i class="bi bi-people-fill"></i>
+          </div>
+
+          <div class="feature-text">
+
+            <span class="feature-title">
+              Gestion multi-utilisateurs
+            </span>
+
+            <span class="feature-desc">
+              Contrôle d'accès granulaire
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Stats -->
+      <div class="stat-cards-row">
+
+        <div class="stat-chip">
+          <span class="stat-chip-value">500+</span>
+          <span class="stat-chip-label">Clients</span>
+        </div>
+
+        <div class="stat-chip">
+          <span class="stat-chip-value">99.9%</span>
+          <span class="stat-chip-label">Disponibilité</span>
+        </div>
+
+        <div class="stat-chip">
+          <span class="stat-chip-value">24/7</span>
+          <span class="stat-chip-label">Support</span>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Decorative blobs -->
+    <div class="left-blob blob-1"></div>
+    <div class="left-blob blob-2"></div>
+    <div class="left-blob blob-3"></div>
+
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="auth-right">
+
+    <div class="auth-form-wrapper">
+
+      <div class="form-header">
+
+        <h1>
+          Bon retour
+        </h1>
+
+        <p>
+          Connectez-vous à votre espace sécurisé
+        </p>
+
+      </div>
+
+      <!-- LOGIN BUTTON -->
+      <div class="auth-form">
+
+        <button
+          pButton
+          type="button"
+          class="auth-submit-btn"
+          [class.is-loading]="loading"
+          (click)="login()">
+
+          <span
+            *ngIf="!loading"
+            class="btn-content">
+
+            <i class="bi bi-box-arrow-in-right"></i>
+
+            Se connecter avec Keycloak
+          </span>
+
+          <span
+            *ngIf="loading"
+            class="btn-content">
+
+            <i class="pi pi-spinner pi-spin"></i>
+
+            Redirection...
+          </span>
+
+        </button>
+
+      </div>
+
+      <!-- Divider -->
+      <div class="auth-divider">
+        <span>
+          AUTHENTIFICATION SÉCURISÉE
+        </span>
+      </div>
+
+      <!-- Footer -->
+      <div class="auth-footer">
+
+        <p>
+          Nouveau sur la plateforme ?
+        </p>
+
+        <a
+          routerLink="/auth/register"
+          class="auth-link">
+
+          Créer un compte
+
+          <i class="bi bi-arrow-right"></i>
+
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

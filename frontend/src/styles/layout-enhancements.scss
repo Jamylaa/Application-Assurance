@@ -1,0 +1,879 @@
+@import './design-system.scss';
+
+// ============================================
+// LAYOUT ENHANCEMENTS - Design moderne
+// ============================================
+
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, $color-background-secondary 0%, $color-background-tertiary 100%);
+  font-family: $font-family-base;
+}
+
+// ============================================
+// SIDEBAR
+// ============================================
+
+.sidebar {
+  width: 280px;
+  background: linear-gradient(180deg, $neutral-900 0%, $neutral-800 100%);
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: $z-index-fixed;
+  transition: all $transition-smooth;
+  box-shadow: $shadow-2xl;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+
+  .sidebar-header {
+    padding: $spacing-6;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: $spacing-3;
+    background: rgba(0, 0, 0, 0.2);
+
+    .logo {
+      width: 48px;
+      height: 48px;
+      border-radius: $radius-xl;
+      background: $gradient-primary;
+      @include flex-center;
+      color: white;
+      font-size: 1.5rem;
+      font-weight: $font-weight-bold;
+      box-shadow: $shadow-colored-primary;
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      flex: 1;
+      min-width: 0;
+
+      .logo-title {
+        font-family: $font-family-heading;
+        font-size: $font-size-lg;
+        font-weight: $font-weight-bold;
+        color: white;
+        margin: 0;
+        letter-spacing: $letter-spacing-tight;
+      }
+
+      .logo-subtitle {
+        font-size: $font-size-xs;
+        color: $neutral-400;
+        margin: 0;
+        font-weight: $font-weight-medium;
+        letter-spacing: $letter-spacing-wider;
+        text-transform: uppercase;
+      }
+    }
+
+    .sidebar-toggle {
+      width: 32px;
+      height: 32px;
+      border-radius: $radius-md;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      cursor: pointer;
+      transition: all $transition-base;
+      @include flex-center;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.1);
+      }
+    }
+  }
+
+  .sidebar-nav {
+    padding: $spacing-4;
+    overflow-y: auto;
+    flex: 1;
+
+    .nav-section {
+      margin-bottom: $spacing-6;
+
+      .nav-section-title {
+        font-size: $font-size-xs;
+        font-weight: $font-weight-semibold;
+        color: $neutral-500;
+        text-transform: uppercase;
+        letter-spacing: $letter-spacing-wider;
+        margin: 0 0 $spacing-3 $spacing-2;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: $spacing-3;
+        padding: $spacing-3 $spacing-4;
+        border-radius: $radius-lg;
+        color: $neutral-300;
+        text-decoration: none;
+        transition: all $transition-base;
+        margin-bottom: $spacing-1;
+        font-weight: $font-weight-medium;
+        font-size: $font-size-sm;
+        position: relative;
+        overflow: hidden;
+
+        &::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          width: 3px;
+          background: $gradient-primary;
+          transform: scaleY(0);
+          transition: transform $transition-base;
+        }
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.05);
+          color: white;
+          transform: translateX(4px);
+        }
+
+        &.active {
+          background: rgba(99, 102, 241, 0.15);
+          color: white;
+          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+
+          &::before {
+            transform: scaleY(1);
+          }
+        }
+
+        .nav-icon {
+          width: 20px;
+          height: 20px;
+          font-size: 1.25rem;
+          @include flex-center;
+          flex-shrink: 0;
+        }
+
+        .nav-text {
+          flex: 1;
+          min-width: 0;
+          @include truncate-text;
+        }
+
+        .nav-badge {
+          background: $gradient-primary;
+          color: white;
+          font-size: $font-size-xs;
+          font-weight: $font-weight-bold;
+          padding: $spacing-1 $spacing-2;
+          border-radius: $radius-full;
+          min-width: 20px;
+          text-align: center;
+          box-shadow: $shadow-colored-primary;
+        }
+
+        .nav-arrow {
+          font-size: $font-size-sm;
+          transition: transform $transition-base;
+        }
+
+        &.has-submenu .nav-arrow {
+          transform: rotate(90deg);
+        }
+      }
+
+      .nav-submenu {
+        margin-left: $spacing-8;
+        padding-top: $spacing-1;
+
+        .nav-item {
+          font-size: $font-size-xs;
+          padding: $spacing-2 $spacing-3;
+
+          &::before {
+            width: 2px;
+          }
+        }
+      }
+    }
+  }
+
+  .sidebar-footer {
+    padding: $spacing-4;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: $spacing-3;
+      padding: $spacing-3;
+      border-radius: $radius-lg;
+      cursor: pointer;
+      transition: all $transition-base;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: $radius-lg;
+        background: $gradient-primary;
+        @include flex-center;
+        color: white;
+        font-weight: $font-weight-bold;
+        font-size: $font-size-base;
+        flex-shrink: 0;
+        box-shadow: $shadow-colored-primary;
+      }
+
+      .user-info {
+        flex: 1;
+        min-width: 0;
+
+        .user-name {
+          font-size: $font-size-sm;
+          font-weight: $font-weight-semibold;
+          color: white;
+          margin: 0;
+          @include truncate-text;
+        }
+
+        .user-role {
+          font-size: $font-size-xs;
+          color: $neutral-400;
+          margin: 0;
+          @include truncate-text;
+        }
+      }
+
+      .user-menu-toggle {
+        color: $neutral-400;
+        font-size: $font-size-sm;
+        transition: all $transition-base;
+
+        &:hover {
+          color: white;
+        }
+      }
+    }
+  }
+
+  &.collapsed {
+    width: 80px;
+
+    .sidebar-header {
+      padding: $spacing-4;
+      justify-content: center;
+
+      .logo-text,
+      .sidebar-toggle {
+        display: none;
+      }
+    }
+
+    .sidebar-nav {
+      .nav-section-title {
+        display: none;
+      }
+
+      .nav-item {
+        justify-content: center;
+        padding: $spacing-3;
+
+        .nav-text,
+        .nav-arrow,
+        .nav-badge {
+          display: none;
+        }
+
+        .nav-icon {
+          font-size: 1.5rem;
+        }
+      }
+
+      .nav-submenu {
+        display: none;
+      }
+    }
+
+    .sidebar-footer {
+      padding: $spacing-3;
+
+      .user-profile {
+        justify-content: center;
+
+        .user-info,
+        .user-menu-toggle {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
+// ============================================
+// MAIN CONTENT
+// ============================================
+
+.main-content {
+  flex: 1;
+  margin-left: 280px;
+  transition: all $transition-smooth;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+
+  &.sidebar-collapsed {
+    margin-left: 80px;
+  }
+}
+
+// ============================================
+// TOP BAR
+// ============================================
+
+.top-bar {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid $color-border-light;
+  position: sticky;
+  top: 0;
+  z-index: $z-index-sticky;
+  box-shadow: $shadow-sm;
+  transition: all $transition-base;
+
+  .top-bar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-4 $spacing-6;
+    gap: $spacing-4;
+  }
+
+  .top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: $spacing-4;
+    flex: 1;
+  }
+
+  .top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: $spacing-3;
+  }
+
+  // Mobile menu toggle
+  .mobile-menu-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: $radius-lg;
+    background: $color-background-secondary;
+    border: 1px solid $color-border-medium;
+    color: $color-text-primary;
+    cursor: pointer;
+    transition: all $transition-base;
+    @include flex-center;
+    display: none;
+
+    &:hover {
+      background: $color-primary-light;
+      border-color: $color-primary;
+      color: $color-primary;
+      transform: scale(1.05);
+    }
+  }
+
+  // Page breadcrumb
+  .page-breadcrumb {
+    flex: 1;
+    min-width: 0;
+
+    .page-title-group {
+      display: flex;
+      align-items: center;
+      gap: $spacing-3;
+    }
+
+    .page-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: $radius-xl;
+      background: $gradient-primary;
+      @include flex-center;
+      color: white;
+      font-size: 1.25rem;
+      box-shadow: $shadow-colored-primary;
+      flex-shrink: 0;
+    }
+
+    .page-name {
+      font-family: $font-family-heading;
+      font-size: $font-size-2xl;
+      font-weight: $font-weight-bold;
+      color: $color-text-primary;
+      margin: 0;
+      letter-spacing: $letter-spacing-tight;
+      line-height: $line-height-tight;
+    }
+  }
+
+  // Search bar
+  .search-bar {
+    position: relative;
+    transition: all $transition-smooth;
+
+    &.search-open {
+      width: 300px;
+    }
+
+    .search-trigger {
+      width: 40px;
+      height: 40px;
+      border-radius: $radius-lg;
+      background: $color-background-secondary;
+      border: 1px solid $color-border-medium;
+      color: $color-text-tertiary;
+      cursor: pointer;
+      transition: all $transition-base;
+      @include flex-center;
+
+      &:hover {
+        background: $color-primary-light;
+        border-color: $color-primary;
+        color: $color-primary;
+        transform: scale(1.05);
+      }
+    }
+
+    .search-input-wrap {
+      position: absolute;
+      right: 0;
+      top: 0;
+      display: flex;
+      align-items: center;
+      background: $color-background-primary;
+      border: 1px solid $color-border-medium;
+      border-radius: $radius-lg;
+      padding: 0 $spacing-3;
+      box-shadow: $shadow-md;
+      animation: slideInFromRight 0.3s ease;
+      width: 300px;
+
+      .search-icon {
+        color: $color-text-tertiary;
+        margin-right: $spacing-2;
+      }
+
+      .search-input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        font-size: $font-size-sm;
+        font-family: $font-family-base;
+        color: $color-text-primary;
+        outline: none;
+
+        &::placeholder {
+          color: $color-text-tertiary;
+        }
+      }
+
+      .search-close {
+        background: transparent;
+        border: none;
+        color: $color-text-tertiary;
+        cursor: pointer;
+        padding: $spacing-1;
+        border-radius: $radius-md;
+        transition: all $transition-base;
+
+        &:hover {
+          background: $color-background-tertiary;
+          color: $color-text-primary;
+        }
+      }
+    }
+  }
+
+  // Icon buttons
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: $radius-lg;
+    background: $color-background-secondary;
+    border: 1px solid $color-border-medium;
+    color: $color-text-tertiary;
+    cursor: pointer;
+    transition: all $transition-base;
+    @include flex-center;
+    position: relative;
+
+    &:hover {
+      background: $color-primary-light;
+      border-color: $color-primary;
+      color: $color-primary;
+      transform: scale(1.05);
+    }
+
+    .notif-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: $gradient-error;
+      color: white;
+      font-size: $font-size-xs;
+      font-weight: $font-weight-bold;
+      padding: $spacing-1 $spacing-2;
+      border-radius: $radius-full;
+      min-width: 18px;
+      text-align: center;
+      box-shadow: $shadow-colored-error;
+      animation: pulse 2s infinite;
+    }
+  }
+
+  .top-bar-divider {
+    width: 1px;
+    height: 24px;
+    background: $color-border-medium;
+    margin: 0 $spacing-2;
+  }
+}
+
+// ============================================
+// NOTIFICATION DROPDOWN
+// ============================================
+
+.notification-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: $spacing-2;
+  width: 380px;
+  background: $color-background-primary;
+  border: 1px solid $color-border-medium;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-xl;
+  z-index: $z-index-popover;
+  animation: fadeInDown 0.3s ease;
+  overflow: hidden;
+
+  .notification-header {
+    padding: $spacing-4;
+    border-bottom: 1px solid $color-border-light;
+    @include flex-between;
+    background: $color-background-secondary;
+
+    h3 {
+      font-family: $font-family-heading;
+      font-size: $font-size-base;
+      font-weight: $font-weight-bold;
+      color: $color-text-primary;
+      margin: 0;
+    }
+
+    .notification-actions {
+      display: flex;
+      gap: $spacing-2;
+
+      .action-link {
+        background: transparent;
+        border: none;
+        color: $color-primary;
+        font-size: $font-size-xs;
+        font-weight: $font-weight-semibold;
+        cursor: pointer;
+        transition: all $transition-base;
+
+        &:hover {
+          color: $color-primary-hover;
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+
+  .notification-list {
+    max-height: 400px;
+    overflow-y: auto;
+
+    .notification-item {
+      display: flex;
+      align-items: flex-start;
+      gap: $spacing-3;
+      padding: $spacing-4;
+      border-bottom: 1px solid $color-border-light;
+      cursor: pointer;
+      transition: all $transition-base;
+
+      &:hover {
+        background: $color-background-secondary;
+      }
+
+      &.unread {
+        background: rgba(99, 102, 241, 0.03);
+        border-left: 3px solid $color-primary;
+      }
+
+      .notification-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: $radius-lg;
+        @include flex-center;
+        color: white;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+      }
+
+      .notification-content {
+        flex: 1;
+        min-width: 0;
+
+        .notification-title {
+          font-size: $font-size-sm;
+          font-weight: $font-weight-semibold;
+          color: $color-text-primary;
+          margin: 0 0 $spacing-1;
+        }
+
+        .notification-message {
+          font-size: $font-size-sm;
+          color: $color-text-secondary;
+          margin: 0 0 $spacing-1;
+          @include multi-line-truncate(2);
+        }
+
+        .notification-time {
+          font-size: $font-size-xs;
+          color: $color-text-tertiary;
+          margin: 0;
+        }
+      }
+
+      .notification-delete {
+        background: transparent;
+        border: none;
+        color: $color-text-tertiary;
+        cursor: pointer;
+        padding: $spacing-1;
+        border-radius: $radius-md;
+        transition: all $transition-base;
+
+        &:hover {
+          background: rgba(239, 68, 68, 0.1);
+          color: $color-error;
+        }
+      }
+    }
+  }
+
+  .notification-empty {
+    padding: $spacing-12 $spacing-6;
+    text-align: center;
+
+    i {
+      font-size: 3rem;
+      color: $color-text-tertiary;
+      margin-bottom: $spacing-3;
+    }
+
+    p {
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+      margin: 0;
+    }
+  }
+}
+
+// ============================================
+// CONTENT AREA
+// ============================================
+
+.content-area {
+  flex: 1;
+  padding: $spacing-6;
+  background: transparent;
+}
+
+.content-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+// ============================================
+// MOBILE OVERLAY
+// ============================================
+
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: $z-index-modal-backdrop;
+  animation: fadeIn 0.3s ease;
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+
+@include respond-below('lg') {
+  .sidebar {
+    transform: translateX(-100%);
+
+    &.mobile-open {
+      transform: translateX(0);
+    }
+  }
+
+  .main-content {
+    margin-left: 0;
+
+    &.sidebar-collapsed {
+      margin-left: 0;
+    }
+  }
+
+  .mobile-menu-toggle {
+    display: flex !important;
+  }
+
+  .page-name {
+    font-size: $font-size-xl;
+  }
+
+  .search-bar.search-open {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: $z-index-popover;
+    width: 90%;
+    max-width: 400px;
+  }
+}
+
+@include respond-below('md') {
+  .top-bar-inner {
+    padding: $spacing-3 $spacing-4;
+  }
+
+  .content-area {
+    padding: $spacing-4;
+  }
+
+  .notification-dropdown {
+    width: calc(100vw - 32px);
+    right: -$spacing-4;
+  }
+}
+
+// ============================================
+// DARK MODE
+// ============================================
+
+.my-app-dark .top-bar {
+  background: rgba(30, 30, 50, 0.95);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.my-app-dark .mobile-menu-toggle {
+  background: rgba(40, 40, 60, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: $neutral-100;
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: $primary-400;
+    color: $primary-400;
+  }
+}
+
+.my-app-dark .page-name {
+  color: $neutral-100;
+}
+
+.my-app-dark .search-trigger {
+  background: rgba(40, 40, 60, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: $neutral-400;
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: $primary-400;
+    color: $primary-400;
+  }
+}
+
+.my-app-dark .search-input-wrap {
+  background: rgba(40, 40, 60, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+
+  .search-input {
+    color: $neutral-100;
+
+    &::placeholder {
+      color: $neutral-500;
+    }
+  }
+}
+
+.my-app-dark .icon-btn {
+  background: rgba(40, 40, 60, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: $neutral-400;
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: $primary-400;
+    color: $primary-400;
+  }
+}
+
+.my-app-dark .top-bar-divider {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.my-app-dark .notification-dropdown {
+  background: rgba(30, 30, 50, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+
+  .notification-header {
+    background: rgba(40, 40, 60, 0.5);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+
+    h3 {
+      color: $neutral-100;
+    }
+  }
+
+  .notification-item {
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+
+    &:hover {
+      background: rgba(40, 40, 60, 0.5);
+    }
+
+    .notification-title {
+      color: $neutral-100;
+    }
+
+    .notification-message {
+      color: $neutral-400;
+    }
+
+    .notification-time {
+      color: $neutral-500;
+    }
+  }
+}

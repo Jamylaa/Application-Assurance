@@ -1,0 +1,95 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "search": "Search",
+    "filter": "Filter",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Information"
+  },
+  "auth": {
+    "loginTitle": "Login to Vermeg Assurance",
+    "loginSubtitle": "Access your customer portal",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "signUp": "Sign up",
+    "rememberMe": "Remember me"
+  },
+  "products": {
+    "title": "Insurance Products",
+    "list": "Product List",
+    "details": "Product Details",
+    "addProduct": "Add Product",
+    "editProduct": "Edit Product",
+    "deleteProduct": "Delete Product",
+    "name": "Product Name",
+    "description": "Description",
+    "price": "Price",
+    "category": "Category",
+    "searchPlaceholder": "Search for a product...",
+    "noProducts": "No products found"
+  },
+  "users": {
+    "title": "User Management",
+    "list": "User List",
+    "addUser": "Add User",
+    "editUser": "Edit User",
+    "deleteUser": "Delete User",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "role": "Role",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "recommendation": {
+    "title": "AI Recommendations",
+    "subtitle": "Personalized suggestions based on artificial intelligence",
+    "getRecommendation": "Get Recommendations",
+    "basedOn": "Based on",
+    "confidence": "Confidence",
+    "reason": "Reason"
+  },
+  "chatbot": {
+    "title": "AI Assistant",
+    "placeholder": "Ask your question here...",
+    "send": "Send",
+    "clear": "Clear",
+    "typing": "AI is typing...",
+    "error": "An error occurred",
+    "retry": "Retry"
+  },
+  "navigation": {
+    "home": "Home",
+    "products": "Products",
+    "users": "Users",
+    "recommendations": "Recommendations",
+    "chatbot": "AI Assistant",
+    "analytics": "Analytics",
+    "settings": "Settings"
+  },
+  "language": {
+    "title": "Language",
+    "french": "French",
+    "english": "English"
+  }
+}

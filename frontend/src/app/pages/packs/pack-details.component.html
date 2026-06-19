@@ -1,0 +1,204 @@
+<div class="page-container">
+  <p-toast position="top-right"></p-toast>
+  <div class="page-header packs-header">
+    <div class="page-header-left">
+      <div class="header-icon"><i class="bi bi-collection-fill"></i></div>
+      <div>
+        <h1>Détails pack</h1>
+        <p *ngIf="pack as p">{{ p.nomPack }}</p>
+        <p *ngIf="!pack">Consultez les informations du pack</p>
+      </div>
+    </div>
+    <div class="page-header-actions">
+      <p-button label="Retour" icon="pi pi-arrow-left" styleClass="p-button-outlined" (click)="back()"></p-button>
+      <p-button label="Modifier" icon="pi pi-pencil" [disabled]="!packId" (click)="edit()"></p-button>
+    </div>
+  </div>
+
+  <!-- Dashboard Metrics -->
+  <div class="metrics-dashboard" *ngIf="pack">
+    <div class="metric-card rating">
+      <div class="metric-icon"><i class="bi bi-star-fill"></i></div>
+      <div class="metric-content">
+        <span class="metric-label">Note globale</span>
+        <span class="metric-value">{{ packRating }}/100</span>
+      </div>
+    </div>
+    <div class="metric-card garanties">
+      <div class="metric-icon"><i class="bi bi-shield-check"></i></div>
+      <div class="metric-content">
+        <span class="metric-label">Garanties</span>
+        <span class="metric-value">{{ garantiesCount }}</span>
+      </div>
+    </div>
+    <div class="metric-card coverage">
+      <div class="metric-icon"><i class="bi bi-globe"></i></div>
+      <div class="metric-content">
+        <span class="metric-label">Score couverture</span>
+        <span class="metric-value">{{ getCoverageScore() }}%</span>
+      </div>
+    </div>
+    <div class="metric-card pricing">
+      <div class="metric-icon"><i class="bi bi-currency-euro"></i></div>
+      <div class="metric-content">
+        <span class="metric-label">Catégorie prix</span>
+        <span class="metric-value">{{ getPricingCategory() }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="details-card">
+    <p-card>
+      <ng-container *ngIf="loading; else content">
+        <div class="loading">
+          <p-progressSpinner ariaLabel="loading"></p-progressSpinner>
+        </div>
+      </ng-container>
+
+      <ng-template #content>
+        <ng-container *ngIf="pack as p; else empty">
+          <!-- Informations principales -->
+          <div class="details-section">
+            <h3><i class="bi bi-info-circle"></i> Informations principales</h3>
+            <div class="section-grid">
+              <div class="info-item">
+                <span class="info-label">Nom</span>
+                <span class="info-value primary">{{ p.nomPack || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Description</span>
+                <span class="info-value">{{ p.description || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Statut</span>
+                <p-tag [severity]="getStatusSeverity(p.statut)" [value]="p.statut || 'INCONNU'"></p-tag>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tarification avec métriques visuelles -->
+          <div class="details-section">
+            <h3><i class="bi bi-currency-euro"></i> Tarification</h3>
+            <div class="section-grid">
+              <div class="info-item highlight">
+                <span class="info-label">Prix mensuel</span>
+                <span class="info-value price">{{ p.prixMensuel || '—' }} TND</span>
+                <div class="price-indicator">
+                  <div class="price-bar" [style.width.%]="Math.min(((p.prixMensuel || 0) / 200) * 100, 100)"></div>
+                </div>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Durée contrat</span>
+                <span class="info-value">{{ p.dureeMinContrat || '—' }} – {{ p.dureeMaxContrat || '—' }} mois</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Catégorie</span>
+                <span class="info-value pricing-category">{{ getPricingCategory() }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Couverture avec score visuel -->
+          <div class="details-section">
+            <h3><i class="bi bi-shield"></i> Couverture</h3>
+            <div class="section-grid">
+              <div class="info-item">
+                <span class="info-label">Niveau</span>
+                <span class="info-value niveau" [ngClass]="getNiveauClass(p.niveauCouverture)">{{ p.niveauCouverture || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Zone géographique</span>
+                <span class="info-value">{{ p.couvertureGeographique || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Âge éligible</span>
+                <span class="info-value">{{ getAgeRange() }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Type clients</span>
+                <span class="info-value">{{ (p.typeClients || []).join(', ') || '—' }}</span>
+              </div>
+            </div>
+            <div class="coverage-score-bar">
+              <span class="score-label">Score de couverture géographique</span>
+              <div class="score-bar">
+                <div class="score-fill" [style.width.%]="getCoverageScore()"></div>
+              </div>
+              <span class="score-value">{{ getCoverageScore() }}%</span>
+            </div>
+          </div>
+
+          <!-- Garanties associées -->
+          <div class="details-section">
+            <h3><i class="bi bi-shield-check"></i> Garanties associées ({{ garantiesCount }})</h3>
+            <div *ngIf="loadingGaranties" class="loading-small">
+              <p-progressSpinner strokeWidth="2" [style]="{ width: '24px', height: '24px' }"></p-progressSpinner>
+              <span>Chargement des garanties...</span>
+            </div>
+            <div *ngIf="!loadingGaranties && packGaranties.length === 0" class="empty-garanties">
+              <i class="bi bi-inbox"></i>
+              <span>Aucune garantie associée à ce pack</span>
+            </div>
+            <div *ngIf="!loadingGaranties && packGaranties.length > 0" class="garanties-list">
+              <div class="garantie-item" *ngFor="let pg of packGaranties">
+                <div class="garantie-header">
+                  <div class="garantie-name">
+                    <i class="bi bi-shield-fill"></i>
+                    <span>{{ pg.nomGarantie }}</span>
+                  </div>
+                  <div class="garantie-status">
+                    <p-tag [severity]="pg.actif ? 'success' : 'danger'" [value]="pg.actif ? 'Active' : 'Inactive'"></p-tag>
+                    <p-tag *ngIf="pg.optionnelle" severity="info" value="Optionnelle"></p-tag>
+                  </div>
+                </div>
+                <div class="garantie-details">
+                  <div class="garantie-detail">
+                    <span class="detail-label">Taux:</span>
+                    <span class="detail-value">{{ pg.tauxRemboursement }}%</span>
+                  </div>
+                  <div class="garantie-detail">
+                    <span class="detail-label">Plafond:</span>
+                    <span class="detail-value">{{ pg.plafond }} TND</span>
+                  </div>
+                  <div class="garantie-detail">
+                    <span class="detail-label">Franchise:</span>
+                    <span class="detail-value">{{ pg.franchise }} TND</span>
+                  </div>
+                  <div class="garantie-detail">
+                    <span class="detail-label">Délai carence:</span>
+                    <span class="detail-value">{{ pg.delaiCarence }} jours</span>
+                  </div>
+                  <div class="garantie-detail">
+                    <span class="detail-label">Supplément:</span>
+                    <span class="detail-value">{{ pg.supplementPrix }} TND</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Métadonnées -->
+          <div class="details-section meta">
+            <h3><i class="bi bi-gear"></i> Métadonnées</h3>
+            <div class="section-grid">
+              <div class="info-item">
+                <span class="info-label">ID</span>
+                <span class="info-value small">{{ p.idPack || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Produit associé</span>
+                <span class="info-value small">{{ p.nomProduit || p.produitId || '—' }}</span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #empty>
+          <div class="empty">
+            Pack introuvable.
+          </div>
+        </ng-template>
+      </ng-template>
+    </p-card>
+  </div>
+</div>

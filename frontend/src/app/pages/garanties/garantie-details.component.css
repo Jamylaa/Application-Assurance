@@ -1,0 +1,288 @@
+.page-container {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+  min-height: 100vh;
+}
+
+.details-card {
+  margin-top: 1.5rem;
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 0;
+}
+
+/* Metrics Dashboard */
+.metrics-dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin: 2rem 0;
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+.metric-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+}
+
+.metric-card.rating {
+  background: linear-gradient(135deg, rgba(240, 147, 251, 0.9) 0%, rgba(245, 87, 108, 0.9) 100%);
+  border-color: rgba(240, 147, 251, 0.3);
+}
+
+.metric-card.packs {
+  background: linear-gradient(135deg, rgba(79, 172, 254, 0.9) 0%, rgba(0, 242, 254, 0.9) 100%);
+  border-color: rgba(79, 172, 254, 0.3);
+}
+
+.metric-card.taux {
+  background: linear-gradient(135deg, rgba(67, 233, 123, 0.9) 0%, rgba(56, 249, 215, 0.9) 100%);
+  border-color: rgba(67, 233, 123, 0.3);
+}
+
+.metric-card.plafond {
+  background: linear-gradient(135deg, rgba(250, 112, 154, 0.9) 0%, rgba(254, 225, 64, 0.9) 100%);
+  border-color: rgba(250, 112, 154, 0.3);
+}
+
+.metric-icon {
+  font-size: 2rem;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(5px);
+  border-radius: 14px;
+  transition: transform 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.metric-card:hover .metric-icon {
+  transform: scale(1.15) rotate(10deg);
+}
+
+.metric-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metric-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.02em;
+}
+
+/* Details Sections */
+.details-section {
+  margin-bottom: 2.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.details-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.details-section h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-color, #212529);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  letter-spacing: -0.01em;
+}
+
+.details-section h3 i {
+  color: var(--primary-color, #667eea);
+  font-size: 1.25rem;
+}
+
+.section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(5px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+}
+
+.info-item:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-color: rgba(102, 126, 234, 0.3);
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.info-label {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary, #6c757d);
+  font-weight: 500;
+}
+
+.info-value {
+  font-size: 1rem;
+  color: var(--text-color, #212529);
+  font-weight: 500;
+}
+
+.info-value.primary {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--primary-color, #667eea);
+}
+
+.info-value.taux {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--success-color, #28a745);
+}
+
+.info-item.highlight {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-radius: 16px;
+  border-left: 4px solid var(--primary-color, #667eea);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+}
+
+/* Taux Indicator */
+.taux-indicator {
+  margin-top: 0.5rem;
+}
+
+.taux-bar {
+  height: 6px;
+  background: linear-gradient(90deg, #28a745 0%, #ffc107 50%, #dc3545 100%);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 1rem;
+  padding: 0.25rem 0;
+}
+
+.label {
+  color: var(--text-color-secondary, #6c757d);
+  font-weight: 600;
+}
+
+.value {
+  color: var(--text-color, #212529);
+  word-break: break-word;
+}
+
+.empty {
+  padding: 1rem 0;
+  color: var(--text-color-secondary, #6c757d);
+}
+
+@media (max-width: 768px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+
+  .metrics-dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .section-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Animations Keyframes */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Dark Mode Overrides */
+.my-app-dark .page-container {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+.my-app-dark .metric-card {
+  background: rgba(30, 30, 50, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.my-app-dark .info-item {
+  background: rgba(40, 40, 60, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.my-app-dark .info-item.highlight {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+}
+

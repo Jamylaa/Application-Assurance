@@ -1,0 +1,95 @@
+{
+  "common": {
+    "welcome": "Bienvenue",
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "register": "Inscription",
+    "dashboard": "Tableau de bord",
+    "settings": "Paramètres",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "add": "Ajouter",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "submit": "Soumettre",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "warning": "Avertissement",
+    "info": "Information"
+  },
+  "auth": {
+    "loginTitle": "Connexion à Vermeg Assurance",
+    "loginSubtitle": "Accédez à votre espace client",
+    "email": "Email",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "noAccount": "Pas de compte ?",
+    "signUp": "S'inscrire",
+    "rememberMe": "Se souvenir de moi"
+  },
+  "products": {
+    "title": "Produits d'Assurance",
+    "list": "Liste des produits",
+    "details": "Détails du produit",
+    "addProduct": "Ajouter un produit",
+    "editProduct": "Modifier le produit",
+    "deleteProduct": "Supprimer le produit",
+    "name": "Nom du produit",
+    "description": "Description",
+    "price": "Prix",
+    "category": "Catégorie",
+    "searchPlaceholder": "Rechercher un produit...",
+    "noProducts": "Aucun produit trouvé"
+  },
+  "users": {
+    "title": "Gestion des Utilisateurs",
+    "list": "Liste des utilisateurs",
+    "addUser": "Ajouter un utilisateur",
+    "editUser": "Modifier l'utilisateur",
+    "deleteUser": "Supprimer l'utilisateur",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "email": "Email",
+    "role": "Rôle",
+    "status": "Statut",
+    "active": "Actif",
+    "inactive": "Inactif"
+  },
+  "recommendation": {
+    "title": "Recommandations IA",
+    "subtitle": "Suggestions personnalisées basées sur l'intelligence artificielle",
+    "getRecommendation": "Obtenir des recommandations",
+    "basedOn": "Basé sur",
+    "confidence": "Confiance",
+    "reason": "Raison"
+  },
+  "chatbot": {
+    "title": "Assistant IA",
+    "placeholder": "Posez votre question ici...",
+    "send": "Envoyer",
+    "clear": "Effacer",
+    "typing": "L'IA rédige...",
+    "error": "Une erreur s'est produite",
+    "retry": "Réessayer"
+  },
+  "navigation": {
+    "home": "Accueil",
+    "products": "Produits",
+    "users": "Utilisateurs",
+    "recommendations": "Recommandations",
+    "chatbot": "Assistant IA",
+    "analytics": "Analytiques",
+    "settings": "Paramètres"
+  },
+  "language": {
+    "title": "Langue",
+    "french": "Français",
+    "english": "Anglais"
+  }
+}

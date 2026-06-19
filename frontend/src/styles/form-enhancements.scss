@@ -1,0 +1,874 @@
+@import './design-system.scss';
+
+// ============================================
+// FORM ENHANCEMENTS - Design moderne avec validation UX
+// ============================================
+
+// ============================================
+// FORM CONTAINER
+// ============================================
+
+.form-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: $spacing-8;
+  background: $glass-bg-light;
+  backdrop-filter: $glass-blur;
+  border: 1px solid $glass-border-light;
+  border-radius: $radius-2xl;
+  box-shadow: $shadow-lg;
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &--compact {
+    max-width: 600px;
+    padding: $spacing-6;
+  }
+
+  &--full {
+    max-width: 100%;
+  }
+}
+
+// ============================================
+// FORM GROUP
+// ============================================
+
+.form-group {
+  margin-bottom: $spacing-6;
+  position: relative;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &--inline {
+    display: flex;
+    align-items: center;
+    gap: $spacing-4;
+    margin-bottom: $spacing-4;
+
+    .form-label {
+      margin-bottom: 0;
+      min-width: 150px;
+    }
+
+    .form-control {
+      flex: 1;
+    }
+  }
+
+  &--horizontal {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: $spacing-4;
+    align-items: start;
+
+    @include respond-below('md') {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+.form-group-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: $spacing-6;
+  margin-bottom: $spacing-6;
+
+  @include respond-below('sm') {
+    grid-template-columns: 1fr;
+    gap: $spacing-4;
+  }
+}
+
+// ============================================
+// FORM LABEL
+// ============================================
+
+.form-label {
+  display: block;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-2;
+  letter-spacing: $letter-spacing-normal;
+  transition: color $transition-base;
+
+  &--required {
+    &::after {
+      content: ' *';
+      color: $color-error;
+    }
+  }
+
+  &--inline {
+    display: inline;
+    margin-bottom: 0;
+  }
+
+  &--floating {
+    position: absolute;
+    left: $spacing-4;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $color-text-tertiary;
+    pointer-events: none;
+    transition: all $transition-base;
+    background: transparent;
+    padding: 0 $spacing-1;
+    margin: 0;
+  }
+
+  &--helper {
+    font-weight: $font-weight-normal;
+    color: $color-text-secondary;
+    font-size: $font-size-xs;
+    margin-top: $spacing-1;
+  }
+}
+
+.form-control:focus ~ .form-label--floating,
+.form-control:not(:placeholder-shown) ~ .form-label--floating {
+  top: 0;
+  transform: translateY(-50%);
+  font-size: $font-size-xs;
+  background: $color-background-primary;
+  color: $color-primary;
+}
+
+// ============================================
+// FORM CONTROL (INPUTS)
+// ============================================
+
+.form-control {
+  width: 100%;
+  padding: $spacing-3 $spacing-4;
+  border: 1px solid $color-border-medium;
+  border-radius: $radius-lg;
+  font-size: $font-size-base;
+  font-family: $font-family-base;
+  line-height: $line-height-normal;
+  color: $color-text-primary;
+  background: $color-background-primary;
+  transition: all $transition-base;
+  outline: none;
+
+  &::placeholder {
+    color: $color-text-tertiary;
+  }
+
+  &:hover {
+    border-color: $color-border-dark;
+  }
+
+  &:focus {
+    border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+
+  &:disabled {
+    background: $color-background-secondary;
+    color: $color-text-tertiary;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  &--sm {
+    padding: $spacing-2 $spacing-3;
+    font-size: $font-size-sm;
+  }
+
+  &--lg {
+    padding: $spacing-4 $spacing-5;
+    font-size: $font-size-lg;
+  }
+
+  // Validation states
+  &--valid {
+    border-color: $color-success;
+    background: rgba(16, 185, 129, 0.02);
+
+    &:focus {
+      border-color: $color-success;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+  }
+
+  &--invalid {
+    border-color: $color-error;
+    background: rgba(239, 68, 68, 0.02);
+
+    &:focus {
+      border-color: $color-error;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+  }
+
+  &--warning {
+    border-color: $color-warning;
+    background: rgba(245, 158, 11, 0.02);
+
+    &:focus {
+      border-color: $color-warning;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+  }
+}
+
+// ============================================
+// TEXTAREA
+// ============================================
+
+.form-textarea {
+  @extend .form-control;
+  min-height: 120px;
+  resize: vertical;
+  font-family: $font-family-base;
+
+  &--auto {
+    min-height: auto;
+    height: auto;
+    resize: none;
+  }
+
+  &--code {
+    font-family: $font-family-mono;
+    font-size: $font-size-sm;
+    background: $neutral-900;
+    color: $neutral-100;
+  }
+}
+
+// ============================================
+// SELECT
+// ============================================
+
+.form-select {
+  @extend .form-control;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right $spacing-3 center;
+  background-size: 16px 12px;
+  padding-right: $spacing-10;
+
+  &--multiple {
+    height: auto;
+    min-height: 120px;
+    padding: $spacing-2;
+  }
+}
+
+// ============================================
+// CHECKBOX & RADIO
+// ============================================
+
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+  cursor: pointer;
+  user-select: none;
+
+  &--inline {
+    display: inline-flex;
+    margin-right: $spacing-4;
+  }
+
+  &--switch {
+    .form-check-input {
+      width: 44px;
+      height: 24px;
+      border-radius: $radius-full;
+      position: relative;
+      background: $color-border-medium;
+      border: none;
+      transition: all $transition-base;
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: white;
+        transition: all $transition-base;
+        box-shadow: $shadow-sm;
+      }
+
+      &:checked {
+        background: $gradient-primary;
+
+        &::after {
+          left: 22px;
+        }
+      }
+    }
+  }
+}
+
+.form-check-input {
+  width: 20px;
+  height: 20px;
+  border: 2px solid $color-border-medium;
+  border-radius: $radius-md;
+  background: $color-background-primary;
+  cursor: pointer;
+  transition: all $transition-base;
+  appearance: none;
+  @include flex-center;
+
+  &:checked {
+    background: $gradient-primary;
+    border-color: $color-primary;
+
+    &::after {
+      content: '✓';
+      color: white;
+      font-size: 0.75rem;
+      font-weight: $font-weight-bold;
+    }
+  }
+
+  &:hover:not(:disabled) {
+    border-color: $color-primary;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &--radio {
+    border-radius: 50%;
+
+    &:checked::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: white;
+    }
+  }
+}
+
+.form-check-label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  cursor: pointer;
+  margin: 0;
+  line-height: $line-height-normal;
+}
+
+// ============================================
+// VALIDATION MESSAGES
+// ============================================
+
+.form-feedback {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  margin-top: $spacing-2;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  animation: fadeIn 0.3s ease;
+
+  &--valid {
+    color: $color-success;
+
+    i {
+      color: $color-success;
+    }
+  }
+
+  &--invalid {
+    color: $color-error;
+
+    i {
+      color: $color-error;
+    }
+  }
+
+  &--warning {
+    color: $color-warning;
+
+    i {
+      color: $color-warning;
+    }
+  }
+
+  &--info {
+    color: #3B82F6;
+
+    i {
+      color: #3B82F6;
+    }
+  }
+}
+
+.form-hint {
+  display: block;
+  margin-top: $spacing-2;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  font-weight: $font-weight-normal;
+}
+
+// ============================================
+// INPUT GROUPS
+// ============================================
+
+.input-group {
+  display: flex;
+  position: relative;
+  align-items: stretch;
+
+  .form-control {
+    flex: 1;
+    border-radius: 0;
+
+    &:first-child {
+      border-top-left-radius: $radius-lg;
+      border-bottom-left-radius: $radius-lg;
+    }
+
+    &:last-child {
+      border-top-right-radius: $radius-lg;
+      border-bottom-right-radius: $radius-lg;
+    }
+
+    &:not(:first-child):not(:last-child) {
+      border-radius: 0;
+    }
+  }
+
+  .input-group-text,
+  .input-group-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 $spacing-4;
+    background: $color-background-secondary;
+    border: 1px solid $color-border-medium;
+    color: $color-text-secondary;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    white-space: nowrap;
+
+    &:first-child {
+      border-right: none;
+      border-top-left-radius: $radius-lg;
+      border-bottom-left-radius: $radius-lg;
+    }
+
+    &:last-child {
+      border-left: none;
+      border-top-right-radius: $radius-lg;
+      border-bottom-right-radius: $radius-lg;
+    }
+  }
+
+  .input-group-btn {
+    padding: 0;
+    background: transparent;
+    border: 1px solid $color-border-medium;
+
+    button {
+      border: none;
+      background: transparent;
+      padding: $spacing-3 $spacing-4;
+      color: $color-text-tertiary;
+      cursor: pointer;
+      transition: all $transition-base;
+
+      &:hover {
+        color: $color-primary;
+        background: $color-background-tertiary;
+      }
+    }
+  }
+}
+
+// ============================================
+// SEARCH INPUT
+// ============================================
+
+.search-input-wrapper {
+  position: relative;
+  width: 100%;
+
+  .search-icon {
+    position: absolute;
+    left: $spacing-4;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $color-text-tertiary;
+    font-size: 1rem;
+    pointer-events: none;
+  }
+
+  .search-clear {
+    position: absolute;
+    right: $spacing-4;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: $color-text-tertiary;
+    cursor: pointer;
+    padding: $spacing-1;
+    border-radius: $radius-md;
+    transition: all $transition-base;
+
+    &:hover {
+      background: $color-background-tertiary;
+      color: $color-text-primary;
+    }
+  }
+
+  .form-control {
+    padding-left: $spacing-10;
+    padding-right: $spacing-10;
+  }
+}
+
+// ============================================
+// DATE PICKER
+// ============================================
+
+.date-picker-wrapper {
+  position: relative;
+
+  .date-picker-icon {
+    position: absolute;
+    right: $spacing-4;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $color-text-tertiary;
+    pointer-events: none;
+  }
+
+  .form-control {
+    padding-right: $spacing-10;
+  }
+}
+
+// ============================================
+// FILE UPLOAD
+// ============================================
+
+.file-upload {
+  border: 2px dashed $color-border-medium;
+  border-radius: $radius-xl;
+  padding: $spacing-8;
+  text-align: center;
+  cursor: pointer;
+  transition: all $transition-base;
+  background: $color-background-secondary;
+
+  &:hover {
+    border-color: $color-primary;
+    background: rgba(99, 102, 241, 0.02);
+  }
+
+  &--dragover {
+    border-color: $color-primary;
+    background: rgba(99, 102, 241, 0.05);
+    transform: scale(1.02);
+  }
+
+  .file-upload-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: $radius-xl;
+    background: rgba(99, 102, 241, 0.1);
+    @include flex-center;
+    color: $color-primary;
+    font-size: 2rem;
+    margin: 0 auto $spacing-4;
+    transition: all $transition-base;
+  }
+
+  &:hover .file-upload-icon {
+    transform: scale(1.1);
+    background: rgba(99, 102, 241, 0.15);
+  }
+
+  .file-upload-title {
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin: 0 0 $spacing-2;
+  }
+
+  .file-upload-description {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    margin: 0;
+  }
+
+  .file-upload-input {
+    display: none;
+  }
+}
+
+.file-list {
+  margin-top: $spacing-4;
+
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: $spacing-3;
+    padding: $spacing-3;
+    background: $color-background-secondary;
+    border-radius: $radius-lg;
+    margin-bottom: $spacing-2;
+    animation: fadeIn 0.3s ease;
+
+    .file-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: $radius-md;
+      background: rgba(99, 102, 241, 0.1);
+      @include flex-center;
+      color: $color-primary;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .file-info {
+      flex: 1;
+      min-width: 0;
+
+      .file-name {
+        font-size: $font-size-sm;
+        font-weight: $font-weight-medium;
+        color: $color-text-primary;
+        margin: 0;
+        @include truncate-text;
+      }
+
+      .file-size {
+        font-size: $font-size-xs;
+        color: $color-text-tertiary;
+        margin: 0;
+      }
+    }
+
+    .file-remove {
+      background: transparent;
+      border: none;
+      color: $color-text-tertiary;
+      cursor: pointer;
+      padding: $spacing-1;
+      border-radius: $radius-md;
+      transition: all $transition-base;
+
+      &:hover {
+        background: rgba(239, 68, 68, 0.1);
+        color: $color-error;
+      }
+    }
+  }
+}
+
+// ============================================
+// FORM ACTIONS
+// ============================================
+
+.form-actions {
+  display: flex;
+  gap: $spacing-3;
+  margin-top: $spacing-8;
+  padding-top: $spacing-6;
+  border-top: 1px solid $color-border-light;
+
+  &--center {
+    justify-content: center;
+  }
+
+  &--right {
+    justify-content: flex-end;
+  }
+
+  &--space-between {
+    justify-content: space-between;
+  }
+
+  @include respond-below('sm') {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+// ============================================
+// PROGRESS STEPPER
+// ============================================
+
+.form-stepper {
+  margin-bottom: $spacing-8;
+
+  .stepper-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-6;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: $color-border-light;
+      z-index: 0;
+    }
+  }
+
+  .stepper-step {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $spacing-2;
+
+    &--completed .step-number {
+      background: $gradient-success;
+      border-color: $color-success;
+      color: white;
+    }
+
+    &--active .step-number {
+      background: $gradient-primary;
+      border-color: $color-primary;
+      color: white;
+      box-shadow: $shadow-colored-primary;
+    }
+
+    .step-number {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: $color-background-primary;
+      border: 2px solid $color-border-medium;
+      @include flex-center;
+      font-weight: $font-weight-bold;
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+      transition: all $transition-base;
+    }
+
+    .step-label {
+      font-size: $font-size-xs;
+      font-weight: $font-weight-medium;
+      color: $color-text-tertiary;
+      text-align: center;
+      max-width: 100px;
+
+      &--active {
+        color: $color-primary;
+        font-weight: $font-weight-semibold;
+      }
+    }
+  }
+
+  .stepper-content {
+    animation: fadeInUp 0.4s ease;
+  }
+}
+
+// ============================================
+// DARK MODE
+// ============================================
+
+.my-app-dark .form-container {
+  background: $glass-bg-dark;
+  border-color: $glass-border-dark;
+}
+
+.my-app-dark .form-label {
+  color: $neutral-100;
+}
+
+.my-app-dark .form-control {
+  background: rgba(40, 40, 60, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: $neutral-100;
+
+  &::placeholder {
+    color: $neutral-500;
+  }
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+.my-app-dark .form-check-label {
+  color: $neutral-100;
+}
+
+.my-app-dark .input-group-text,
+.my-app-dark .input-group-btn {
+  background: rgba(40, 40, 60, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: $neutral-400;
+}
+
+.my-app-dark .search-input-wrapper .search-icon {
+  color: $neutral-500;
+}
+
+.my-app-dark .file-upload {
+  background: rgba(40, 40, 60, 0.5);
+  border-color: rgba(255, 255, 255, 0.1);
+
+  &:hover {
+    border-color: $primary-400;
+    background: rgba(99, 102, 241, 0.1);
+  }
+}
+
+.my-app-dark .file-list .file-item {
+  background: rgba(40, 40, 60, 0.5);
+}
+
+.my-app-dark .form-actions {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+
+@include respond-below('md') {
+  .form-container {
+    padding: $spacing-6;
+  }
+
+  .form-group--horizontal {
+    grid-template-columns: 1fr;
+  }
+
+  .form-stepper .stepper-header {
+    .step-label {
+      font-size: 0.625rem;
+      max-width: 60px;
+    }
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+      font-size: 0.75rem;
+    }
+  }
+}

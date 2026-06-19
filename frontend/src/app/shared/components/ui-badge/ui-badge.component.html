@@ -1,0 +1,12 @@
+<span class="ui-badge {{ getVariantClass() }} {{ getSizeClass() }}">
+  <!-- Dot variant -->
+  <span *ngIf="dot" class="badge-dot-indicator"></span>
+
+  <!-- Icon -->
+  <i *ngIf="icon && !dot" [class]="'bi ' + icon" class="badge-icon"></i>
+
+  <!-- Content -->
+  <span *ngIf="!dot" class="badge-content">
+    <ng-content></ng-content>
+  </span>
+</span>

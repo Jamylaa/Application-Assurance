@@ -1,0 +1,187 @@
+spring:
+  application:
+    name: gestionProduit
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+  cloud:
+    config:
+      enabled: false
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:9090/realms/vermeg-realm}
+
+  # Redis Configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+      timeout: 60000
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
+  # Cache Configuration
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000 # 1 hour
+      cache-null-values: false
+
+  # Actuator Configuration
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: "*"
+    endpoint:
+      health:
+        show-details: always
+      metrics:
+        enabled: true
+      prometheus:
+        enabled: true
+    metrics:
+      export:
+        prometheus:
+          enabled: true
+      tags:
+        application: ${spring.application.name}
+        environment: ${spring.profiles.active:local}
+
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+    consumer:
+      group-id: gestion-produit-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+
+server:
+  port: 9093
+
+# Google AI Studio Configuration
+google:
+  api:
+    key: ${GOOGLE_API_KEY:}
+
+# Gemini Configuration (for chat)
+gemini:
+  api-key: ${GEMINI_API_KEY:}
+  model: ${GEMINI_MODEL:gemini-2.0-flash}
+  url: https://generativelanguage.googleapis.com/v1beta/models
+  timeout-seconds: 30
+  max-retries: 3
+  retry-delay-ms: 1000
+  enabled: ${GEMINI_ENABLED:true}
+
+chatbot:
+  ai-extraction-enabled: true
+  fallback-on-ai-error: true
+  strict-action-detection: true
+  log-prompts: true
+
+# Configuration RAG
+rag:
+  embedding:
+    enabled: ${RAG_EMBEDDING_ENABLED:false}
+  search:
+    enabled: ${RAG_SEARCH_ENABLED:false}
+    top-k: 5
+    similarity-threshold: 0.7
+
+# Spring AI Configuration - Commented out (dependencies not available)
+# spring:
+#   ai:
+#     openai:
+#       api-key: ${OPENAI_API_KEY:}
+#       chat:
+#         options:
+#           model: gpt-4
+#           temperature: 0.7
+#     vectorstore:
+#       mongodb:
+#         collection-name: product_embeddings
+#         index-name: vector_index
+#         initialize-schema: true
+
+web:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
+    allowed-methods: GET,POST,PUT,DELETE
+    allowed-headers: "*"
+    allow-credentials: true
+    max-age: 3600
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka}
+
+  instance:
+    prefer-ip-address: true
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework: INFO
+    org.hibernate: INFO
+    com.zaxxer.hikari: INFO
+    org.springframework.web: INFO
+    org.springframework.web.servlet.mvc.method.annotation: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://admin:password@mongodb:27017/vermeg_db?authSource=admin}
+      database: ${MONGODB_DATABASE:vermeg_db}
+    redis:
+      host: redis
+      port: 6379
+
+  kafka:
+    bootstrap-servers: kafka:9092
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka:8761/eureka
+  instance:
+    prefer-ip-address: false
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://admin:password@localhost:27017/vermeg_db?authSource=admin}
+      database: ${MONGODB_DATABASE:vermeg_db}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka

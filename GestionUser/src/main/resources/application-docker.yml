@@ -1,0 +1,11 @@
+# application-docker.yml
+spring:
+  data:
+    mongodb:
+      uri: mongodb://admin:password@mongodb:27017/vermeg_db?authSource=admin
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/vermeg-realm}

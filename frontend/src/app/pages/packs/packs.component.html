@@ -1,0 +1,170 @@
+<div class="page-container">
+  <p-toast position="top-right"></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+
+  <!-- Page Header -->
+  <div class="page-header packs-header animate-fade-in-down">
+    <div class="page-header-left">
+      <div class="header-icon"><i class="bi bi-collection-fill"></i></div>
+      <div>
+        <h1>Gestion des Packs</h1>
+        <p>Gérez tous les packs d'assurance de la plateforme</p>
+      </div>
+    </div>
+    <div class="page-header-actions">
+      <p-button
+        label="Actualiser"
+        icon="pi pi-refresh"
+        [loading]="loading"
+        (click)="loadPacks()"
+        styleClass="p-button-outlined">
+      </p-button>
+      <p-button
+        label="Ajouter"
+        icon="pi pi-plus"
+        (click)="addPack()"
+        styleClass="p-button-primary">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="table-card animate-fade-in-up">
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <div class="table-title">
+          <i class="bi bi-list-ul"></i>
+          <span>Packs</span>
+          <span class="count-badge">{{ packs.length }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="responsive-table">
+      <p-table
+        [value]="packs"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[5,10,20,50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Affichage {first} – {last} sur {totalRecords}"
+        sortMode="single"
+        styleClass="p-table"
+        responsiveLayout="scroll">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="nomPack">Nom du pack <p-sortIcon field="nomPack"></p-sortIcon></th>
+          <th pSortableColumn="description">Description <p-sortIcon field="description"></p-sortIcon></th>
+          <th pSortableColumn="prixMensuel">Prix <p-sortIcon field="prixMensuel"></p-sortIcon></th>
+          <th pSortableColumn="ageMinimum">Âge <p-sortIcon field="ageMinimum"></p-sortIcon></th>
+          <th pSortableColumn="couvertureGeographique">Couverture <p-sortIcon field="couvertureGeographique"></p-sortIcon></th>
+          <th pSortableColumn="niveauCouverture">Niveau <p-sortIcon field="niveauCouverture"></p-sortIcon></th>
+          <th>Garanties</th>
+          <th pSortableColumn="statut">Statut <p-sortIcon field="statut"></p-sortIcon></th>
+          <th style="width:100px;text-align:center;">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-pack>
+        <tr class="table-row">
+          <td>
+            <div class="pack-cell">
+              <div class="pack-icon"><i class="bi bi-collection-fill"></i></div>
+              <span class="cell-primary">{{ pack.nomPack }}</span>
+            </div>
+          </td>
+          <td><span class="cell-text">{{ pack.description || '—' }}</span></td>
+          <td>
+            <div class="price-cell">
+              <span class="price-value">{{ pack.prixMensuel }}</span>
+              <span class="price-currency">TND</span>
+            </div>
+          </td>
+          <td>
+            <div class="age-cell">
+              <i class="bi bi-person"></i>
+              <span>{{ pack.ageMinimum || 0 }} - {{ pack.ageMaximum || 120 }} ans</span>
+            </div>
+          </td>
+          <td>
+            <app-ui-badge variant="info" size="sm">{{ pack.couvertureGeographique || 'N/A' }}</app-ui-badge>
+          </td>
+          <td>
+            <app-ui-badge [variant]="getNiveauBadgeVariant(pack.niveauCouverture)" size="sm">
+              {{ pack.niveauCouverture || 'N/A' }}
+            </app-ui-badge>
+          </td>
+          <td>
+            <div class="garanties-cell">
+              @if (!getPackGaranties(pack.idPack || '').loading && getPackGaranties(pack.idPack || '').garanties.length > 0) {
+                <span class="garanties-count">
+                  <i class="bi bi-shield-check"></i>
+                  {{ getPackGaranties(pack.idPack || '').garanties.length }} garantie(s)
+                </span>
+              } @if (!getPackGaranties(pack.idPack || '').loading && getPackGaranties(pack.idPack || '').garanties.length === 0) {
+                <span class="text-muted">
+                  <i class="bi bi-dash-circle"></i>
+                  Aucune
+                </span>
+              } @if (getPackGaranties(pack.idPack || '').loading) {
+                <span class="text-muted small">Chargement...</span>
+              }
+              @if (!getPackGaranties(pack.idPack || '').loading && getPackGaranties(pack.idPack || '').garanties.length > 0) {
+                <p-button
+                  icon="pi pi-eye"
+                  pTooltip="Voir les garanties"
+                  tooltipPosition="top"
+                  styleClass="p-button-rounded p-button-text p-button-sm"
+                  (click)="toggleGaranties(pack)">
+                </p-button>
+              }
+            </div>
+            @if (getPackGaranties(pack.idPack || '').show && getPackGaranties(pack.idPack || '').garanties.length > 0) {
+              <div class="garanties-list">
+                @for (pg of getPackGaranties(pack.idPack || '').garanties; track pg.idPackGarantie) {
+                  <div class="garantie-item">
+                    <span class="garantie-name">{{ pg.nomGarantie }}</span>
+                    <span class="garantie-taux">{{ (pg.tauxRemboursement * 100) | number:'1.0-1' }}%</span>
+                  </div>
+                }
+              </div>
+            }
+          </td>
+          <td>
+            <app-ui-badge [variant]="getStatusBadgeVariant(pack.statut)" size="sm">
+              {{ pack.statut || 'INCONNU' }}
+            </app-ui-badge>
+          </td>
+          <td>
+            <div class="table-actions">
+              <button class="action-btn view-btn" pTooltip="Détails" tooltipPosition="top" (click)="viewPack(pack.idPack || '')">
+                <i class="bi bi-eye"></i>
+              </button>
+              <button class="action-btn edit-btn" pTooltip="Modifier" tooltipPosition="top" (click)="editPack(pack.idPack || '')">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="action-btn delete-btn" pTooltip="Supprimer" tooltipPosition="top" (click)="deletePack(pack.idPack || '')">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9">
+            <div class="table-empty">
+              <div class="empty-icon"><i class="bi bi-collection"></i></div>
+              <h3 class="empty-title">Aucun pack trouvé</h3>
+              <p class="empty-description">Commencez par créer un pack d'assurance</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+    </div>
+  </div>
+</div>

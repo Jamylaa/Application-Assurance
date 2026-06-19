@@ -1,0 +1,4 @@
+/* Auth layout is now a transparent passthrough — login/register own their full viewport */
+:host {
+  display: block;
+}

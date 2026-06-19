@@ -1,0 +1,21 @@
+<span class="btn-content">
+  <!-- Loading Spinner -->
+  <span *ngIf="loading" class="btn-spinner">
+    <i class="bi bi-arrow-clockwise"></i>
+  </span>
+
+  <!-- Icon Left -->
+  <span *ngIf="icon && iconPosition === 'left' && !loading" class="btn-icon btn-icon--left">
+    <i [class]="'bi ' + icon"></i>
+  </span>
+
+  <!-- Button Text/Content -->
+  <span class="btn-text">
+    <ng-content></ng-content>
+  </span>
+
+  <!-- Icon Right -->
+  <span *ngIf="icon && iconPosition === 'right' && !loading" class="btn-icon btn-icon--right">
+    <i [class]="'bi ' + icon"></i>
+  </span>
+</span>

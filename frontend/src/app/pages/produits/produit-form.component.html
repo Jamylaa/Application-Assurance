@@ -1,0 +1,121 @@
+<div class="page-container">
+  <p-toast position="top-right"></p-toast>
+
+  <form [formGroup]="produitForm" (ngSubmit)="onSubmit()" class="auth-form">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="header-icon"><i class="bi bi-plus-circle-fill"></i></div>
+      <div>
+        <h1>Nouveau Produit</h1>
+        <p>Créer un nouveau produit d'assurance</p>
+      </div>
+    </div>
+    <div class="page-header-actions">
+      <p-button 
+        label="Annuler" 
+        icon="pi pi-times" 
+        [loading]="loading" 
+        type="button"
+        (click)="onCancel()" 
+        styleClass="p-button-outlined">
+      </p-button>
+      <p-button 
+        label="{{ loading ? 'Création...' : 'Créer' }}" 
+        icon="pi pi-check" 
+        [loading]="loading" 
+        [disabled]="(produitForm.invalid && produitForm.touched) || loading" 
+        type="submit"
+        styleClass="p-button-primary">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Form Card -->
+  <div class="form-card">
+      <div class="form-grid">
+        <!-- Nom du produit -->
+        <div class="form-field">
+          <label class="field-label" for="nomProduit">
+            <i class="bi bi-tag"></i> Nom du produit *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('nomProduit')">
+            <input
+              pInputText
+              id="nomProduit"
+              formControlName="nomProduit"
+              placeholder="Entrez le nom du produit"
+              class="auth-input" />
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('nomProduit')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('nomProduit') }}
+          </div>
+        </div>
+
+        <!-- Type de produit -->
+        <div class="form-field">
+          <label class="field-label" for="typeProduit">
+            <i class="bi bi-box"></i> Type de produit *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('typeProduit')">
+            <p-dropdown
+              id="typeProduit"
+              formControlName="typeProduit"
+              [options]="typeProduitOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez un type"
+              styleClass="auth-dropdown">
+            </p-dropdown>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('typeProduit')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('typeProduit') }}
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-field full-width">
+          <label class="field-label" for="description">
+            <i class="bi bi-text-paragraph"></i> Description *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('description')">
+            <textarea
+              pTextarea
+              id="description"
+              formControlName="description"
+              placeholder="Décrivez le produit d'assurance"
+              rows="4"
+              class="auth-textarea">
+            </textarea>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('description')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('description') }}
+          </div>
+        </div>
+
+        <!-- Statut -->
+        <div class="form-field">
+          <label class="field-label" for="statut">
+            <i class="bi bi-toggle-on"></i> Statut *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('statut')">
+            <p-dropdown
+              id="statut"
+              formControlName="statut"
+              [options]="statutOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez un statut"
+              styleClass="auth-dropdown">
+            </p-dropdown>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('statut')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('statut') }}
+          </div>
+        </div>
+      </div>
+  </div>
+
+  </form>
+</div>

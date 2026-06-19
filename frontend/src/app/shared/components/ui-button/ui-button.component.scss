@@ -1,0 +1,341 @@
+@import '../../../../styles/design-system.scss';
+
+.ui-button {
+  @include flex-center;
+  gap: $spacing-2;
+  font-family: $font-family-base;
+  font-weight: $font-weight-semibold;
+  text-align: center;
+  text-decoration: none;
+  border: none;
+  border-radius: $radius-lg;
+  cursor: pointer;
+  transition: all $transition-base;
+  position: relative;
+  overflow: hidden;
+  outline: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  // Focus state
+  &:focus-visible {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+  }
+
+  // Disabled state
+  &.btn-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  // Loading state
+  &.btn-loading {
+    pointer-events: none;
+  }
+
+  // Full width
+  &.btn-full-width {
+    width: 100%;
+  }
+
+  // Rounded
+  &.btn-rounded {
+    border-radius: $radius-full;
+  }
+
+  // Outlined
+  &.btn-outlined {
+    background: transparent;
+    border-width: 2px;
+    border-style: solid;
+  }
+
+  // Size variants
+  &--xs {
+    padding: $spacing-1 $spacing-2;
+    font-size: $font-size-xs;
+    min-height: 24px;
+  }
+
+  &--sm {
+    padding: $spacing-2 $spacing-3;
+    font-size: $font-size-sm;
+    min-height: 32px;
+  }
+
+  &--md {
+    padding: $spacing-3 $spacing-5;
+    font-size: $font-size-base;
+    min-height: 40px;
+  }
+
+  &--lg {
+    padding: $spacing-4 $spacing-6;
+    font-size: $font-size-lg;
+    min-height: 48px;
+  }
+
+  &--xl {
+    padding: $spacing-5 $spacing-8;
+    font-size: $font-size-xl;
+    min-height: 56px;
+  }
+
+  // Color variants
+  &--primary {
+    background: $gradient-primary;
+    color: white;
+    box-shadow: $shadow-colored-primary;
+
+    &:hover:not(.btn-disabled):not(.btn-loading) {
+      background: linear-gradient(135deg, $primary-600 0%, $primary-800 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+    }
+
+    &:active:not(.btn-disabled):not(.btn-loading) {
+      transform: translateY(0);
+    }
+
+    &.btn-outlined {
+      border-color: $color-primary;
+      color: $color-primary;
+
+      &:hover:not(.btn-disabled):not(.btn-loading) {
+        background: $color-primary-light;
+        border-color: $color-primary-hover;
+      }
+    }
+  }
+
+  &--secondary {
+    background: $gradient-secondary;
+    color: white;
+    box-shadow: $shadow-colored-secondary;
+
+    &:hover:not(.btn-disabled):not(.btn-loading) {
+      background: linear-gradient(135deg, $secondary-600 0%, $secondary-800 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(6, 182, 212, 0.4);
+    }
+
+    &:active:not(.btn-disabled):not(.btn-loading) {
+      transform: translateY(0);
+    }
+
+    &.btn-outlined {
+      border-color: $color-secondary;
+      color: $color-secondary;
+
+      &:hover:not(.btn-disabled):not(.btn-loading) {
+        background: rgba(6, 182, 212, 0.1);
+        border-color: $secondary-700;
+      }
+    }
+  }
+
+  &--success {
+    background: $gradient-success;
+    color: white;
+    box-shadow: $shadow-colored-success;
+
+    &:hover:not(.btn-disabled):not(.btn-loading) {
+      background: linear-gradient(135deg, $success-600 0%, $success-800 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    &:active:not(.btn-disabled):not(.btn-loading) {
+      transform: translateY(0);
+    }
+
+    &.btn-outlined {
+      border-color: $color-success;
+      color: $color-success;
+
+      &:hover:not(.btn-disabled):not(.btn-loading) {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: $success-700;
+      }
+    }
+  }
+
+  &--warning {
+    background: $gradient-warning;
+    color: white;
+    box-shadow: $shadow-colored-warning;
+
+    &:hover:not(.btn-disabled):not(.btn-loading) {
+      background: linear-gradient(135deg, $warning-600 0%, $warning-800 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+    }
+
+    &:active:not(.btn-disabled):not(.btn-loading) {
+      transform: translateY(0);
+    }
+
+    &.btn-outlined {
+      border-color: $color-warning;
+      color: $color-warning;
+
+      &:hover:not(.btn-disabled):not(.btn-loading) {
+        background: rgba(245, 158, 11, 0.1);
+        border-color: $warning-700;
+      }
+    }
+  }
+
+  &--error {
+    background: $gradient-error;
+    color: white;
+    box-shadow: $shadow-colored-error;
+
+    &:hover:not(.btn-disabled):not(.btn-loading) {
+      background: linear-gradient(135deg, $error-600 0%, $error-800 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    &:active:not(.btn-disabled):not(.btn-loading) {
+      transform: translateY(0);
+    }
+
+    &.btn-outlined {
+      border-color: $color-error;
+      color: $color-error;
+
+      &:hover:not(.btn-disabled):not(.btn-loading) {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: $error-700;
+      }
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: $color-text-primary;
+    border: 1px solid $color-border-medium;
+
+    &:hover:not(.btn-disabled):not(.btn-loading) {
+      background: $color-background-tertiary;
+      border-color: $color-border-dark;
+      transform: translateY(-1px);
+    }
+
+    &:active:not(.btn-disabled):not(.btn-loading) {
+      transform: translateY(0);
+    }
+  }
+
+  &--link {
+    background: transparent;
+    color: $color-primary;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+
+    &:hover:not(.btn-disabled):not(.btn-loading) {
+      color: $color-primary-hover;
+      text-decoration: underline;
+    }
+  }
+}
+
+// Button content
+.btn-content {
+  @include flex-center;
+  gap: $spacing-2;
+  width: 100%;
+  height: 100%;
+}
+
+// Button text
+.btn-text {
+  line-height: 1;
+  white-space: nowrap;
+}
+
+// Button icon
+.btn-icon {
+  @include flex-center;
+  font-size: 1em;
+  transition: transform $transition-base;
+
+  &--left {
+    margin-right: $spacing-1;
+  }
+
+  &--right {
+    margin-left: $spacing-1;
+  }
+}
+
+.ui-button:hover .btn-icon {
+  transform: scale(1.1);
+}
+
+// Loading spinner
+.btn-spinner {
+  @include flex-center;
+  animation: spin 1s linear infinite;
+  font-size: 1.2em;
+}
+
+// Ripple effect (optional advanced feature)
+.ui-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.ui-button:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+// Dark mode
+.my-app-dark .ui-button {
+  &--ghost {
+    color: $neutral-100;
+    border-color: rgba(255, 255, 255, 0.2);
+
+    &:hover:not(.btn-disabled):not(.btn-loading) {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+  }
+
+  &--link {
+    color: $primary-400;
+
+    &:hover:not(.btn-disabled):not(.btn-loading) {
+      color: $primary-300;
+    }
+  }
+}
+
+// Responsive
+@include respond-below('md') {
+  .ui-button {
+    &--lg {
+      padding: $spacing-3 $spacing-5;
+      font-size: $font-size-base;
+      min-height: 44px;
+    }
+
+    &--xl {
+      padding: $spacing-4 $spacing-6;
+      font-size: $font-size-lg;
+      min-height: 48px;
+    }
+  }
+}
