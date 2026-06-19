@@ -78,10 +78,13 @@
           </td>
           <td><span class="cell-text">{{ produit.description || '—' }}</span></td>
           <td>
-            <app-ui-badge variant="info" size="sm">{{ produit.typeProduit || 'N/A' }}</app-ui-badge>
+            <span class="type-badge">{{ produit.typeProduit || 'N/A' }}</span>
           </td>
           <td>
-            <app-ui-badge variant="success" size="sm">{{ produit.statut || 'INCONNU' }}</app-ui-badge>
+            <span class="status-badge" [ngClass]="getStatusClass(produit.statut)">
+              <span class="status-dot"></span>
+              {{ produit.statut || 'INCONNU' }}
+            </span>
           </td>
           <td>
             <div class="action-btns">
