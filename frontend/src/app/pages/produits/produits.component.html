@@ -3,7 +3,7 @@
   <p-confirmDialog></p-confirmDialog>
 
   <!-- Page Header -->
-  <div class="page-header">
+  <div class="page-header produits-header animate-fade-in-down">
     <div class="page-header-left">
       <div class="header-icon"><i class="bi bi-box-seam-fill"></i></div>
       <div>
@@ -29,7 +29,7 @@
   </div>
 
   <!-- Table Card -->
-  <div class="table-card">
+  <div class="table-card animate-fade-in-up">
     <div class="table-toolbar">
       <div class="toolbar-left">
         <div class="table-title">
@@ -55,7 +55,7 @@
       [showCurrentPageReport]="true"
       currentPageReportTemplate="Affichage {first} – {last} sur {totalRecords}"
       sortMode="single"
-      styleClass="custom-table"
+      styleClass="p-table"
       responsiveLayout="scroll">
 
       <ng-template pTemplate="header">
@@ -78,7 +78,7 @@
           </td>
           <td><span class="cell-text">{{ produit.description || '—' }}</span></td>
           <td>
-            <span class="type-badge">{{ produit.typeProduit || 'N/A' }}</span>
+            <app-ui-badge variant="info" size="sm">{{ produit.typeProduit || 'N/A' }}</app-ui-badge>
           </td>
           <td>
             <span class="status-badge" [ngClass]="getStatusClass(produit.statut)">
