@@ -14,7 +14,16 @@ import { TranslationService } from '../../services/translation.service';
 export class SidebarComponent {
   @Output() sidebarToggle = new EventEmitter<void>();
 
-  isCollapsed = false;
+  private _isCollapsed = false;
+
+  get isCollapsed(): boolean {
+    return this._isCollapsed;
+  }
+
+  set isCollapsed(value: boolean) {
+    this._isCollapsed = value;
+  }
+
   isDarkMode = false;
   currentUser: any = null;
   currentLanguage = 'fr';

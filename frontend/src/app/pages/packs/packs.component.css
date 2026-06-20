@@ -143,17 +143,19 @@
   border-bottom: 2px solid var(--app-border, #E2E8F0) !important;
 }
 
-:host ::ng-deep .custom-table .p-datatable-tbody > tr {
+:host ::ng-deep .p-table .p-datatable-tbody > tr {
   background: var(--app-surface, white) !important;
-  transition: background 0.15s ease !important;
+  transition: all 0.2s ease !important;
 }
 
-:host ::ng-deep .custom-table .p-datatable-tbody > tr:hover {
-  background: rgba(59,130,246,0.04) !important;
+:host ::ng-deep .p-table .p-datatable-tbody > tr:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(255, 255, 255, 0.98) 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
 }
 
-:host ::ng-deep .custom-table .p-datatable-tbody > tr > td {
-  padding: 0.875rem 1rem !important;
+:host ::ng-deep .p-table .p-datatable-tbody > tr > td {
+  padding: 1rem 1.25rem !important;
   border-bottom: 1px solid var(--app-border-light, #F1F5F9) !important;
   font-size: 0.875rem !important;
 }

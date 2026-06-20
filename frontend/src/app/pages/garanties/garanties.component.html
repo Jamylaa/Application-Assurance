@@ -38,6 +38,55 @@
           <span class="count-badge">{{ garanties.length }}</span>
         </div>
       </div>
+      <div class="toolbar-right">
+        <!-- Advanced Filters -->
+        <div class="filters-group">
+          <p-dropdown
+            [options]="domaineOptions"
+            placeholder="Domaine"
+            [(ngModel)]="selectedDomaine"
+            (onChange)="applyFilters()"
+            styleClass="filter-dropdown"
+            [showClear]="true">
+          </p-dropdown>
+          <p-dropdown
+            [options]="statusOptions"
+            placeholder="Statut"
+            [(ngModel)]="selectedStatus"
+            (onChange)="applyFilters()"
+            styleClass="filter-dropdown"
+            [showClear]="true">
+          </p-dropdown>
+        </div>
+        <div class="search-box">
+          <i class="bi bi-search"></i>
+          <input type="text" placeholder="Rechercher une garantie..." (input)="onGlobalFilter($event)" [value]="globalFilterValue">
+        </div>
+        <p-button
+          icon="pi pi-filter-slash"
+          pTooltip="Réinitialiser les filtres"
+          tooltipPosition="top"
+          styleClass="p-button-outlined p-button-rounded"
+          (click)="resetFilters()">
+        </p-button>
+      </div>
+    </div>
+
+    <!-- Active Filters Display -->
+    <div class="active-filters" *ngIf="hasActiveFilters()">
+      <span class="filters-label">Filtres actifs:</span>
+      <div class="filter-tag" *ngIf="selectedDomaine">
+        Domaine: {{ selectedDomaine }}
+        <i class="bi bi-x-circle" (click)="clearDomaineFilter()"></i>
+      </div>
+      <div class="filter-tag" *ngIf="selectedStatus">
+        Statut: {{ selectedStatus }}
+        <i class="bi bi-x-circle" (click)="clearStatusFilter()"></i>
+      </div>
+      <div class="filter-tag" *ngIf="globalFilterValue">
+        Recherche: {{ globalFilterValue }}
+        <i class="bi bi-x-circle" (click)="clearSearchFilter()"></i>
+      </div>
     </div>
 
     <div class="responsive-table">

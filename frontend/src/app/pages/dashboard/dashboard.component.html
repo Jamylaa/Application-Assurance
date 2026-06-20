@@ -1,12 +1,10 @@
 <div class="dashboard-page">
   <p-toast position="top-right"></p-toast>
-  
   <!-- Loading -->
   <div *ngIf="loading" class="loading-state">
     <div class="loading-spinner"></div>
     <p class="loading-text">Chargement des statistiques...</p>
   </div>
-  
   <!-- Dashboard Content -->
   <div *ngIf="!loading" class="dashboard-content">
     <!-- Welcome Banner -->
@@ -39,19 +37,30 @@
           </div>
         </div>
       </div>
-
       <!-- RIGHT -->
       <div class="welcome-right">
         <div class="welcome-date">
           <i class="bi bi-calendar3"></i>
           {{ today | date:'EEEE dd MMMM yyyy' }}
         </div>
+        <div class="welcome-stats">
+          <div class="mini-stat">
+            <span class="mini-stat-value">{{ stats.totalProduits }}</span>
+            <span class="mini-stat-label">Produits</span>
+          </div>
+          <div class="mini-stat">
+            <span class="mini-stat-value">{{ stats.totalPacks }}</span>
+            <span class="mini-stat-label">Packs</span>
+          </div>
+          <div class="mini-stat">
+            <span class="mini-stat-value">{{ stats.totalGaranties }}</span>
+            <span class="mini-stat-label">Garanties</span>
+          </div>
+        </div>
       </div>
     </div>
-
     <!-- KPI STATS -->
     <div class="stats-grid">
-
       <!-- Produits -->
       <div
         class="stat-card stat-card--primary hover-lift animate-fade-in-up"
@@ -209,7 +218,6 @@
       </div>
 
     </div>
-
     <!-- Advanced Metrics Dashboard -->
     <div class="advanced-metrics-grid">
       <div class="metric-card metric-card--primary hover-lift animate-fade-in-up">
@@ -267,7 +275,7 @@
         </div>
       </div>
 
-        <!--  <div class="metric-card advanced">       
+        <!--  <div class="metric-card advanced">
         <div class="metric-header">
           <i class="bi bi-star-fill"></i>
           <span>Satisfaction client</span>
@@ -278,7 +286,8 @@
         </div>
       </div>
     </div> -->
-
+    </div>
+  </div>
     <!-- Assistant IA -->
     <section
       class="dashboard-assistant"
@@ -350,10 +359,12 @@
 
           </div>
 
-          <button class="chart-action-btn">
-            <i class="bi bi-three-dots-vertical"></i>
-          </button>
-
+          <div class="chart-stats">
+            <div class="chart-stat">
+              <span class="chart-stat-value">{{ stats.totalProduits }}</span>
+              <span class="chart-stat-label">Total</span>
+            </div>
+          </div>
         </div>
 
         <div class="chart-container">
@@ -386,9 +397,12 @@
 
           </div>
 
-          <button class="chart-action-btn">
-            <i class="bi bi-three-dots-vertical"></i>
-          </button>
+          <div class="chart-stats">
+            <div class="chart-stat">
+              <span class="chart-stat-value">{{ stats.totalPacks }}</span>
+              <span class="chart-stat-label">Packs</span>
+            </div>
+          </div>
 
         </div>
 
@@ -420,9 +434,14 @@
               <p class="chart-subtitle">Répartition des couvertures actives</p>
             </div>
           </div>
-          <button class="chart-action-btn">
-            <i class="bi bi-three-dots-vertical"></i>
-          </button>
+
+          <div class="chart-stats">
+            <div class="chart-stat">
+              <span class="chart-stat-value">{{ stats.totalGaranties }}</span>
+              <span class="chart-stat-label">Garanties</span>
+            </div>
+          </div>
+
         </div>
         <div class="chart-container">
           <p-chart
@@ -477,4 +496,3 @@
       </div>
     </div>
   </div>
-</div>

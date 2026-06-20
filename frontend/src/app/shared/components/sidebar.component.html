@@ -79,6 +79,19 @@
     </ul>
   </nav>
 
+  <!-- User Profile Section -->
+  <div class="user-profile-section" *ngIf="!isCollapsed">
+    <div class="user-profile-card">
+      <div class="user-avatar">
+        {{ getUserInitials() }}
+      </div>
+      <div class="user-details">
+        <div class="user-name">{{ currentUser?.firstName || currentUser?.username || 'Utilisateur' }}</div>
+        <div class="user-role">{{ getUserRole() }}</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer Section -->
   <div class="sidebar-footer">
     <!-- Language Toggle -->
@@ -86,11 +99,20 @@
       <i class="bi" [class.bi-translate]="currentLanguage === 'fr'" [class.bi-translate-alt]="currentLanguage === 'en'"></i>
       <span *ngIf="!isCollapsed">{{ currentLanguage === 'fr' ? 'EN' : 'FR' }}</span>
     </button>
-    
+
     <!-- Theme Toggle -->
     <button class="theme-toggle-btn" (click)="toggleTheme()" [title]="isDarkMode ? 'Mode clair' : 'Mode sombre'">
       <i class="bi" [class.bi-sun-fill]="isDarkMode" [class.bi-moon-stars-fill]="!isDarkMode"></i>
       <span *ngIf="!isCollapsed">{{ isDarkMode ? 'Mode clair' : 'Mode sombre' }}</span>
+    </button>
+
+    <!-- Logout Button -->
+    <button class="logout-btn" (click)="logout()" [title]="Déconnexion" *ngIf="!isCollapsed">
+      <i class="bi bi-box-arrow-right"></i>
+      <span>Déconnexion</span>
+    </button>
+    <button class="logout-btn-icon-only" (click)="logout()" [title]="Déconnexion" *ngIf="isCollapsed">
+      <i class="bi bi-box-arrow-right"></i>
     </button>
   </div>
 </div>

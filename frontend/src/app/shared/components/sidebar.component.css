@@ -227,6 +227,68 @@
   gap: 0.5rem;
 }
 
+/* ── User Profile Section ── */
+.user-profile-section {
+  padding: 1rem 0.75rem;
+  border-top: 1px solid var(--sidebar-divider, rgba(255,255,255,0.08));
+  border-bottom: 1px solid var(--sidebar-divider, rgba(255,255,255,0.08));
+}
+
+.user-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.user-profile-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #E2E8F0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.3;
+  margin-bottom: 0.125rem;
+}
+
+.user-role {
+  font-size: 0.6875rem;
+  color: rgba(148, 163, 184, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+
 .theme-toggle-btn {
   display: flex;
   align-items: center;
@@ -366,11 +428,14 @@
 .sidebar.collapsed .user-info,
 .sidebar.collapsed .nav-section-label,
 .sidebar.collapsed .theme-toggle-btn span,
-.sidebar.collapsed .lang-toggle-btn span {
+.sidebar.collapsed .lang-toggle-btn span,
+.sidebar.collapsed .logout-btn,
+.sidebar.collapsed .user-profile-section {
   opacity: 0;
   visibility: hidden;
   width: 0;
   overflow: hidden;
+  display: none;
 }
 
 .sidebar.collapsed .nav-link {
