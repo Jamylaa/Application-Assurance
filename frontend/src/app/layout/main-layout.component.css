@@ -78,7 +78,7 @@
 .page-icon {
   width: 36px;
   height: 36px;
-  background: var(--primary-lightest, #EEF2FF);
+  background: var(--primary-lightest, #EEF6FF);
   border-radius: var(--radius-md, 8px);
   display: flex;
   align-items: center;
@@ -141,7 +141,7 @@
   height: 36px;
   gap: 0.375rem;
   animation: expandSearch 0.25s ease;
-  box-shadow: 0 0 0 3px rgba(79,70,229,0.08);
+  box-shadow: 0 0 0 3px rgba(15,76,129,0.08);
 }
 
 @keyframes expandSearch {
@@ -253,8 +253,8 @@
 }
 
 .user-menu.open {
-  background: var(--primary-lightest, #EEF2FF);
-  border-color: var(--primary-lighter, #C7D2FE);
+  background: var(--primary-lightest, #EEF6FF);
+  border-color: var(--primary-lighter, #BFDBFE);
 }
 
 .user-avatar-wrap {
@@ -265,14 +265,14 @@
   width: 34px;
   height: 34px;
   border-radius: var(--radius-md, 8px);
-  background: var(--primary-gradient, linear-gradient(135deg,#4F46E5,#7C3AED));
+  background: var(--primary-gradient, linear-gradient(135deg,#0C3D68,#0D7377));
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 0.8125rem;
   color: white;
-  box-shadow: var(--shadow-primary, 0 4px 14px rgba(79,70,229,0.25));
+  box-shadow: var(--shadow-primary, 0 4px 14px rgba(15,76,129,0.25));
 }
 
 .online-dot {
@@ -281,7 +281,7 @@
   right: -2px;
   width: 9px;
   height: 9px;
-  background: var(--success, #10B981);
+  background: var(--success, #15803D);
   border-radius: 50%;
   border: 2px solid var(--app-surface, white);
 }
@@ -340,7 +340,7 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1rem;
-  background: var(--primary-lightest, #EEF2FF);
+  background: var(--primary-lightest, #EEF6FF);
 }
 
 .dropdown-avatar {
@@ -540,7 +540,7 @@
 }
 
 .notification-item.unread {
-  background: var(--primary-lightest, #EEF2FF);
+  background: var(--primary-lightest, #EEF6FF);
 }
 
 .notification-item.unread::before {
@@ -612,7 +612,7 @@
 }
 
 .notification-delete:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(185, 28, 28, 0.1);
   color: var(--danger);
 }
 

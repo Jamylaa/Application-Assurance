@@ -23,6 +23,9 @@
       "dom"
     ]
   },
+  "exclude": [
+    "EXAMPLE_ADVANCED_TABLE.ts"
+  ],
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,

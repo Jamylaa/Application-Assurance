@@ -12,7 +12,7 @@
 
 /* ── Page Header ── */
 .page-header {
-  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  background: linear-gradient(135deg, #0C3D68 0%, #0D7377 100%);
   border-radius: var(--radius-xl, 16px);
   padding: 1.5rem 2rem;
   display: flex;
@@ -21,7 +21,7 @@
   gap: 1rem;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.25);
+  box-shadow: 0 8px 24px rgba(12, 61, 104, 0.25);
 }
 
 .page-header::before {
@@ -95,7 +95,7 @@
 
 .btn-primary {
   background: white;
-  color: #4F46E5;
+  color: #0C3D68;
   box-shadow: 0 2px 8px rgba(0,0,0,0.12);
 }
 .btn-primary:hover {
@@ -149,11 +149,11 @@
   color: var(--app-text, #0F172A);
 }
 
-.table-title i { color: var(--primary, #4F46E5); }
+.table-title i { color: var(--primary, #0C3D68); }
 
 .count-badge {
-  background: var(--primary-lightest, #EEF2FF);
-  color: var(--primary, #4F46E5);
+  background: var(--primary-lightest, #EEF6FF);
+  color: var(--primary, #0C3D68);
   border-radius: var(--radius-full);
   padding: 0.125rem 0.5rem;
   font-size: 0.75rem;
@@ -175,8 +175,8 @@
 }
 
 .search-box:focus-within {
-  border-color: var(--primary, #4F46E5);
-  box-shadow: 0 0 0 3px rgba(79,70,229,0.08);
+  border-color: var(--primary, #0C3D68);
+  box-shadow: 0 0 0 3px rgba(15,76,129,0.08);
   background: white;
 }
 
@@ -214,7 +214,7 @@
 }
 
 :host ::ng-deep .custom-table .p-datatable-tbody > tr:hover {
-  background: var(--primary-lightest, #EEF2FF) !important;
+  background: var(--primary-lightest, #EEF6FF) !important;
 }
 
 :host ::ng-deep .custom-table .p-datatable-tbody > tr > td {
@@ -234,7 +234,7 @@
 .row-avatar {
   width: 34px; height: 34px;
   border-radius: var(--radius-md, 8px);
-  background: var(--primary-gradient, linear-gradient(135deg,#4F46E5,#7C3AED));
+  background: var(--primary-gradient, linear-gradient(135deg,#0C3D68,#0D7377));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -242,7 +242,7 @@
   font-weight: 700;
   font-size: 0.75rem;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(79,70,229,0.2);
+  box-shadow: 0 2px 6px rgba(15,76,129,0.2);
 }
 
 .cell-primary {
@@ -281,22 +281,22 @@
 }
 
 .edit-btn {
-  background: rgba(59,130,246,0.08);
-  color: #3B82F6;
+  background: rgba(15,76,129,0.08);
+  color: #0F4C81;
 }
 .edit-btn:hover {
-  background: #3B82F6;
+  background: #0F4C81;
   color: white;
   transform: scale(1.05);
-  box-shadow: 0 3px 10px rgba(59,130,246,0.3);
+  box-shadow: 0 3px 10px rgba(15,76,129,0.3);
 }
 
 .delete-btn {
   background: rgba(239,68,68,0.08);
-  color: #EF4444;
+  color: #B91C1C;
 }
 .delete-btn:hover {
-  background: #EF4444;
+  background: #B91C1C;
   color: white;
   transform: scale(1.05);
   box-shadow: 0 3px 10px rgba(239,68,68,0.3);
@@ -314,13 +314,13 @@
 
 .empty-icon {
   width: 72px; height: 72px;
-  background: var(--primary-lightest, #EEF2FF);
+  background: var(--primary-lightest, #EEF6FF);
   border-radius: var(--radius-xl, 16px);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 2rem;
-  color: var(--primary-lighter, #C7D2FE);
+  color: var(--primary-lighter, #BFDBFE);
   margin-bottom: 1.25rem;
 }
 

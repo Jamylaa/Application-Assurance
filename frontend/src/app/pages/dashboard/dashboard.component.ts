@@ -193,13 +193,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const documentStyle = getComputedStyle(document.documentElement);
 
     const textColor =
-      documentStyle.getPropertyValue('--app-text').trim() || '#334155';
+      documentStyle.getPropertyValue('--color-text-primary').trim() || '#334155';
 
     const textColorSecondary =
-      documentStyle.getPropertyValue('--app-text-muted').trim() || '#64748b';
+      documentStyle.getPropertyValue('--color-text-tertiary').trim() || '#64748b';
 
     const surfaceBorder =
-      documentStyle.getPropertyValue('--app-border-light').trim() || '#f1f5f9';
+      documentStyle.getPropertyValue('--color-border-light').trim() || '#f1f5f9';
 
     this.chartOptions = {
       maintainAspectRatio: false,
@@ -314,11 +314,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
           label: 'Produits',
           data: Object.values(produitsByType).filter(count => count > 0),
           backgroundColor: [
-            'rgba(99, 102, 241, 0.7)',
-            'rgba(139, 92, 246, 0.7)',
-            'rgba(59, 130, 246, 0.7)',
-            'rgba(16, 185, 129, 0.7)',
-            'rgba(245, 158, 11, 0.7)'
+            'rgba(15, 76, 129, 0.7)',
+            'rgba(13, 115, 119, 0.7)',
+            'rgba(96, 165, 250, 0.7)',
+            'rgba(21, 101, 52, 0.7)',
+            'rgba(180, 83, 9, 0.7)'
           ]
         }
       ]
@@ -340,9 +340,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         {
           data: Object.values(packsByNiveau).filter(count => count > 0),
           backgroundColor: [
-            'rgba(99, 102, 241, 0.8)',
-            'rgba(139, 92, 246, 0.8)',
-            'rgba(245, 158, 11, 0.8)'
+            'rgba(15, 76, 129, 0.8)',
+            'rgba(13, 115, 119, 0.8)',
+            'rgba(180, 83, 9, 0.8)'
           ]
         }
       ]
@@ -355,8 +355,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         {
           label: 'Utilisateurs',
           data: [Math.max(0, users.length - 3), Math.max(0, users.length - 2), Math.max(0, users.length - 1), users.length],
-          borderColor: 'rgba(99, 102, 241, 1)',
-          backgroundColor: 'rgba(99, 102, 241, 0.1)',
+          borderColor: 'rgba(15, 76, 129, 1)',
+          backgroundColor: 'rgba(15, 76, 129, 0.1)',
           fill: true,
           tension: 0.4
         }
@@ -382,16 +382,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
         {
           data: sortedDomains.map(([_, count]) => count),
           backgroundColor: [
-            'rgba(99, 102, 241, 0.7)',
-            'rgba(139, 92, 246, 0.7)',
-            'rgba(59, 130, 246, 0.7)',
-            'rgba(16, 185, 129, 0.7)',
-            'rgba(245, 158, 11, 0.7)',
-            'rgba(239, 68, 68, 0.7)',
-            'rgba(236, 72, 153, 0.7)',
-            'rgba(20, 184, 166, 0.7)',
-            'rgba(168, 85, 247, 0.7)',
-            'rgba(249, 115, 22, 0.7)'
+            'rgba(15, 76, 129, 0.7)',
+            'rgba(13, 115, 119, 0.7)',
+            'rgba(96, 165, 250, 0.7)',
+            'rgba(21, 101, 52, 0.7)',
+            'rgba(180, 83, 9, 0.7)',
+            'rgba(185, 28, 28, 0.7)',
+            'rgba(15, 76, 129, 0.7)',
+            'rgba(21, 101, 52, 0.7)',
+            'rgba(13, 115, 119, 0.7)',
+            'rgba(180, 83, 9, 0.7)'
           ]
         }
       ]

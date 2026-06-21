@@ -209,12 +209,12 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   getNotificationColor(type: string): string {
     switch (type) {
-      case 'produit': return '#6366F1';
-      case 'pack': return '#8B5CF6';
-      case 'garantie': return '#10B981';
-      case 'success': return '#10B981';
-      case 'warning': return '#F59E0B';
-      case 'error': return '#EF4444';
+      case 'produit': return '#0F4C81';
+      case 'pack': return '#0D7377';
+      case 'garantie': return '#15803D';
+      case 'success': return '#15803D';
+      case 'warning': return '#B45309';
+      case 'error': return '#B91C1C';
       default: return '#64748B';
     }
   }

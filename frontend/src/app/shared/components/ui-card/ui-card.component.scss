@@ -32,38 +32,38 @@
 
   // Variantes de couleur
   &--variant-primary {
-    border-color: rgba(99, 102, 241, 0.3);
+    border-color: rgba(15, 76, 129, 0.3);
 
     &:hover {
-      border-color: rgba(99, 102, 241, 0.5);
-      box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+      border-color: rgba(15, 76, 129, 0.5);
+      box-shadow: 0 20px 40px rgba(15, 76, 129, 0.15);
     }
   }
 
   &--variant-success {
-    border-color: rgba(16, 185, 129, 0.3);
+    border-color: rgba(21, 101, 52, 0.3);
 
     &:hover {
-      border-color: rgba(16, 185, 129, 0.5);
-      box-shadow: 0 20px 40px rgba(16, 185, 129, 0.15);
+      border-color: rgba(21, 101, 52, 0.5);
+      box-shadow: 0 20px 40px rgba(21, 101, 52, 0.15);
     }
   }
 
   &--variant-warning {
-    border-color: rgba(245, 158, 11, 0.3);
+    border-color: rgba(180, 83, 9, 0.3);
 
     &:hover {
-      border-color: rgba(245, 158, 11, 0.5);
-      box-shadow: 0 20px 40px rgba(245, 158, 11, 0.15);
+      border-color: rgba(180, 83, 9, 0.5);
+      box-shadow: 0 20px 40px rgba(180, 83, 9, 0.15);
     }
   }
 
   &--variant-error {
-    border-color: rgba(239, 68, 68, 0.3);
+    border-color: rgba(185, 28, 28, 0.3);
 
     &:hover {
-      border-color: rgba(239, 68, 68, 0.5);
-      box-shadow: 0 20px 40px rgba(239, 68, 68, 0.15);
+      border-color: rgba(185, 28, 28, 0.5);
+      box-shadow: 0 20px 40px rgba(185, 28, 28, 0.15);
     }
   }
 
@@ -125,7 +125,7 @@
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(99, 102, 241, 0.2);
+  border: 3px solid rgba(15, 76, 129, 0.2);
   border-top-color: $color-primary;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -247,7 +247,7 @@
 }
 
 .my-app-dark .loading-spinner {
-  border-color: rgba(99, 102, 241, 0.2);
+  border-color: rgba(15, 76, 129, 0.2);
 }
 
 .my-app-dark .card-title {

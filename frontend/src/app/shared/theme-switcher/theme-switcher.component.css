@@ -51,9 +51,9 @@
 }
 
 .theme-btn.active {
-  background: #3b82f6;
+  background: #0F4C81;
   color: white;
-  border-color: #3b82f6;
+  border-color: #0F4C81;
 }
 
 .theme-btn.active:hover {

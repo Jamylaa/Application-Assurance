@@ -6,9 +6,9 @@ export type ThemeMode = 'light' | 'dark';
 const STORAGE_KEY = 'theme';
 const LIGHT_THEME_HREF = './assets/primeng-themes/lara-light-blue/theme.css';
 const DARK_THEME_HREF = './assets/primeng-themes/lara-dark-blue/theme.css';
-const LIGHT_PRIMARY = '#3b82f6';
-const LIGHT_PRIMARY_RGB = '59, 130, 246';
-const DARK_PRIMARY = '#60a5fa';
+const LIGHT_PRIMARY = '#0F4C81';
+const LIGHT_PRIMARY_RGB = '15, 76, 129';
+const DARK_PRIMARY = '#60A5FA';
 const DARK_PRIMARY_RGB = '96, 165, 250';
 @Injectable({ providedIn: 'root' })
 export class ThemeService {

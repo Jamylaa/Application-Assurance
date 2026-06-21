@@ -140,9 +140,9 @@
         }
 
         &.active {
-          background: rgba(99, 102, 241, 0.15);
+          background: rgba($primary-500, 0.15);
           color: white;
-          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+          box-shadow: 0 4px 12px rgba($primary-500, 0.2);
 
           &::before {
             transform: scaleY(1);
@@ -618,7 +618,7 @@
       }
 
       &.unread {
-        background: rgba(99, 102, 241, 0.03);
+        background: rgba($primary-500, 0.03);
         border-left: 3px solid $color-primary;
       }
 
@@ -667,7 +667,7 @@
         transition: all $transition-base;
 
         &:hover {
-          background: rgba(239, 68, 68, 0.1);
+          background: rgba($error-500, 0.1);
           color: $color-error;
         }
       }
@@ -793,7 +793,7 @@
   color: $neutral-100;
 
   &:hover {
-    background: rgba(99, 102, 241, 0.2);
+    background: rgba($primary-500, 0.2);
     border-color: $primary-400;
     color: $primary-400;
   }
@@ -809,7 +809,7 @@
   color: $neutral-400;
 
   &:hover {
-    background: rgba(99, 102, 241, 0.2);
+    background: rgba($primary-500, 0.2);
     border-color: $primary-400;
     color: $primary-400;
   }
@@ -834,7 +834,7 @@
   color: $neutral-400;
 
   &:hover {
-    background: rgba(99, 102, 241, 0.2);
+    background: rgba($primary-500, 0.2);
     border-color: $primary-400;
     color: $primary-400;
   }

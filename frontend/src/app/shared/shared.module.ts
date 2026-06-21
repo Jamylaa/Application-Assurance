@@ -36,19 +36,18 @@ import { UiSelectComponent } from './components/ui-select/ui-select.component';
 import { UiSkeletonComponent } from './components/ui-skeleton/ui-skeleton.component';
 
 @NgModule({
-  declarations: [
+  declarations: [],
+  imports: [
+    // Custom UI Components (Standalone)
     UiCardComponent,
     UiButtonComponent,
-    UiBadgeComponent
-  ],
-  imports: [
+    UiBadgeComponent,
     UiModalComponent,
     UiInputComponent,
     UiTextareaComponent,
     UiSelectComponent,
-    UiSkeletonComponent
-  ],
-  imports: [
+    UiSkeletonComponent,
+
     CommonModule,
     RouterModule,
     FormsModule,

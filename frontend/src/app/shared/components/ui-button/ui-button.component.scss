@@ -19,7 +19,7 @@
 
   // Focus state
   &:focus-visible {
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 0 0 3px rgba(15, 76, 129, 0.3);
   }
 
   // Disabled state
@@ -91,7 +91,7 @@
     &:hover:not(.btn-disabled):not(.btn-loading) {
       background: linear-gradient(135deg, $primary-600 0%, $primary-800 100%);
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+      box-shadow: 0 8px 20px rgba(15, 76, 129, 0.4);
     }
 
     &:active:not(.btn-disabled):not(.btn-loading) {
@@ -117,7 +117,7 @@
     &:hover:not(.btn-disabled):not(.btn-loading) {
       background: linear-gradient(135deg, $secondary-600 0%, $secondary-800 100%);
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(6, 182, 212, 0.4);
+      box-shadow: 0 8px 20px rgba(13, 115, 119, 0.4);
     }
 
     &:active:not(.btn-disabled):not(.btn-loading) {
@@ -129,7 +129,7 @@
       color: $color-secondary;
 
       &:hover:not(.btn-disabled):not(.btn-loading) {
-        background: rgba(6, 182, 212, 0.1);
+        background: rgba(13, 115, 119, 0.1);
         border-color: $secondary-700;
       }
     }
@@ -143,7 +143,7 @@
     &:hover:not(.btn-disabled):not(.btn-loading) {
       background: linear-gradient(135deg, $success-600 0%, $success-800 100%);
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+      box-shadow: 0 8px 20px rgba(21, 101, 52, 0.4);
     }
 
     &:active:not(.btn-disabled):not(.btn-loading) {
@@ -155,7 +155,7 @@
       color: $color-success;
 
       &:hover:not(.btn-disabled):not(.btn-loading) {
-        background: rgba(16, 185, 129, 0.1);
+        background: rgba(21, 101, 52, 0.1);
         border-color: $success-700;
       }
     }
@@ -169,7 +169,7 @@
     &:hover:not(.btn-disabled):not(.btn-loading) {
       background: linear-gradient(135deg, $warning-600 0%, $warning-800 100%);
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+      box-shadow: 0 8px 20px rgba(180, 83, 9, 0.4);
     }
 
     &:active:not(.btn-disabled):not(.btn-loading) {
@@ -181,7 +181,7 @@
       color: $color-warning;
 
       &:hover:not(.btn-disabled):not(.btn-loading) {
-        background: rgba(245, 158, 11, 0.1);
+        background: rgba(180, 83, 9, 0.1);
         border-color: $warning-700;
       }
     }
@@ -195,7 +195,7 @@
     &:hover:not(.btn-disabled):not(.btn-loading) {
       background: linear-gradient(135deg, $error-600 0%, $error-800 100%);
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+      box-shadow: 0 8px 20px rgba(185, 28, 28, 0.4);
     }
 
     &:active:not(.btn-disabled):not(.btn-loading) {
@@ -207,7 +207,7 @@
       color: $color-error;
 
       &:hover:not(.btn-disabled):not(.btn-loading) {
-        background: rgba(239, 68, 68, 0.1);
+        background: rgba(185, 28, 28, 0.1);
         border-color: $error-700;
       }
     }

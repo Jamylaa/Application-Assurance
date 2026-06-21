@@ -163,7 +163,7 @@
 
   &:focus {
     border-color: $color-primary;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 3px rgba($primary-500, 0.1);
   }
 
   &:disabled {
@@ -186,31 +186,31 @@
   // Validation states
   &--valid {
     border-color: $color-success;
-    background: rgba(16, 185, 129, 0.02);
+    background: rgba($success-500, 0.02);
 
     &:focus {
       border-color: $color-success;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+      box-shadow: 0 0 0 3px rgba($success-500, 0.1);
     }
   }
 
   &--invalid {
     border-color: $color-error;
-    background: rgba(239, 68, 68, 0.02);
+    background: rgba($error-500, 0.02);
 
     &:focus {
       border-color: $color-error;
-      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+      box-shadow: 0 0 0 3px rgba($error-500, 0.1);
     }
   }
 
   &--warning {
     border-color: $color-warning;
-    background: rgba(245, 158, 11, 0.02);
+    background: rgba($warning-500, 0.02);
 
     &:focus {
       border-color: $color-warning;
-      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+      box-shadow: 0 0 0 3px rgba($warning-500, 0.1);
     }
   }
 }
@@ -401,10 +401,10 @@
   }
 
   &--info {
-    color: #3B82F6;
+    color: #{$primary-500};
 
     i {
-      color: #3B82F6;
+      color: #{$primary-500};
     }
   }
 }
@@ -571,12 +571,12 @@
 
   &:hover {
     border-color: $color-primary;
-    background: rgba(99, 102, 241, 0.02);
+    background: rgba($primary-500, 0.02);
   }
 
   &--dragover {
     border-color: $color-primary;
-    background: rgba(99, 102, 241, 0.05);
+    background: rgba($primary-500, 0.05);
     transform: scale(1.02);
   }
 
@@ -584,7 +584,7 @@
     width: 64px;
     height: 64px;
     border-radius: $radius-xl;
-    background: rgba(99, 102, 241, 0.1);
+    background: rgba($primary-500, 0.1);
     @include flex-center;
     color: $color-primary;
     font-size: 2rem;
@@ -594,7 +594,7 @@
 
   &:hover .file-upload-icon {
     transform: scale(1.1);
-    background: rgba(99, 102, 241, 0.15);
+    background: rgba($primary-500, 0.15);
   }
 
   .file-upload-title {
@@ -632,7 +632,7 @@
       width: 40px;
       height: 40px;
       border-radius: $radius-md;
-      background: rgba(99, 102, 241, 0.1);
+      background: rgba($primary-500, 0.1);
       @include flex-center;
       color: $color-primary;
       font-size: 1.25rem;
@@ -668,7 +668,7 @@
       transition: all $transition-base;
 
       &:hover {
-        background: rgba(239, 68, 68, 0.1);
+        background: rgba($error-500, 0.1);
         color: $color-error;
       }
     }
@@ -834,7 +834,7 @@
 
   &:hover {
     border-color: $primary-400;
-    background: rgba(99, 102, 241, 0.1);
+    background: rgba($primary-500, 0.1);
   }
 }
 

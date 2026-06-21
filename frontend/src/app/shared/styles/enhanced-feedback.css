@@ -98,7 +98,7 @@
 
 .p-inputtext:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.08);
+  box-shadow: 0 0 0 3px rgba(12, 61, 104, 0.08);
 }
 
 .p-inputtext:hover {
@@ -149,31 +149,31 @@
 }
 
 .p-toast-message-success {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(52, 211, 153, 0.95)) !important;
+  background: linear-gradient(135deg, rgba(21, 101, 52, 0.95), rgba(52, 211, 153, 0.95)) !important;
 }
 .p-toast-message-success::before {
-  background: #059669;
+  background: #15803D;
 }
 
 .p-toast-message-info {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(96, 165, 250, 0.95)) !important;
+  background: linear-gradient(135deg, rgba(15, 76, 129, 0.95), rgba(96, 165, 250, 0.95)) !important;
 }
 .p-toast-message-info::before {
   background: #2563EB;
 }
 
 .p-toast-message-warn {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(251, 191, 36, 0.95)) !important;
+  background: linear-gradient(135deg, rgba(180, 83, 9, 0.95), rgba(251, 191, 36, 0.95)) !important;
 }
 .p-toast-message-warn::before {
-  background: #D97706;
+  background: #B45309;
 }
 
 .p-toast-message-error {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(248, 113, 113, 0.95)) !important;
+  background: linear-gradient(135deg, rgba(185, 28, 28, 0.95), rgba(248, 113, 113, 0.95)) !important;
 }
 .p-toast-message-error::before {
-  background: #DC2626;
+  background: #B91C1C;
 }
 
 .p-toast-message .p-toast-message-content {

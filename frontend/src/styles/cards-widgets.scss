@@ -22,38 +22,38 @@
   }
 
   &--primary {
-    border-color: rgba(99, 102, 241, 0.2);
+    border-color: rgba($primary-500, 0.2);
 
     &:hover {
-      border-color: rgba(99, 102, 241, 0.5);
-      box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+      border-color: rgba($primary-500, 0.5);
+      box-shadow: 0 20px 40px rgba($primary-500, 0.2);
     }
   }
 
   &--success {
-    border-color: rgba(16, 185, 129, 0.2);
+    border-color: rgba($success-500, 0.2);
 
     &:hover {
-      border-color: rgba(16, 185, 129, 0.5);
-      box-shadow: 0 20px 40px rgba(16, 185, 129, 0.2);
+      border-color: rgba($success-500, 0.5);
+      box-shadow: 0 20px 40px rgba($success-500, 0.2);
     }
   }
 
   &--warning {
-    border-color: rgba(245, 158, 11, 0.2);
+    border-color: rgba($warning-500, 0.2);
 
     &:hover {
-      border-color: rgba(245, 158, 11, 0.5);
-      box-shadow: 0 20px 40px rgba(245, 158, 11, 0.2);
+      border-color: rgba($warning-500, 0.5);
+      box-shadow: 0 20px 40px rgba($warning-500, 0.2);
     }
   }
 
   &--error {
-    border-color: rgba(239, 68, 68, 0.2);
+    border-color: rgba($error-500, 0.2);
 
     &:hover {
-      border-color: rgba(239, 68, 68, 0.5);
-      box-shadow: 0 20px 40px rgba(239, 68, 68, 0.2);
+      border-color: rgba($error-500, 0.5);
+      box-shadow: 0 20px 40px rgba($error-500, 0.2);
     }
   }
 }
@@ -168,7 +168,7 @@
   border-radius: $radius-full;
 
   &--up {
-    background: rgba(16, 185, 129, 0.1);
+    background: rgba($success-500, 0.1);
     color: $color-success;
 
     i {
@@ -177,7 +177,7 @@
   }
 
   &--down {
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba($error-500, 0.1);
     color: $color-error;
 
     i {
@@ -186,7 +186,7 @@
   }
 
   &--neutral {
-    background: rgba(100, 116, 139, 0.1);
+    background: rgba($neutral-500, 0.1);
     color: $color-text-secondary;
 
     i {
@@ -226,8 +226,8 @@
 }
 
 .stat-card:hover .stat-card-footer {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
-  border-top-color: rgba(99, 102, 241, 0.2);
+  background: linear-gradient(135deg, rgba($primary-500, 0.05) 0%, rgba($primary-500, 0.05) 100%);
+  border-top-color: rgba($primary-500, 0.2);
 }
 
 // ============================================
@@ -348,14 +348,14 @@
     width: 40px;
     height: 40px;
     border-radius: $radius-lg;
-    background: rgba(99, 102, 241, 0.1);
+    background: rgba($primary-500, 0.1);
     @include flex-center;
     color: $color-primary;
     font-size: 1.25rem;
     transition: all $transition-base;
 
     &:hover {
-      background: rgba(99, 102, 241, 0.2);
+      background: rgba($primary-500, 0.2);
       transform: scale(1.1);
     }
   }
@@ -386,12 +386,12 @@
     border-radius: $radius-full;
 
     &--positive {
-      background: rgba(16, 185, 129, 0.1);
+      background: rgba($success-500, 0.1);
       color: $color-success;
     }
 
     &--negative {
-      background: rgba(239, 68, 68, 0.1);
+      background: rgba($error-500, 0.1);
       color: $color-error;
     }
   }
@@ -430,7 +430,7 @@
     width: 44px;
     height: 44px;
     border-radius: $radius-xl;
-    background: rgba(99, 102, 241, 0.1);
+    background: rgba($primary-500, 0.1);
     @include flex-center;
     color: $color-primary;
     font-size: 1.25rem;
@@ -555,7 +555,7 @@
     width: 36px;
     height: 36px;
     border-radius: $radius-lg;
-    background: rgba(99, 102, 241, 0.1);
+    background: rgba($primary-500, 0.1);
     @include flex-center;
     color: $color-primary;
     font-size: 1rem;
@@ -637,7 +637,7 @@
     width: 32px;
     height: 32px;
     border-radius: $radius-md;
-    background: rgba(99, 102, 241, 0.1);
+    background: rgba($primary-500, 0.1);
     @include flex-center;
     color: $color-primary;
     font-size: 0.875rem;
@@ -692,24 +692,24 @@
     width: 48px;
     height: 48px;
     border-radius: $radius-xl;
-    background: rgba(99, 102, 241, 0.1);
+    background: rgba($primary-500, 0.1);
     @include flex-center;
     color: $color-primary;
     font-size: 1.5rem;
     margin-bottom: $spacing-4;
 
     &--success {
-      background: rgba(16, 185, 129, 0.1);
+      background: rgba($success-500, 0.1);
       color: $color-success;
     }
 
     &--warning {
-      background: rgba(245, 158, 11, 0.1);
+      background: rgba($warning-500, 0.1);
       color: $color-warning;
     }
 
     &--error {
-      background: rgba(239, 68, 68, 0.1);
+      background: rgba($error-500, 0.1);
       color: $color-error;
     }
   }

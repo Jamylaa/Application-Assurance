@@ -74,9 +74,9 @@
 
   // Color variants
   &--primary {
-    background: rgba(99, 102, 241, 0.1);
+    background: rgba(15, 76, 129, 0.1);
     color: $color-primary;
-    border-color: rgba(99, 102, 241, 0.3);
+    border-color: rgba(15, 76, 129, 0.3);
 
     &.badge-outlined {
       background: transparent;
@@ -89,9 +89,9 @@
   }
 
   &--secondary {
-    background: rgba(6, 182, 212, 0.1);
+    background: rgba(13, 115, 119, 0.1);
     color: $color-secondary;
-    border-color: rgba(6, 182, 212, 0.3);
+    border-color: rgba(13, 115, 119, 0.3);
 
     &.badge-outlined {
       background: transparent;
@@ -104,9 +104,9 @@
   }
 
   &--success {
-    background: rgba(16, 185, 129, 0.1);
+    background: rgba(21, 101, 52, 0.1);
     color: $color-success;
-    border-color: rgba(16, 185, 129, 0.3);
+    border-color: rgba(21, 101, 52, 0.3);
 
     &.badge-outlined {
       background: transparent;
@@ -119,9 +119,9 @@
   }
 
   &--warning {
-    background: rgba(245, 158, 11, 0.1);
+    background: rgba(180, 83, 9, 0.1);
     color: $color-warning;
-    border-color: rgba(245, 158, 11, 0.3);
+    border-color: rgba(180, 83, 9, 0.3);
 
     &.badge-outlined {
       background: transparent;
@@ -134,9 +134,9 @@
   }
 
   &--error {
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(185, 28, 28, 0.1);
     color: $color-error;
-    border-color: rgba(239, 68, 68, 0.3);
+    border-color: rgba(185, 28, 28, 0.3);
 
     &.badge-outlined {
       background: transparent;
@@ -149,17 +149,17 @@
   }
 
   &--info {
-    background: rgba(59, 130, 246, 0.1);
-    color: #3B82F6;
-    border-color: rgba(59, 130, 246, 0.3);
+    background: rgba(15, 76, 129, 0.1);
+    color: #0F4C81;
+    border-color: rgba(15, 76, 129, 0.3);
 
     &.badge-outlined {
       background: transparent;
-      border-color: #3B82F6;
+      border-color: #0F4C81;
     }
 
     &.badge-dot {
-      background: #3B82F6;
+      background: #0F4C81;
     }
   }
 
@@ -202,9 +202,9 @@
 // Dark mode
 .my-app-dark .ui-badge {
   &--primary {
-    background: rgba(99, 102, 241, 0.2);
+    background: rgba(15, 76, 129, 0.2);
     color: $primary-400;
-    border-color: rgba(99, 102, 241, 0.4);
+    border-color: rgba(15, 76, 129, 0.4);
 
     &.badge-outlined {
       background: transparent;
@@ -217,9 +217,9 @@
   }
 
   &--secondary {
-    background: rgba(6, 182, 212, 0.2);
+    background: rgba(13, 115, 119, 0.2);
     color: $secondary-400;
-    border-color: rgba(6, 182, 212, 0.4);
+    border-color: rgba(13, 115, 119, 0.4);
 
     &.badge-outlined {
       background: transparent;
@@ -232,9 +232,9 @@
   }
 
   &--success {
-    background: rgba(16, 185, 129, 0.2);
+    background: rgba(21, 101, 52, 0.2);
     color: $success-400;
-    border-color: rgba(16, 185, 129, 0.4);
+    border-color: rgba(21, 101, 52, 0.4);
 
     &.badge-outlined {
       background: transparent;
@@ -247,9 +247,9 @@
   }
 
   &--warning {
-    background: rgba(245, 158, 11, 0.2);
+    background: rgba(180, 83, 9, 0.2);
     color: $warning-400;
-    border-color: rgba(245, 158, 11, 0.4);
+    border-color: rgba(180, 83, 9, 0.4);
 
     &.badge-outlined {
       background: transparent;
@@ -262,9 +262,9 @@
   }
 
   &--error {
-    background: rgba(239, 68, 68, 0.2);
+    background: rgba(185, 28, 28, 0.2);
     color: $error-400;
-    border-color: rgba(239, 68, 68, 0.4);
+    border-color: rgba(185, 28, 28, 0.4);
 
     &.badge-outlined {
       background: transparent;
@@ -277,9 +277,9 @@
   }
 
   &--info {
-    background: rgba(59, 130, 246, 0.2);
+    background: rgba(15, 76, 129, 0.2);
     color: #60A5FA;
-    border-color: rgba(59, 130, 246, 0.4);
+    border-color: rgba(15, 76, 129, 0.4);
 
     &.badge-outlined {
       background: transparent;

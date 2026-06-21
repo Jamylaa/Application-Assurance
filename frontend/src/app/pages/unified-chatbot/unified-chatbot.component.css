@@ -136,7 +136,7 @@
 }
 
 .feature-item i {
-  color: #10B981;
+  color: #15803D;
   font-size: 1.125rem;
   flex-shrink: 0;
 }
@@ -405,7 +405,7 @@
 
 .input-wrapper textarea:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1), var(--shadow-sm);
+  box-shadow: 0 0 0 3px rgba(12, 61, 104, 0.1), var(--shadow-sm);
   outline: none;
   background: var(--app-surface);
 }

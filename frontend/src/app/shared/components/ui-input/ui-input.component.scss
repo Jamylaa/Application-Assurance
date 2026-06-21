@@ -47,20 +47,20 @@
 
   &:has(.ui-input:focus) {
     border-color: var(--primary-500);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 3px rgba(15, 76, 129, 0.1);
   }
 
   &.focused {
     border-color: var(--primary-500);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 3px rgba(15, 76, 129, 0.1);
   }
 
   &.has-error {
     border-color: var(--error-500);
-    background: rgba(239, 68, 68, 0.05);
+    background: rgba(185, 28, 28, 0.05);
 
     &:has(.ui-input:focus) {
-      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+      box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.1);
     }
   }
 
