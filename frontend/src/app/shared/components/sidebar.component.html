@@ -107,12 +107,16 @@
     </button>
 
     <!-- Logout Button -->
-    <button class="logout-btn" (click)="logout()" [title]="Déconnexion" *ngIf="!isCollapsed">
-      <i class="bi bi-box-arrow-right"></i>
-      <span>Déconnexion</span>
-    </button>
-    <button class="logout-btn-icon-only" (click)="logout()" [title]="Déconnexion" *ngIf="isCollapsed">
-      <i class="bi bi-box-arrow-right"></i>
-    </button>
+    <ng-container *ngIf="!isCollapsed">
+      <button class="logout-btn" (click)="logout()" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Déconnexion</span>
+      </button>
+    </ng-container>
+    <ng-container *ngIf="isCollapsed">
+      <button class="logout-btn-icon-only" (click)="logout()" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </ng-container>
   </div>
 </div>

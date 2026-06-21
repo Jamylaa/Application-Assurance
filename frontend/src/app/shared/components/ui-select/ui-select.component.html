@@ -1,0 +1,29 @@
+<div class="ui-select-group" [class]="'size-' + size">
+  <label *ngIf="label" class="ui-select-label">
+    {{ label }}
+    <span *ngIf="required" class="required">*</span>
+  </label>
+
+  <p-multiSelect
+    [options]="options"
+    [(ngModel)]="selectedItems"
+    (onChange)="onSelectionChange(selectedItems)"
+    [placeholder]="placeholder"
+    [disabled]="disabled"
+    [showClear]="showClear"
+    [maxSelectedLabels]="maxSelectedLabels"
+    [displayLimit]="displayLimit"
+    class="ui-select-control"
+    [ngClass]="{'has-error': error}">
+  </p-multiSelect>
+
+  <div *ngIf="error" class="select-error">
+    <i class="bi bi-exclamation-circle"></i>
+    {{ error }}
+  </div>
+
+  <div *ngIf="help && !error" class="select-help">
+    <i class="bi bi-info-circle"></i>
+    {{ help }}
+  </div>
+</div>

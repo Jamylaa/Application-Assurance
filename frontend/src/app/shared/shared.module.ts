@@ -23,16 +23,30 @@ import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService } from 'primeng/api';
 
-// Custom UI Components
+// Custom UI Components (Legacy)
 import { UiCardComponent } from './components/ui-card/ui-card.component';
 import { UiButtonComponent } from './components/ui-button/ui-button.component';
 import { UiBadgeComponent } from './components/ui-badge/ui-badge.component';
+
+// Custom UI Components (Standalone)
+import { UiModalComponent } from './components/ui-modal/ui-modal.component';
+import { UiInputComponent } from './components/ui-input/ui-input.component';
+import { UiTextareaComponent } from './components/ui-textarea/ui-textarea.component';
+import { UiSelectComponent } from './components/ui-select/ui-select.component';
+import { UiSkeletonComponent } from './components/ui-skeleton/ui-skeleton.component';
 
 @NgModule({
   declarations: [
     UiCardComponent,
     UiButtonComponent,
     UiBadgeComponent
+  ],
+  imports: [
+    UiModalComponent,
+    UiInputComponent,
+    UiTextareaComponent,
+    UiSelectComponent,
+    UiSkeletonComponent
   ],
   imports: [
     CommonModule,
@@ -83,11 +97,18 @@ import { UiBadgeComponent } from './components/ui-badge/ui-badge.component';
     PaginatorModule,
     TagModule,
     TooltipModule,
-    
-    // Export Custom UI Components
+
+    // Export Custom UI Components (Legacy)
     UiCardComponent,
     UiButtonComponent,
-    UiBadgeComponent
+    UiBadgeComponent,
+
+    // Export Custom UI Components (Standalone)
+    UiModalComponent,
+    UiInputComponent,
+    UiTextareaComponent,
+    UiSelectComponent,
+    UiSkeletonComponent
       ],
   providers: [
     ConfirmationService

@@ -12,6 +12,7 @@ import { CardModule } from 'primeng/card';
 import { ChartModule } from 'primeng/chart';
 import { CommonModule } from '@angular/common';
 import { DomaineMedical, TypeProduit, NiveauCouverture, getDomaineMedicalLabel, getTypeProduitLabel, getNiveauCouvertureLabel } from '../../models/entities.model';
+import { UiSkeletonComponent } from '../../shared/components/ui-skeleton/ui-skeleton.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -24,7 +25,8 @@ import { DomaineMedical, TypeProduit, NiveauCouverture, getDomaineMedicalLabel, 
     ButtonModule,
     CardModule,
     ChartModule,
-    CommonModule
+    CommonModule,
+    UiSkeletonComponent
   ]
 })
 export class DashboardComponent implements OnInit, OnDestroy {
@@ -63,10 +65,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
   pieChartData: any;
   lineChartData: any;
   polarChartData: any;
+  areaChartData: any;
+  scatterChartData: any;
 
   chartOptions: any;
   pieChartOptions: any;
   polarOptions: any;
+  areaChartOptions: any;
+  scatterChartOptions: any;
+
+  // Date range filter
+  startDate: Date | null = null;
+  endDate: Date | null = null;
 
   constructor(
     private readonly router: Router,
@@ -239,6 +249,46 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }
       }
     };
+
+    // Area chart options
+    this.areaChartOptions = {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { color: textColor }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: textColorSecondary },
+          grid: { color: surfaceBorder }
+        },
+        y: {
+          ticks: { color: textColorSecondary },
+          grid: { color: surfaceBorder }
+        }
+      }
+    };
+
+    // Scatter chart options
+    this.scatterChartOptions = {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { color: textColor }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: textColorSecondary },
+          grid: { color: surfaceBorder }
+        },
+        y: {
+          ticks: { color: textColorSecondary },
+          grid: { color: surfaceBorder }
+        }
+      }
+    };
   }
 
   prepareCharts(
@@ -348,8 +398,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
     };
   }
 
-  getGreeting(): string {
+  exportChartAsImage(chartElement: HTMLCanvasElement, fileName: string): void {
+    const link = document.createElement('a');
+    link.href = chartElement.toDataURL('image/png');
+    link.download = `${fileName}-${new Date().getTime()}.png`;
+    link.click();
+  }
 
+  filterChartsByDateRange(): void {
+    if (!this.startDate || !this.endDate) {
+      return;
+    }
+    // Charts would be re-fetched based on date range
+    this.loadStats();
+  }
+
+  resetDateFilter(): void {
+    this.startDate = null;
+    this.endDate = null;
+    this.loadStats();
+  }
+
+  getGreeting(): string {
     const hour = new Date().getHours();
 
     if (hour < 12) {

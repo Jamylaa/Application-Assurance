@@ -1,0 +1,47 @@
+<div class="ui-input-group" [class]="'size-' + size">
+  <label *ngIf="label" class="ui-input-label">
+    {{ label }}
+    <span *ngIf="required" class="required">*</span>
+  </label>
+
+  <div class="ui-input-wrapper" [class.focused]="focused" [class.has-error]="error" [class.has-success]="success">
+    <i *ngIf="icon" [class]="'bi ' + icon" class="input-icon"></i>
+    <input
+      [type]="type"
+      [placeholder]="placeholder"
+      [value]="value"
+      [disabled]="disabled"
+      [readonly]="readonly"
+      [attr.min]="min"
+      [attr.max]="max"
+      [attr.step]="step"
+      (input)="onInput($event)"
+      (focus)="onFocus()"
+      (blur)="onBlur()"
+      class="ui-input"
+      [class.has-icon]="icon" />
+
+    <div class="input-actions">
+      <button
+        *ngIf="clearable && hasValue"
+        type="button"
+        class="clear-btn"
+        (click)="clear()"
+        aria-label="Effacer">
+        <i class="bi bi-x-circle-fill"></i>
+      </button>
+      <i *ngIf="success && !error" class="bi bi-check-circle-fill status-icon success"></i>
+      <i *ngIf="error" class="bi bi-exclamation-circle-fill status-icon error"></i>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="input-error">
+    <i class="bi bi-exclamation-circle"></i>
+    {{ error }}
+  </div>
+
+  <div *ngIf="help && !error" class="input-help">
+    <i class="bi bi-info-circle"></i>
+    {{ help }}
+  </div>
+</div>

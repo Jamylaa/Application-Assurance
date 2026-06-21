@@ -1,0 +1,125 @@
+@import '../../../../styles/design-system.scss';
+
+.ui-select-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  &.size-sm {
+    --font-size: 0.875rem;
+  }
+
+  &.size-md {
+    --font-size: 1rem;
+  }
+
+  &.size-lg {
+    --font-size: 1.125rem;
+  }
+}
+
+.ui-select-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  .required {
+    color: var(--error-600);
+  }
+}
+
+.ui-select-control {
+  ::ng-deep {
+    .p-multiselect {
+      width: 100%;
+      border-radius: 8px;
+      border: 1.5px solid var(--color-border-light);
+      background: var(--color-bg-secondary);
+      transition: all 0.2s ease;
+
+      &:hover:not(.p-disabled) {
+        border-color: var(--primary-400);
+      }
+
+      &.p-focus {
+        border-color: var(--primary-500);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      }
+
+      &.has-error {
+        border-color: var(--error-500);
+        background: rgba(239, 68, 68, 0.05);
+
+        &.p-focus {
+          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+      }
+    }
+
+    .p-multiselect-label {
+      padding: 0.5rem 0.75rem;
+      color: var(--color-text-primary);
+      font-size: var(--font-size);
+    }
+
+    .p-multiselect-label-empty {
+      color: var(--color-text-muted);
+    }
+
+    .p-multiselect-trigger {
+      color: var(--color-text-muted);
+    }
+
+    .p-multiselect-panel {
+      border-radius: 8px;
+      border: 1px solid var(--color-border-light);
+      background: var(--color-bg-primary);
+
+      .p-multiselect-items {
+        padding: 0.5rem;
+      }
+
+      .p-multiselect-item {
+        border-radius: 6px;
+        margin-bottom: 0.25rem;
+        padding: 0.5rem 0.75rem;
+
+        &.p-highlight {
+          background: rgba(99, 102, 241, 0.15);
+          color: var(--primary-600);
+        }
+
+        &:hover {
+          background: var(--color-bg-secondary);
+        }
+      }
+    }
+  }
+}
+
+.select-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--error-600);
+
+  i {
+    flex-shrink: 0;
+  }
+}
+
+.select-help {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+
+  i {
+    flex-shrink: 0;
+  }
+}

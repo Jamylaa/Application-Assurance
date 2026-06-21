@@ -1,0 +1,34 @@
+<div class="ui-textarea-group" [class]="'size-' + size">
+  <label *ngIf="label" class="ui-textarea-label">
+    {{ label }}
+    <span *ngIf="required" class="required">*</span>
+  </label>
+
+  <div class="ui-textarea-wrapper" [class.focused]="focused" [class.has-error]="error" [class.has-success]="success">
+    <textarea
+      [placeholder]="placeholder"
+      [value]="value"
+      [rows]="rows"
+      [disabled]="disabled"
+      [readonly]="readonly"
+      [maxlength]="maxLength"
+      (input)="onInput($event)"
+      (focus)="onFocus()"
+      (blur)="onBlur()"
+      class="ui-textarea"></textarea>
+
+    <div *ngIf="showCharCount && maxLength" class="char-count">
+      {{ charCount }}/{{ maxLength }}
+    </div>
+  </div>
+
+  <div *ngIf="error" class="textarea-error">
+    <i class="bi bi-exclamation-circle"></i>
+    {{ error }}
+  </div>
+
+  <div *ngIf="help && !error" class="textarea-help">
+    <i class="bi bi-info-circle"></i>
+    {{ help }}
+  </div>
+</div>

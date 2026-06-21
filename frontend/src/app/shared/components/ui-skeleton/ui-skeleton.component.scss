@@ -1,0 +1,131 @@
+@import '../../../../styles/design-system.scss';
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-secondary) 25%,
+    var(--color-bg-tertiary) 50%,
+    var(--color-bg-secondary) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-pulse 2s infinite;
+  border-radius: 6px;
+  display: block;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    background: var(--color-bg-secondary);
+  }
+}
+
+.skeleton-text {
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-circle {
+  border-radius: 50%;
+}
+
+.skeleton-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+  padding: 1rem;
+  gap: 0.75rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.skeleton-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.skeleton-table-row {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-border-light);
+
+  &.header {
+    background: linear-gradient(135deg, var(--primary-50), var(--primary-100));
+    font-weight: 600;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.skeleton-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+}
+
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: 0.75rem;
+  height: 200px;
+}
+
+.chart-bar {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  .skeleton-bar {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+  }
+}
+
+.chart-labels {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-around;
+}
+
+@keyframes skeleton-pulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Dark mode */
+[data-theme='dark'] {
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--slate-800) 25%,
+      var(--slate-700) 50%,
+      var(--slate-800) 75%
+    );
+  }
+
+  .skeleton-card,
+  .skeleton-table,
+  .skeleton-chart {
+    background: var(--slate-800);
+    border-color: var(--slate-700);
+  }
+
+  .skeleton-table-row.header {
+    background: rgba(99, 102, 241, 0.15);
+  }
+}

@@ -1,0 +1,56 @@
+<div *ngIf="visible" class="ui-modal-overlay" [class.show]="visible" (click)="onBackdropClick()">
+  <div class="ui-modal" [style.width]="width" [class.modal-top]="position === 'top'" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div *ngIf="showHeader" class="ui-modal-header">
+      <ng-container *ngIf="headerTemplate; else defaultHeader">
+        <ng-container *ngTemplateOutlet="headerTemplate"></ng-container>
+      </ng-container>
+      <ng-template #defaultHeader>
+        <h2 class="ui-modal-title">{{ title }}</h2>
+        <button
+          *ngIf="closable"
+          class="ui-modal-close-btn"
+          (click)="close()"
+          type="button"
+          aria-label="Fermer">
+          <i class="bi bi-x"></i>
+        </button>
+      </ng-template>
+    </div>
+
+    <!-- Body -->
+    <div class="ui-modal-body">
+      <ng-container *ngIf="bodyTemplate; else emptyBody">
+        <ng-container *ngTemplateOutlet="bodyTemplate"></ng-container>
+      </ng-container>
+      <ng-template #emptyBody>
+        <!-- Default empty content -->
+      </ng-template>
+    </div>
+
+    <!-- Footer -->
+    <div *ngIf="showFooter" class="ui-modal-footer">
+      <ng-container *ngIf="footerTemplate; else defaultFooter">
+        <ng-container *ngTemplateOutlet="footerTemplate"></ng-container>
+      </ng-container>
+      <ng-template #defaultFooter>
+        <button
+          class="btn-cancel"
+          (click)="close()"
+          type="button">
+          {{ closeButtonLabel }}
+        </button>
+        <button
+          class="btn-submit"
+          (click)="submit()"
+          [disabled]="submitting"
+          type="button">
+          <span *ngIf="!submitting">{{ submitButtonLabel }}</span>
+          <span *ngIf="submitting" class="spinner">
+            <i class="pi pi-spin pi-spinner"></i>
+          </span>
+        </button>
+      </ng-template>
+    </div>
+  </div>
+</div>

@@ -9,7 +9,9 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
+import { DropdownModule } from 'primeng/dropdown';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../shared/services/toast.service';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
 import { UiBadgeComponent } from '../../shared/components/ui-badge/ui-badge.component';
@@ -28,7 +30,9 @@ import { getDomaineMedicalLabel } from '../../models/entities.model';
     ToastModule,
     ConfirmDialogModule,
     TooltipModule,
+    DropdownModule,
     CommonModule,
+    FormsModule,
     RouterModule,
     UiBadgeComponent
   ],
@@ -37,6 +41,13 @@ import { getDomaineMedicalLabel } from '../../models/entities.model';
 export class GarantiesComponent implements OnInit {
   garanties: Garantie[] = [];
   loading = true;
+
+  // Filter properties
+  domaineOptions: any[] = [];
+  selectedDomaine: any = null;
+  statusOptions: any[] = [];
+  selectedStatus: any = null;
+  globalFilterValue = '';
 
   constructor(
     private readonly garantieService: GestionProduitService,
@@ -175,5 +186,46 @@ export class GarantiesComponent implements OnInit {
     } catch (error) {
       this.toastService.showError('Erreur lors de la modification de la garantie', 'Veuillez réessayer plus tard');
     }
+  }
+
+  // Filter methods
+  applyFilters(): void {
+    // Filter logic would be implemented here
+    console.log('Applying filters:', {
+      domaine: this.selectedDomaine,
+      status: this.selectedStatus
+    });
+  }
+
+  resetFilters(): void {
+    this.selectedDomaine = null;
+    this.selectedStatus = null;
+    this.globalFilterValue = '';
+    this.applyFilters();
+  }
+
+  hasActiveFilters(): boolean {
+    return !!this.selectedDomaine || !!this.selectedStatus || !!this.globalFilterValue;
+  }
+
+  clearDomaineFilter(): void {
+    this.selectedDomaine = null;
+    this.applyFilters();
+  }
+
+  clearStatusFilter(): void {
+    this.selectedStatus = null;
+    this.applyFilters();
+  }
+
+  clearSearchFilter(): void {
+    this.globalFilterValue = '';
+    this.applyFilters();
+  }
+
+  onGlobalFilter(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.globalFilterValue = target.value;
+    this.applyFilters();
   }
 }

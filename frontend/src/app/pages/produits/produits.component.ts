@@ -10,7 +10,9 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { BadgeModule } from 'primeng/badge';
 import { TooltipModule } from 'primeng/tooltip';
+import { DropdownModule } from 'primeng/dropdown';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../shared/services/toast.service';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
 import { UiBadgeComponent } from '../../shared/components/ui-badge/ui-badge.component';
@@ -29,7 +31,9 @@ import { UiBadgeComponent } from '../../shared/components/ui-badge/ui-badge.comp
     ConfirmDialogModule,
     BadgeModule,
     TooltipModule,
+    DropdownModule,
     CommonModule,
+    FormsModule,
     RouterModule
   ],
   providers: [ConfirmationService]
@@ -38,6 +42,12 @@ export class ProduitsComponent implements OnInit {
   produits: Produit[] = [];
   loading = false;
   globalFilterValue = '';
+
+  // Filter properties
+  typeOptions: any[] = [];
+  selectedType: any = null;
+  statusOptions: any[] = [];
+  selectedStatus: any = null;
 
   constructor(
     private produitService: GestionProduitService,
@@ -70,6 +80,42 @@ export class ProduitsComponent implements OnInit {
   onGlobalFilter(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.globalFilterValue = target.value;
+    this.applyFilters();
+  }
+
+  // Filter methods
+  applyFilters(): void {
+    console.log('Applying filters:', {
+      type: this.selectedType,
+      status: this.selectedStatus,
+      search: this.globalFilterValue
+    });
+  }
+
+  resetFilters(): void {
+    this.selectedType = null;
+    this.selectedStatus = null;
+    this.globalFilterValue = '';
+    this.applyFilters();
+  }
+
+  hasActiveFilters(): boolean {
+    return !!this.selectedType || !!this.selectedStatus || !!this.globalFilterValue;
+  }
+
+  clearTypeFilter(): void {
+    this.selectedType = null;
+    this.applyFilters();
+  }
+
+  clearStatusFilter(): void {
+    this.selectedStatus = null;
+    this.applyFilters();
+  }
+
+  clearSearchFilter(): void {
+    this.globalFilterValue = '';
+    this.applyFilters();
   }
 
   refreshProduits(): void {

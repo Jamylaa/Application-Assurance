@@ -1,0 +1,128 @@
+@import '../../../../styles/design-system.scss';
+
+.ui-textarea-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  &.size-sm {
+    --font-size: 0.875rem;
+  }
+
+  &.size-md {
+    --font-size: 1rem;
+  }
+
+  &.size-lg {
+    --font-size: 1.125rem;
+  }
+}
+
+.ui-textarea-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  .required {
+    color: var(--error-600);
+  }
+}
+
+.ui-textarea-wrapper {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  background: var(--color-bg-secondary);
+  border: 1.5px solid var(--color-border-light);
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.2s ease;
+
+  &:has(.ui-textarea:focus) {
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+
+  &.focused {
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+
+  &.has-error {
+    border-color: var(--error-500);
+    background: rgba(239, 68, 68, 0.05);
+
+    &:has(.ui-textarea:focus) {
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+  }
+
+  &.has-success {
+    border-color: var(--success-500);
+  }
+}
+
+.ui-textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text-primary);
+  font-size: var(--font-size);
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  padding: 0;
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &:read-only {
+    opacity: 0.8;
+    cursor: default;
+  }
+}
+
+.char-count {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  background: var(--color-bg-secondary);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.textarea-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--error-600);
+
+  i {
+    flex-shrink: 0;
+  }
+}
+
+.textarea-help {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+
+  i {
+    flex-shrink: 0;
+  }
+}
