@@ -126,9 +126,19 @@
                 <span class="info-label">Durée contrat</span>
                 <span class="info-value">{{ g.dureeMinContrat ?? '—' }} – {{ g.dureeMaxContrat ?? '—' }} mois</span>
               </div>
+              <div class="info-item">
+                <span class="info-label">Résiliable annuellement</span>
+                <span class="info-value">
+                  <p-tag [severity]="g.resiliableAnnuellement ? 'success' : 'danger'"
+                         [value]="g.resiliableAnnuellement ? 'Oui' : 'Non'"></p-tag>
+                </span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Coût moyen par sinistre</span>
+                <span class="info-value">{{ g.coutMoyenParSinistre ?? '—' }} €</span>
+              </div>
             </div>
           </div>
-
           <!-- Métadonnées -->
           <div class="details-section meta">
             <h3><i class="bi bi-gear"></i> Métadonnées</h3>

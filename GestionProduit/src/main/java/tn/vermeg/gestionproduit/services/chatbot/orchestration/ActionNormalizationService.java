@@ -59,19 +59,28 @@ public class ActionNormalizationService {
      //Normalise le type de montant
     public TypeMontant normalizeTypeMontant(String typeMontant) {
         if (typeMontant == null || typeMontant.trim().isEmpty()) {
+            logger.warn("TypeMontant est null ou vide, retourne null pour validation");
             return null; // Ne pas appliquer de valeur par défaut - laisser la validation gérer
         }
         String normalized = typeMontant.toUpperCase().trim();
         if (normalized.contains("FORFAIT")) {
+            logger.info("TypeMontant normalisé: FORFAIT");
             return TypeMontant.FORFAIT;
         }
         if (normalized.contains("TARIF") && (normalized.contains("CONVENTION") || normalized.contains("CONVENTIONNE"))) {
+            logger.info("TypeMontant normalisé: TARIF_CONVENTIONNE");
             return TypeMontant.TARIF_CONVENTIONNE;
         }
         if (normalized.contains("CONVENTION")) {
+            logger.info("TypeMontant normalisé: TARIF_CONVENTIONNE");
             return TypeMontant.TARIF_CONVENTIONNE;
         }
-        return TypeMontant.FRAIS_REELS;
+        if (normalized.contains("FRAIS") && (normalized.contains("REEL") || normalized.contains("RÉEL"))) {
+            logger.info("TypeMontant normalisé: FRAIS_REELS");
+            return TypeMontant.FRAIS_REELS;
+        }
+        logger.warn("TypeMontant non reconnu: {}, retourne null pour validation", typeMontant);
+        return null; // Retourner null au lieu d'une valeur par défaut
     }
      //Normalise le statut
     public Statut normalizeStatut(String statut) {
@@ -222,50 +231,69 @@ public class ActionNormalizationService {
     }
      // Applique les valeurs par défaut pour une garantie
     public void applyGarantieDefaults(tn.vermeg.gestionproduit.entities.Garantie garantie) {
+        logger.info("=== APPLICATION VALEURS PAR DÉFAUT GARANTIE ===");
+        
         if (garantie.getTauxRemboursement() == 0.0) {
+            logger.warn("Taux de remboursement = 0, application valeur par défaut: 0.8");
             garantie.setTauxRemboursement(0.8); // 80% par défaut
         }
         
+        // NE PAS appliquer de valeur par défaut pour typeMontant
+        // Laisser null pour validation bloquante
         if (garantie.getTypeMontant() == null) {
-            garantie.setTypeMontant(TypeMontant.FRAIS_REELS);
+            logger.warn("TypeMontant est null, PAS de valeur par défaut appliquée (validation requise)");
         }
         
         if (garantie.getTypePlafond() == null) {
+            logger.info("TypePlafond null, application valeur par défaut: ANNUEL");
             garantie.setTypePlafond(TypePlafond.ANNUEL);
         }
         
+        // NE PAS appliquer de valeur par défaut pour coutMoyenParSinistre
+        // Laisser 0.0 pour indiquer que l'information n'a pas été fournie
         if (garantie.getCoutMoyenParSinistre() == 0.0) {
-            garantie.setCoutMoyenParSinistre(100.0);
+            logger.warn("Coût moyen par sinistre = 0, PAS de valeur par défaut appliquée");
         }
         
         if (garantie.getDureeMinContrat() == 0) {
+            logger.warn("Durée min contrat = 0, application valeur par défaut: 12");
             garantie.setDureeMinContrat(12);
         }
         
-        // Ne pas appliquer de valeur par défaut pour dureeMaxContrat
+        // NE PAS appliquer de valeur par défaut pour dureeMaxContrat
         // Laisser l'extraction IA ou regex gérer cette valeur critique
+        if (garantie.getDureeMaxContrat() == 0) {
+            logger.warn("Durée max contrat = 0, PAS de valeur par défaut appliquée (validation requise)");
+        }
         
         if (!garantie.isResiliableAnnuellement()) {
+            logger.info("Résiliable annuellement = false, application valeur par défaut: true");
             garantie.setResiliableAnnuellement(true);
         }
         
         if (garantie.getStatut() == null) {
+            logger.info("Statut null, application valeur par défaut: ACTIF");
             garantie.setStatut(Statut.ACTIF);
         }
         
         if (garantie.getFranchise() == 0.0) {
+            logger.warn("Franchise = 0, application valeur par défaut: 0.0");
             garantie.setFranchise(0.0);
         }
         
         // Calculer les plafonds dérivés si nécessaire
         if (garantie.getPlafondAnnuel() != 0.0) {
             if (garantie.getPlafondMensuel() == 0.0) {
+                logger.info("Calcul plafond mensuel à partir du plafond annuel");
                 garantie.setPlafondMensuel(garantie.getPlafondAnnuel() / 12.0);
             }
             if (garantie.getPlafondParActe() == 0.0) {
+                logger.info("Calcul plafond par acte à partir du plafond annuel");
                 garantie.setPlafondParActe(garantie.getPlafondAnnuel() / 24.0);
             }
         }
+        
+        logger.info("=== FIN APPLICATION VALEURS PAR DÉFAUT ===");
     }
 
      // Applique les valeurs par défaut pour un pack (uniquement les valeurs critiques métier)

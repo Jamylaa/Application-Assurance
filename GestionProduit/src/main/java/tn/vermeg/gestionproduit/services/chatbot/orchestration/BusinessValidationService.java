@@ -114,28 +114,49 @@ public class BusinessValidationService {
         Map<String, String> missingFields = new LinkedHashMap<>();
         List<String> suggestions = new ArrayList<>();
         double scorePenalty = 0.0;
+        
+        logger.info("=== VALIDATION MÉTIER GARANTIE ===");
+        logger.info("Garantie: {}", garantie.getNomGarantie());
+        
         // Validation 1: Nom
         if (garantie.getNomGarantie() == null || garantie.getNomGarantie().isBlank()) {
             missingFields.put("nomGarantie", "Nom de la garantie manquant");
             scorePenalty += 0.4;
             suggestions.add("Spécifiez un nom pour la garantie");
+            logger.warn("Nom de garantie manquant");
         }
+        
         // Validation 2: Taux de remboursement
         if (garantie.getTauxRemboursement() <= 0.0) {
             missingFields.put("tauxRemboursement", "Taux de remboursement manquant");
             scorePenalty += 0.3;
             suggestions.add("Indiquez le taux de remboursement (ex: 0.8 pour 80%)");
+            logger.warn("Taux de remboursement manquant");
         } else if (garantie.getTauxRemboursement() > 1.0) {
             warnings.add("Le taux de remboursement semble être en pourcentage (ex: 80 au lieu de 0.8)");
             scorePenalty += 0.1;
+            logger.warn("Taux de remboursement > 1.0: {}", garantie.getTauxRemboursement());
         }
+        
         // Validation 3: Domaine médical
         if (garantie.getDomaine() == null) {
             missingFields.put("domaine", "Domaine médical manquant");
             scorePenalty += 0.15;
             suggestions.add("Spécifiez le domaine médical (HOSPITALISATION, CONSULTATION, etc.)");
+            logger.warn("Domaine médical manquant");
         }
-        // Validation 4: Plafond
+        
+        // Validation 4: TypeMontant (CRITIQUE - NOUVEAU)
+        if (garantie.getTypeMontant() == null) {
+            missingFields.put("typeMontant", "Type de montant manquant (FORFAIT/FRAIS_REELS/TARIF_CONVENTIONNE)");
+            scorePenalty += 0.25; // Pénalité élevée car champ critique
+            suggestions.add("Spécifiez le type de montant: FORFAIT, FRAIS_REELS ou TARIF_CONVENTIONNE");
+            logger.error("TypeMontant MANQUANT - CHAMP CRITIQUE");
+        } else {
+            logger.info("TypeMontant: {}", garantie.getTypeMontant());
+        }
+        
+        // Validation 5: Plafond
         boolean hasAnyPlafond = (garantie.getPlafondAnnuel() > 0.0) ||
                                (garantie.getPlafondMensuel() > 0.0) ||
                                (garantie.getPlafondParActe() > 0.0);
@@ -143,11 +164,56 @@ public class BusinessValidationService {
             missingFields.put("plafond", "Aucun plafond spécifié");
             scorePenalty += 0.15;
             suggestions.add("Spécifiez au moins un plafond (annuel, mensuel ou par acte)");
+            logger.warn("Aucun plafond spécifié");
         }
+        
+        // Validation 6: Durée contrat (NOUVEAU)
+        if (garantie.getDureeMinContrat() <= 0) {
+            missingFields.put("dureeMinContrat", "Durée minimum contrat manquante");
+            scorePenalty += 0.1;
+            suggestions.add("Indiquez la durée minimum de contrat");
+            logger.warn("Durée min contrat manquante");
+        }
+        if (garantie.getDureeMaxContrat() <= 0) {
+            missingFields.put("dureeMaxContrat", "Durée maximum contrat manquante");
+            scorePenalty += 0.15;
+            suggestions.add("Indiquez la durée maximum de contrat");
+            logger.error("Durée max contrat manquante - CHAMP CRITIQUE");
+        } else {
+            logger.info("Durée contrat: {} - {} mois", garantie.getDureeMinContrat(), garantie.getDureeMaxContrat());
+        }
+        if (garantie.getDureeMinContrat() > 0 && garantie.getDureeMaxContrat() > 0 &&
+            garantie.getDureeMinContrat() >= garantie.getDureeMaxContrat()) {
+            errors.add("La durée minimum doit être inférieure à la durée maximum");
+            scorePenalty += 0.2;
+            logger.error("Incohérence durées: min={} >= max={}", garantie.getDureeMinContrat(), garantie.getDureeMaxContrat());
+        }
+        
+        // Validation 7: Description (NOUVEAU)
+        if (garantie.getDescription() == null || garantie.getDescription().isBlank()) {
+            missingFields.put("description", "Description manquante");
+            scorePenalty += 0.1;
+            suggestions.add("Ajoutez une description de la garantie");
+            logger.warn("Description manquante");
+        }
+        
+        // Validation 8: Résiliable annuellement (NOUVEAU - warning)
+        if (!garantie.isResiliableAnnuellement()) {
+            warnings.add("La garantie n'est pas résiliable annuellement");
+            scorePenalty += 0.05;
+            logger.info("Résiliable annuellement: false");
+        }
+        
         double adjustedScore = Math.max(0.0, originalScore - scorePenalty);
         boolean isValid = scorePenalty < 0.5;
-        logger.info("Garantie validation - Original score: {}, Adjusted score: {}, Penalty: {}, Valid: {}",
-                    originalScore, adjustedScore, scorePenalty, isValid);
+        
+        logger.info("=== RÉSULTAT VALIDATION ===");
+        logger.info("Score original: {}", originalScore);
+        logger.info("Score ajusté: {}", adjustedScore);
+        logger.info("Pénalité: {}", scorePenalty);
+        logger.info("Valide: {}", isValid);
+        logger.info("Champs manquants: {}", missingFields.keySet());
+        
         return new BusinessValidationResult(isValid, originalScore, adjustedScore, errors, warnings, missingFields, suggestions);
     }
 // Valide une entité Produit avant calcul du score

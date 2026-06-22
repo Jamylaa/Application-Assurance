@@ -12,6 +12,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -58,14 +59,60 @@ public class AIExtractionService {
             .build();
         this.objectMapper = new ObjectMapper();
     }
-
     // ========== EXTRACTION DONNÉES ==========
-
     public Map<String, Object> extractGarantieData(String prompt) {
         try {
-            return callGoogleAIWithRetry(prompt + "\n\nExtrais les informations pour créer une garantie d'assurance. Retourne un JSON avec: nom, description, domaine (domaine médical parmi: CONSULTATION_GENERALE, CARDIOLOGIE, DENTAIRE, OPHTALMOLOGIE, HOSPITALISATION, etc.), tauxRemboursement, typeMontant (TARIF_CONVENTIONNE/FRAIS_REELS/FORFAIT), plafond*, franchise, coutMoyenParSinistre, dureeMin/MaxContrat, resiliableAnnuellement, statut. Utilise null si absent.");
+            logger.info("=== EXTRACTION IA GARANTIE ===");
+            logger.info("Prompt: {}", prompt);
+            
+            String enhancedPrompt = prompt + "\n\nExtrais les informations pour créer une garantie d'assurance. IMPORTANT: " +
+                "- Retourne un JSON avec: nom, description, domaine (domaine médical parmi: CONSULTATION_GENERALE, CARDIOLOGIE, DENTAIRE, OPHTALMOLOGIE, HOSPITALISATION, etc.), " +
+                "- tauxRemboursement (en décimal, ex: 0.8 pour 80%), " +
+                "- typeMontant (TARIF_CONVENTIONNE/FRAIS_REELS/FORFAIT - EXACTEMENT ces valeurs, pas de variations), " +
+                "- plafondAnnuel, plafondMensuel, plafondParActe, " +
+                "- franchise, coutMoyenParSinistre, " +
+                "- dureeMinContrat, dureeMaxContrat (DEUX valeurs distinctes, important!), " +
+                "- resiliableAnnuellement (true/false), " +
+                "- statut (ACTIF/INACTIF). " +
+                "- Pour les plages de durée (ex: '12 à 36 mois'), séparez en dureeMinContrat=12 et dureeMaxContrat=36. " +
+                "- Utilise null si vraiment absent.";
+            
+            Map<String, Object> result = callGoogleAIWithRetry(enhancedPrompt);
+            
+            logger.info("Résultat IA brut: {}", result);
+            
+            // Validation de la réponse IA pour les champs critiques
+            if (result.containsKey("typeMontant")) {
+                String typeMontant = (String) result.get("typeMontant");
+                logger.info("TypeMontant extrait par IA: {}", typeMontant);
+                if (!Arrays.asList("TARIF_CONVENTIONNE", "FRAIS_REELS", "FORFAIT").contains(typeMontant)) {
+                    logger.warn("TypeMontant invalide extrait: {}, attendu: TARIF_CONVENTIONNE/FRAIS_REELS/FORFAIT", typeMontant);
+                }
+            } else {
+                logger.warn("TypeMontant non extrait par l'IA");
+            }
+            
+            if (result.containsKey("dureeMinContrat") && result.containsKey("dureeMaxContrat")) {
+                logger.info("Durées extraites par IA - Min: {}, Max: {}", result.get("dureeMinContrat"), result.get("dureeMaxContrat"));
+            } else {
+                logger.warn("Durées min/max non extraites correctement par l'IA");
+            }
+            
+            if (result.containsKey("coutMoyenParSinistre")) {
+                logger.info("Coût moyen par sinistre extrait: {}", result.get("coutMoyenParSinistre"));
+            } else {
+                logger.warn("Coût moyen par sinistre non extrait par l'IA");
+            }
+            
+            if (result.containsKey("resiliableAnnuellement")) {
+                logger.info("Résiliable annuellement extrait: {}", result.get("resiliableAnnuellement"));
+            } else {
+                logger.warn("Résiliable annuellement non extrait par l'IA");
+            }
+            
+            return result;
         } catch (Exception e) {
-            logger.error("Erreur extraction garantie IA: {}", e.getMessage());
+            logger.error("Erreur extraction garantie IA: {}", e.getMessage(), e);
             return new HashMap<>();
         }
     }
@@ -108,13 +155,11 @@ public class AIExtractionService {
     public Map<String, Object> extractAddGarantieToPackData(String prompt) {
         try {
             Map<String, Object> result = callGoogleAIWithRetry(prompt + "\n\nExtrais: nomPack, nomGarantie, tauxRemboursement, plafond, franchise, optionnelle. Utilise null si absent.");
-            
             // Si l'IA n'a rien retourné ou que le nomPack est manquant, utiliser le fallback regex
             if (result == null || result.isEmpty() || !result.containsKey("nomPack") || result.get("nomPack") == null) {
                 logger.warn("IA n'a pas extrait nomPack, utilisation du fallback regex");
                 return extractAddGarantieToPackDataFallback(prompt);
             }
-            
             return result;
         } catch (Exception e) {
             logger.error("Erreur extraction ajout garantie pack IA: {}", e.getMessage());
@@ -123,13 +168,11 @@ public class AIExtractionService {
     }
 
     // ========== APPEL GEMINI AVEC RETRY ROBUSTE ==========
-
     private Map<String, Object> callGoogleAIWithRetry(String fullPrompt) throws IOException, InterruptedException {
         if (!isAIAvailable()) {
             logger.warn("API KEY non configuree, fallback patterns");
             return new HashMap<>();
         }
-
         int attempt = 0;
         while (attempt < maxRetries) {
             try {
@@ -182,10 +225,8 @@ public class AIExtractionService {
             logger.error("Gemini error {}: {}", response.statusCode(), response.body());
             throw new IOException("Gemini error: " + response.statusCode());
         }
-
         return parseAIResponse(response.body());
     }
-
     private String escapeJsonString(String str) {
         return str
             .replace("\\", "\\\\")
@@ -193,7 +234,6 @@ public class AIExtractionService {
             .replace("\n", "\\n")
             .replace("\r", "\\r");
     }
-
     private Map<String, Object> parseAIResponse(String aiResponse) {
         try {
             Pattern jsonPattern = Pattern.compile("\\{[^{}]*(?:\\{[^{}]*\\}[^{}]*)*\\}", Pattern.DOTALL);
@@ -210,15 +250,12 @@ public class AIExtractionService {
             return new HashMap<>();
         }
     }
-
     private String cleanJsonString(String jsonStr) {
         jsonStr = jsonStr.replaceAll("(?<![\\\\])'([^']*)'", "\"$1\"");
         jsonStr = jsonStr.replaceAll("[\\x00-\\x1F]", "");
         return jsonStr;
     }
-
     // ========== HELPERS ==========
-
     public String getStringValue(Map<String, Object> data, String key, String defaultValue) {
         if (data == null) {
             return defaultValue;
@@ -230,7 +267,6 @@ public class AIExtractionService {
         String s = value.toString().trim();
         return s.isEmpty() ? defaultValue : s;
     }
-
     public double getDoubleValue(Map<String, Object> data, String key, double defaultValue) {
         if (data == null) return defaultValue;
         Object value = data.get(key);
@@ -269,12 +305,10 @@ public class AIExtractionService {
     }
 
     // ========== LOGIQUE DE FALLBACK POUR LES PACKS ==========
-
     private Map<String, Object> applyPackFallbackLogic(Map<String, Object> data, String originalPrompt) {
         if (data == null || data.isEmpty()) {
             return data;
         }
-
         String packName = getStringValue(data, "nom", "").toLowerCase();
         String promptLower = originalPrompt.toLowerCase();
 
@@ -342,7 +376,6 @@ public class AIExtractionService {
     }
 
     // ========== FALLBACK REGEX POUR AJOUT GARANTIE AU PACK ==========
-
     private Map<String, Object> extractAddGarantieToPackDataFallback(String prompt) {
         Map<String, Object> result = new HashMap<>();
         String promptLower = prompt.toLowerCase();
@@ -355,7 +388,6 @@ public class AIExtractionService {
             result.put("nomPack", packName);
             logger.info("nomPack extrait via fallback: {}", packName);
         }
-
         // Extraire le nom de la garantie: "la garantie X" ou "garantie X"
         Pattern garantiePattern = Pattern.compile("(?:la\\s+garantie|garantie\\s+)([a-zA-ZàâäéèêëïîôöùûüÿçÀÂÄÉÈÊËÏÎÔÖÙÛÜŸÇ\\s]+?)(?:\\s+avec|\\s+et|\\s+un|,|\\.$|$)", Pattern.CASE_INSENSITIVE);
         Matcher garantieMatcher = garantiePattern.matcher(prompt);

@@ -259,6 +259,8 @@ public class PromptAnalyzerService {
         return null;
     }
     public String extractDescription(String prompt) {
+        logger.info("Extraction description pour prompt: {}", prompt);
+        
         // Pattern amélioré pour capturer des descriptions plus longues et complètes
         // Capture jusqu'aux délimiteurs de fin de phrase ou de section
         Pattern pattern = Pattern.compile(
@@ -276,11 +278,12 @@ public class PromptAnalyzerService {
                 if (desc.endsWith(" et le")) {
                     desc = desc.substring(0, desc.length() - 6).trim();
                 }
+                logger.info("Description détectée via pattern standard: {}", desc);
                 return desc;
             }
         }
         
-        //  extraire la description entre guillemets si présente
+        // Extraire la description entre guillemets si présente
         Pattern quotedPattern = Pattern.compile("[\"']([^\"']{15,500})[\"']");
         Matcher quotedMatcher = quotedPattern.matcher(prompt);
         if (quotedMatcher.find()) {
@@ -288,10 +291,21 @@ public class PromptAnalyzerService {
             // Vérifier que ce n'est probablement pas un nom ou une autre valeur
             if (possibleDesc.length() > 20 && 
                 (possibleDesc.contains(" ") || possibleDesc.contains("pour") || possibleDesc.contains("avec"))) {
+                logger.info("Description détectée via guillemets: {}", possibleDesc);
                 return possibleDesc;
             }
         }
         
+        // Générer une description automatique basée sur les informations extraites
+        String nom = extractNomGarantie(prompt);
+        String domaine = extractDomaineMedical(prompt);
+        if (nom != null && domaine != null && !domaine.equals("AUTRE")) {
+            String autoDesc = "Garantie " + nom + " dans le domaine " + domaine + " avec couverture complète.";
+            logger.info("Description générée automatiquement: {}", autoDesc);
+            return autoDesc;
+        }
+        
+        logger.warn("Description non détectée et impossible à générer automatiquement");
         return null;
     }
     public String extractTypeProduit(String prompt) {
@@ -333,10 +347,22 @@ public class PromptAnalyzerService {
     }
     public String extractTypeMontant(String prompt) {
         String lowerPrompt = prompt.toLowerCase();
-        if (lowerPrompt.contains("tarif convention") || lowerPrompt.contains("tarif conventionne")) return "TARIF_CONVENTIONNE";
-        if (lowerPrompt.contains("forfait")) return "FORFAIT";
-        if (lowerPrompt.contains("frais reels") || lowerPrompt.contains("frais réels")) return "FRAIS_REELS";
-        return "FRAIS_REELS"; // Valeur par défaut
+        // Pattern amélioré pour détecter TARIF_CONVENTIONNE (insensible à la casse et aux variations)
+        if (lowerPrompt.contains("tarif convention") || lowerPrompt.contains("tarif conventionne") ||
+            prompt.contains("TARIF_CONVENTIONNE") || prompt.contains("TARIF_CONVENTION")) {
+            logger.info("TypeMontant détecté: TARIF_CONVENTIONNE");
+            return "TARIF_CONVENTIONNE";
+        }
+        if (lowerPrompt.contains("forfait")) {
+            logger.info("TypeMontant détecté: FORFAIT");
+            return "FORFAIT";
+        }
+        if (lowerPrompt.contains("frais reels") || lowerPrompt.contains("frais réels")) {
+            logger.info("TypeMontant détecté: FRAIS_REELS");
+            return "FRAIS_REELS";
+        }
+        logger.warn("TypeMontant non détecté, utilisation valeur par défaut: FRAIS_REELS");
+        return null; // Retourner null au lieu d'une valeur par défaut pour permettre la validation
     }
     public Double extractTauxRemboursement(String prompt) {
         Double result = extractDoubleWithPattern(prompt,
@@ -394,11 +420,24 @@ public class PromptAnalyzerService {
         return result != null ? result : 0;
     }
     public Integer extractDureeMaxContrat(String prompt) {
-        // D'abord chercher le pattern "X à Y mois" pour capturer la valeur max
-        Pattern rangePattern = Pattern.compile("(\\d+)\\s+à\\s+(\\d+)\\s+mois");
+        logger.info("Extraction durée max contrat pour prompt: {}", prompt);
+        
+        // D'abord chercher le pattern "X à Y mois" pour capturer la valeur max (priorité maximale)
+        Pattern rangePattern = Pattern.compile("(\\d+)\\s+à\\s+(\\d+)\\s+mois", Pattern.CASE_INSENSITIVE);
         Matcher rangeMatcher = rangePattern.matcher(prompt);
         if (rangeMatcher.find()) {
-            return Integer.parseInt(rangeMatcher.group(2));
+            Integer maxValue = Integer.parseInt(rangeMatcher.group(2));
+            logger.info("Durée max détectée via pattern range: {} mois", maxValue);
+            return maxValue;
+        }
+        
+        // Pattern "entre X et Y mois"
+        Pattern betweenPattern = Pattern.compile("entre\\s+(\\d+)\\s+et\\s+(\\d+)\\s+mois", Pattern.CASE_INSENSITIVE);
+        Matcher betweenMatcher = betweenPattern.matcher(prompt);
+        if (betweenMatcher.find()) {
+            Integer maxValue = Integer.parseInt(betweenMatcher.group(2));
+            logger.info("Durée max détectée via pattern between: {} mois", maxValue);
+            return maxValue;
         }
         
         // Sinon utiliser les autres patterns
@@ -408,7 +447,12 @@ public class PromptAnalyzerService {
             "jusqu'à\\s+(\\d+)\\s+(?:mois|ans)\\s+de contrat|" +
             "dur[ée]+\\s+maximale\\s+(?:de\\s+)?(\\d+)");
         
-        return result != null ? result : 0;
+        if (result != null) {
+            logger.info("Durée max détectée via pattern standard: {} mois", result);
+        } else {
+            logger.warn("Durée max non détectée, retourne null");
+        }
+        return result; // Retourner null au lieu de 0 pour permettre la validation
     }
     public Boolean extractResiliableAnnuellement(String prompt) {
         String lowerPrompt = prompt.toLowerCase();

@@ -1,8 +1,12 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { TranslationService } from '../../services/translation.service';
 
 @Component({
   selector: 'app-language-selector',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="language-selector">
       <select (change)="changeLanguage($event)" [value]="currentLang">

@@ -31,6 +31,7 @@ import tn.vermeg.gestionproduit.services.chatbot.analysis.ComplexGuaranteeExtrac
 import tn.vermeg.gestionproduit.services.chatbot.analysis.FuzzyProductMatcherService;
 import tn.vermeg.gestionproduit.services.chatbot.scoring.RecommendationService;
 import tn.vermeg.gestionproduit.services.chatbot.core.ChatbotAction;
+import tn.vermeg.gestionproduit.services.chatbot.validation.DataConsistencyValidator;
 import tn.vermeg.gestionproduit.repositories.GarantieRepository;
 import tn.vermeg.gestionproduit.repositories.PackUnifiedRepository;
 import tn.vermeg.gestionproduit.repositories.PackGarantieRepository;
@@ -61,6 +62,7 @@ public class ChatbotOrchestratorService {
     private final RecommendationService recommendationService;
     private final ConversationMemoryService conversationMemoryService;
     private final RAGService ragService;
+    private final DataConsistencyValidator dataConsistencyValidator;
 
     // Services métier existants (réutilisés)
     private final GarantieService garantieService;
@@ -88,6 +90,7 @@ public class ChatbotOrchestratorService {
             RecommendationService recommendationService,
             ConversationMemoryService conversationMemoryService,
             RAGService ragService,
+            DataConsistencyValidator dataConsistencyValidator,
             GarantieService garantieService,
             ProduitService produitService,
             PackUnifiedService packUnifiedService,
@@ -108,6 +111,7 @@ public class ChatbotOrchestratorService {
         this.recommendationService = recommendationService;
         this.conversationMemoryService = conversationMemoryService;
         this.ragService = ragService;
+        this.dataConsistencyValidator = dataConsistencyValidator;
         this.garantieService = garantieService;
         this.produitService = produitService;
         this.packUnifiedService = packUnifiedService;
@@ -302,8 +306,20 @@ public class ChatbotOrchestratorService {
             // Application des valeurs par défaut (seulement si non détecté)
             normalizationService.applyGarantieDefaults(garantie);
 
+            // Log avant création pour traçabilité
+            logger.info("=== CRÉATION GARANTIE - AVANT ENREGISTREMENT ===");
+            logger.info("DTO extrait: {}", dto);
+            logger.info("Entity à créer: {}", garantie);
+
             // Création via le service métier existant
             Garantie created = garantieService.createGarantie(garantie);
+
+            // Validation de consistance entre extraction et enregistrement
+            logger.info("=== CRÉATION GARANTIE - APRÈS ENREGISTREMENT ===");
+            logger.info("Entity créée: {}", created);
+
+            DataConsistencyValidator.ConsistencyReport consistencyReport = 
+                dataConsistencyValidator.validateGarantieConsistency(dto, created);
 
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
@@ -313,6 +329,12 @@ public class ChatbotOrchestratorService {
             result.put("id", created.getIdGarantie());
             result.put("warnings", validation.getWarnings());
             result.put("businessValidation", businessValidationService.generateValidationMessage(businessValidation));
+            result.put("consistencyReport", dataConsistencyValidator.generateValidationReport(consistencyReport));
+            result.put("consistencyStatus", consistencyReport.isConsistent() ? "CONSISTENT" : "INCONSISTENT");
+
+            // Ajouter les warnings du DTO (valeurs par défaut appliquées)
+            result.put("extractionWarnings", dto.getWarnings());
+
             return result;
 
         } catch (Exception e) {

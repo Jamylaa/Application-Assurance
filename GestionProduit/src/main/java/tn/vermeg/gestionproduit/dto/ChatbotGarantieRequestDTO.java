@@ -125,38 +125,58 @@ public class ChatbotGarantieRequestDTO {
     }
 
     public void applyDefaults() {
-        if (this.tauxRemboursement == null) {
+        // N'appliquer les valeurs par défaut que si réellement non détectées (null ou 0)
+        // Ne PAS écraser les valeurs extraites correctement
+        
+        if (this.tauxRemboursement == null || this.tauxRemboursement == 0.0) {
             this.tauxRemboursement = 0.8; // 80% par défaut
+            this.warnings.add("Taux de remboursement non détecté, valeur par défaut appliquée: 80%");
         }
+        
+        // NE PAS appliquer de valeur par défaut pour typeMontant - laisser null pour validation
         if (this.typeMontant == null) {
-            this.typeMontant = "FRAIS_REELS";
+            this.warnings.add("Type de montant non détecté, veuillez spécifier: FORFAIT, FRAIS_REELS ou TARIF_CONVENTIONNE");
         }
+        
+        // Ne PAS appliquer de valeur par défaut pour coutMoyenParSinistre si null
+        // Laisser null pour indiquer que l'information n'a pas été fournie
         if (this.coutMoyenParSinistre == null) {
-            this.coutMoyenParSinistre = 100.0;
+            this.warnings.add("Coût moyen par sinistre non détecté");
         }
-        if (this.dureeMinContrat == null) {
+        
+        if (this.dureeMinContrat == null || this.dureeMinContrat == 0) {
             this.dureeMinContrat = 12;
+            this.warnings.add("Durée min contrat non détectée, valeur par défaut appliquée: 12 mois");
         }
-        if (this.dureeMaxContrat == null) {
+        
+        if (this.dureeMaxContrat == null || this.dureeMaxContrat == 0) {
             this.dureeMaxContrat = 60;
+            this.warnings.add("Durée max contrat non détectée, valeur par défaut appliquée: 60 mois");
         }
+        
         if (this.resiliableAnnuellement == null) {
             this.resiliableAnnuellement = true;
+            this.warnings.add("Résiliabilité annuelle non détectée, valeur par défaut appliquée: true");
         }
+        
         if (this.statut == null) {
             this.statut = "ACTIF";
         }
+        
         if (this.franchise == null) {
             this.franchise = 0.0;
+            this.warnings.add("Franchise non détectée, valeur par défaut appliquée: 0€");
         }
         
-        // Calculer les plafonds dérivés si nécessaire
-        if (this.plafondAnnuel != null) {
-            if (this.plafondMensuel == null) {
+        // Calculer les plafonds dérivés si nécessaire (seulement si non fournis)
+        if (this.plafondAnnuel != null && this.plafondAnnuel > 0) {
+            if (this.plafondMensuel == null || this.plafondMensuel == 0.0) {
                 this.plafondMensuel = this.plafondAnnuel / 12;
+                this.warnings.add("Plafond mensuel calculé à partir du plafond annuel");
             }
-            if (this.plafondParActe == null) {
+            if (this.plafondParActe == null || this.plafondParActe == 0.0) {
                 this.plafondParActe = this.plafondAnnuel / 24;
+                this.warnings.add("Plafond par acte calculé à partir du plafond annuel");
             }
         }
     }
