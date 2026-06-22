@@ -91,5 +91,28 @@
     "title": "Language",
     "french": "French",
     "english": "English"
+  },
+  "notification": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "clearAll": "Clear all",
+    "noNotifications": "No notifications"
+  },
+  "page": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "products": "Products",
+    "packs": "Packs",
+    "guarantees": "Guarantees",
+    "chatbot": "AI Assistant"
+  },
+  "sidebar": {
+    "mainMenu": "MAIN MENU",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "user": "User",
+    "lightMode": "Light Mode",
+    "darkMode": "Dark Mode",
+    "logout": "Logout"
   }
 }

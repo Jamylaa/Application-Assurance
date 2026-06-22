@@ -12,14 +12,14 @@
         </div>
       </div>
     </div>
-    <button class="toggle-btn" (click)="toggleSidebar()" [title]="isCollapsed ? 'Déployer' : 'Réduire'">
+    <button class="toggle-btn" (click)="toggleSidebar()" [title]="isCollapsed ? ('sidebar.expand' | translate) : ('sidebar.collapse' | translate)">
       <i class="pi" [class.pi-angle-left]="!isCollapsed" [class.pi-angle-right]="isCollapsed"></i>
     </button>
   </div>
 
   <!-- Navigation -->
   <nav class="sidebar-nav">
-    <div class="nav-section-label" *ngIf="!isCollapsed">MENU PRINCIPAL</div>
+    <div class="nav-section-label" *ngIf="!isCollapsed">{{ 'sidebar.mainMenu' | translate }}</div>
     <ul class="nav-list">
       <li class="nav-item">
         <a
@@ -27,11 +27,11 @@
           [class.active]="isActiveRoute('/dashboard')"
           (click)="navigateTo('/dashboard'); $event.preventDefault()"
           href="#"
-          title="Dashboard">
+          [title]="'page.dashboard' | translate">
           <div class="nav-icon-wrapper">
             <i class="bi bi-grid-1x2-fill nav-icon"></i>
           </div>
-          <span class="nav-text" *ngIf="!isCollapsed">Dashboard</span>
+          <span class="nav-text" *ngIf="!isCollapsed">{{ 'page.dashboard' | translate }}</span>
         </a>
       </li>
 
@@ -41,11 +41,11 @@
           [class.active]="isActiveRoute('/produits')"
           (click)="navigateTo('/produits'); $event.preventDefault()"
           href="#"
-          title="Produits">
+          [title]="'page.products' | translate">
           <div class="nav-icon-wrapper">
             <i class="bi bi-box-seam-fill nav-icon"></i>
           </div>
-          <span class="nav-text" *ngIf="!isCollapsed">Produits</span>
+          <span class="nav-text" *ngIf="!isCollapsed">{{ 'page.products' | translate }}</span>
         </a>
       </li>
 
@@ -55,11 +55,11 @@
           [class.active]="isActiveRoute('/packs')"
           (click)="navigateTo('/packs'); $event.preventDefault()"
           href="#"
-          title="Packs">
+          [title]="'page.packs' | translate">
           <div class="nav-icon-wrapper">
             <i class="bi bi-collection-fill nav-icon"></i>
           </div>
-          <span class="nav-text" *ngIf="!isCollapsed">Packs</span>
+          <span class="nav-text" *ngIf="!isCollapsed">{{ 'page.packs' | translate }}</span>
         </a>
       </li>
 
@@ -69,11 +69,11 @@
           [class.active]="isActiveRoute('/garanties')"
           (click)="navigateTo('/garanties'); $event.preventDefault()"
           href="#"
-          title="Garanties">
+          [title]="'page.guarantees' | translate">
           <div class="nav-icon-wrapper">
             <i class="bi bi-shield-fill-check nav-icon"></i>
           </div>
-          <span class="nav-text" *ngIf="!isCollapsed">Garanties</span>
+          <span class="nav-text" *ngIf="!isCollapsed">{{ 'page.guarantees' | translate }}</span>
         </a>
       </li>
     </ul>
@@ -86,7 +86,7 @@
         {{ getUserInitials() }}
       </div>
       <div class="user-details">
-        <div class="user-name">{{ currentUser?.firstName || currentUser?.username || 'Utilisateur' }}</div>
+        <div class="user-name">{{ currentUser?.firstName || currentUser?.username || ('sidebar.user' | translate) }}</div>
         <div class="user-role">{{ getUserRole() }}</div>
       </div>
     </div>
@@ -94,27 +94,21 @@
 
   <!-- Footer Section -->
   <div class="sidebar-footer">
-    <!-- Language Toggle -->
-    <button class="lang-toggle-btn" (click)="toggleLanguage()" [title]="currentLanguage === 'fr' ? 'Switch to English' : 'Passer en français'">
-      <i class="bi" [class.bi-translate]="currentLanguage === 'fr'" [class.bi-translate-alt]="currentLanguage === 'en'"></i>
-      <span *ngIf="!isCollapsed">{{ currentLanguage === 'fr' ? 'EN' : 'FR' }}</span>
-    </button>
-
     <!-- Theme Toggle -->
-    <button class="theme-toggle-btn" (click)="toggleTheme()" [title]="isDarkMode ? 'Mode clair' : 'Mode sombre'">
+    <button class="theme-toggle-btn" (click)="toggleTheme()" [title]="isDarkMode ? ('sidebar.lightMode' | translate) : ('sidebar.darkMode' | translate)">
       <i class="bi" [class.bi-sun-fill]="isDarkMode" [class.bi-moon-stars-fill]="!isDarkMode"></i>
-      <span *ngIf="!isCollapsed">{{ isDarkMode ? 'Mode clair' : 'Mode sombre' }}</span>
+      <span *ngIf="!isCollapsed">{{ isDarkMode ? ('sidebar.lightMode' | translate) : ('sidebar.darkMode' | translate) }}</span>
     </button>
 
     <!-- Logout Button -->
     <ng-container *ngIf="!isCollapsed">
-      <button class="logout-btn" (click)="logout()" title="Déconnexion">
+      <button class="logout-btn" (click)="logout()" [title]="'sidebar.logout' | translate">
         <i class="bi bi-box-arrow-right"></i>
-        <span>Déconnexion</span>
+        <span>{{ 'sidebar.logout' | translate }}</span>
       </button>
     </ng-container>
     <ng-container *ngIf="isCollapsed">
-      <button class="logout-btn-icon-only" (click)="logout()" title="Déconnexion">
+      <button class="logout-btn-icon-only" (click)="logout()" [title]="'sidebar.logout' | translate">
         <i class="bi bi-box-arrow-right"></i>
       </button>
     </ng-container>

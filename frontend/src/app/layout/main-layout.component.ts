@@ -10,13 +10,16 @@ import { BreadcrumbComponent } from '../shared/components/breadcrumb.component';
 import { BreadcrumbService } from '../shared/services/breadcrumb.service';
 import { ThemeService } from '../core/theme.service';
 import { NotificationService, Notification } from '../services/notification.service';
+import { LanguageSelectorComponent } from '../components/language-selector/language-selector.component';
+import { TranslatePipe } from '../pipes/translate.pipe';
+import { TranslationService } from '../services/translation.service';
 
 @Component({
   selector: 'app-main-layout',
   templateUrl: './main-layout.component.html',
   styleUrls: ['./main-layout.component.css'],
   standalone: true,
-  imports: [RouterOutlet, BreadcrumbComponent, SidebarComponent, CommonModule, FormsModule],
+  imports: [RouterOutlet, BreadcrumbComponent, SidebarComponent, CommonModule, FormsModule, LanguageSelectorComponent, TranslatePipe],
   providers: []
 })
 export class MainLayoutComponent implements OnInit, OnDestroy {
@@ -33,12 +36,14 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   private resizeHandler = () => this.checkMobileView();
   private routerSub?: Subscription;
   private notificationSub?: Subscription;
+  private langSub?: Subscription;
 
   constructor(
     private router: Router,
     private breadcrumbService: BreadcrumbService,
     private themeService: ThemeService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private translationService: TranslationService
   ) {
     this.loadUserData();
   }
@@ -50,27 +55,33 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       .subscribe(() => this.breadcrumbService.updateBreadcrumbFromUrl());
     this.checkMobileView();
     window.addEventListener('resize', this.resizeHandler);
-    
+
     // Initialize notifications
     this.notifications = this.notificationService.getNotifications();
     this.unreadCount = this.notificationService.getUnreadCount();
-    
+
     this.notificationSub = this.notificationService.notifications$.subscribe(
       notifications => {
         this.notifications = notifications;
       }
     );
-    
+
     this.notificationService.unreadCount$.subscribe(
       count => {
         this.unreadCount = count;
       }
     );
+
+    // Subscribe to language changes to update UI
+    this.langSub = this.translationService.currentLang$.subscribe(() => {
+      // Trigger change detection when language changes
+    });
   }
 
   ngOnDestroy(): void {
     this.routerSub?.unsubscribe();
     this.notificationSub?.unsubscribe();
+    this.langSub?.unsubscribe();
     window.removeEventListener('resize', this.resizeHandler);
   }
 
@@ -93,13 +104,13 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   getCurrentPageTitle(): string {
     const url = this.router.url;
-    if (url.includes('/dashboard')) return 'Dashboard';
-    if (url.includes('/users')) return 'Utilisateurs';
-    if (url.includes('/produits')) return 'Produits';
-    if (url.includes('/packs')) return 'Packs';
-    if (url.includes('/garanties')) return 'Garanties';
-    if (url.includes('/chatbot')) return 'Assistant IA';
-    return 'Dashboard';
+    if (url.includes('/dashboard')) return this.translationService.translate('page.dashboard');
+    if (url.includes('/users')) return this.translationService.translate('page.users');
+    if (url.includes('/produits')) return this.translationService.translate('page.products');
+    if (url.includes('/packs')) return this.translationService.translate('page.packs');
+    if (url.includes('/garanties')) return this.translationService.translate('page.guarantees');
+    if (url.includes('/chatbot')) return this.translationService.translate('page.chatbot');
+    return this.translationService.translate('page.dashboard');
   }
 
   getCurrentPageIcon(): string {

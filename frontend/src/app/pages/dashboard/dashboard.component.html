@@ -64,124 +64,90 @@
       <div
         class="stat-card stat-card--primary hover-lift animate-fade-in-up"
         (click)="navigateToProduits()">
-
         <div class="stat-card-content">
-
           <div class="stat-icon stat-icon--primary">
             <i class="bi bi-box-seam-fill"></i>
           </div>
-
           <div class="stat-info">
-
             <div class="stat-value">
               {{ stats.totalProduits }}
             </div>
-
             <div class="stat-label">
               Produits
             </div>
-
             <div class="stat-trend stat-trend--up">
               <i class="bi bi-arrow-up-right"></i>
               +{{ metrics.croissanceProduits }}%
             </div>
-
           </div>
-
         </div>
-
         <div class="stat-card-footer">
           <span>
             Voir tous
             <i class="bi bi-arrow-right"></i>
           </span>
         </div>
-
       </div>
-
       <!-- Packs -->
       <div
         class="stat-card stat-card--info hover-lift animate-fade-in-up"
         (click)="navigateToPacks()">
-
         <div class="stat-card-content">
-
           <div class="stat-icon stat-icon--info">
             <i class="bi bi-collection-fill"></i>
           </div>
-
           <div class="stat-info">
-
             <div class="stat-value">
               {{ stats.totalPacks }}
             </div>
-
             <div class="stat-label">
               Packs
             </div>
-
             <div class="stat-trend stat-trend--up">
               <i class="bi bi-arrow-up-right"></i>
               +{{ metrics.croissancePacks }}%
             </div>
-
           </div>
-
         </div>
-
         <div class="stat-card-footer">
           <span>
             Voir tous
             <i class="bi bi-arrow-right"></i>
           </span>
         </div>
-
       </div>
-
       <!-- Garanties -->
       <div
         class="stat-card stat-card--success hover-lift animate-fade-in-up"
         (click)="navigateToGaranties()">
-
         <div class="stat-card-content">
-
           <div class="stat-icon stat-icon--success">
             <i class="bi bi-shield-fill-check"></i>
           </div>
-
           <div class="stat-info">
-
             <div class="stat-value">
               {{ stats.totalGaranties }}
             </div>
-
             <div class="stat-label">
               Garanties
             </div>
-
             <div class="stat-trend stat-trend--up">
               <i class="bi bi-arrow-up-right"></i>
               +{{ metrics.croissanceGaranties }}%
             </div>
-
           </div>
-
         </div>
-
         <div class="stat-card-footer">
           <span>
             Voir tous
             <i class="bi bi-arrow-right"></i>
           </span>
         </div>
-
       </div>
-
       <!-- Utilisateurs -->
-      <div
+      <!-- <div
         class="stat-card stat-card--secondary hover-lift animate-fade-in-up"
         (click)="navigateToUsers()">
-
         <div class="stat-card-content">
 
           <div class="stat-icon stat-icon--secondary">
@@ -189,20 +155,16 @@
           </div>
 
           <div class="stat-info">
-
             <div class="stat-value">
               {{ stats.totalUsers }}
             </div>
-
             <div class="stat-label">
               Utilisateurs
             </div>
-
             <div class="stat-trend stat-trend--neutral">
               <i class="bi bi-check-circle"></i>
               Actifs
             </div>
-
           </div>
 
         </div>
@@ -214,8 +176,7 @@
           </span>
         </div>
 
-      </div>
-
+      </div> -->
     </div>
     <!-- Advanced Metrics Dashboard -->
     <div class="advanced-metrics-grid">
@@ -229,7 +190,6 @@
           <div class="indicator-bar" [style.width.%]="Math.min((metrics.avgPrixPacks / 200) * 100, 100)"></div>
         </div>
       </div>
-
       <div class="metric-card metric-card--success hover-lift animate-fade-in-up">
         <div class="metric-header">
           <i class="bi bi-percent"></i>
@@ -342,117 +302,89 @@
 
       <!-- BAR -->
       <div class="chart-card chart-card--primary hover-lift animate-fade-in-up">
-
         <div class="chart-header">
-
           <div class="chart-title-group">
-
             <div class="chart-icon">
               <i class="bi bi-bar-chart-fill"></i>
             </div>
-
             <div>
               <h3 class="chart-title">Répartition des Produits</h3>
               <p class="chart-subtitle">Volume par type d'assurance</p>
             </div>
-
           </div>
 
           <div class="chart-stats">
             <div class="chart-stat">
-              <span class="chart-stat-value">{{ stats.totalProduits }}</span>
-              <span class="chart-stat-label">Total</span>
+              <!--       <span class="chart-stat-value">{{ stats.totalProduits }}</span>
+              <span class="chart-stat-label">Total</span>  -->
             </div>
           </div>
         </div>
-
         <div class="chart-container">
-
           <p-chart
             #barChart
             type="bar"
             [data]="barChartData"
             [options]="chartOptions">
           </p-chart>
-
         </div>
-
       </div>
 
       <!-- PIE -->
       <div class="chart-card chart-card--info hover-lift animate-fade-in-up">
-
         <div class="chart-header">
-
           <div class="chart-title-group">
-
             <div class="chart-icon">
               <i class="bi bi-pie-chart-fill"></i>
             </div>
-
             <div>
               <h3 class="chart-title">Packs par Niveau</h3>
               <p class="chart-subtitle">Couverture des abonnements</p>
             </div>
-
           </div>
-
           <div class="chart-stats">
             <div class="chart-stat">
-              <span class="chart-stat-value">{{ stats.totalPacks }}</span>
-              <span class="chart-stat-label">Packs</span>
+              <!--   <span class="chart-stat-value">{{ stats.totalPacks }}</span>
+              <span class="chart-stat-label">Packs</span> -->
             </div>
           </div>
-
         </div>
-
         <div class="chart-container">
-
           <p-chart
             type="doughnut"
             [data]="pieChartData"
             [options]="pieChartOptions">
           </p-chart>
-
         </div>
-
       </div>
-
-      <!-- POLAR -->
+      <!-- HORIZONTAL BAR -->
       <div class="chart-card chart-card--success hover-lift animate-fade-in-up">
-
         <div class="chart-header">
-
           <div class="chart-title-group">
-
             <div class="chart-icon">
-              <i class="bi bi-shield-fill-check"></i>
+              <i class="bi bi-bar-chart-fill"></i>
             </div>
-
             <div>
               <h3 class="chart-title">Types de Garanties</h3>
-              <p class="chart-subtitle">Répartition des couvertures actives</p>
+              <p class="chart-subtitle">Répartition par domaine médical</p>
             </div>
           </div>
-
           <div class="chart-stats">
             <div class="chart-stat">
-              <span class="chart-stat-value">{{ stats.totalGaranties }}</span>
-              <span class="chart-stat-label">Garanties</span>
+              <!--      <span class="chart-stat-value">{{ stats.totalGaranties }}</span>
+                    <span class="chart-stat-label">Garanties</span>  -->
             </div>
           </div>
-
         </div>
         <div class="chart-container">
           <p-chart
-            type="polarArea"
-            [data]="polarChartData"
-            [options]="polarOptions">
+            type="bar"
+            [data]="horizontalBarChartData"
+            [options]="horizontalBarOptions">
           </p-chart>
         </div>
       </div>
     </div>
-
     <!-- QUICK ACTIONS -->
     <div class="quick-actions-card animate-fade-in-up">
       <div class="section-header">
@@ -461,7 +393,6 @@
         </h2>
       </div>
       <div class="quick-actions-grid">
-
         <!-- PRODUITS -->
         <button
           class="quick-action-btn quick-action-btn--primary hover-lift"

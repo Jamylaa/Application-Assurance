@@ -3,13 +3,14 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../core/theme.service';
 import { TranslationService } from '../../services/translation.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-sidebar',
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.css'],
   standalone: true,
-  imports: [CommonModule]
+  imports: [CommonModule, TranslatePipe]
 })
 export class SidebarComponent {
   @Output() sidebarToggle = new EventEmitter<void>();
@@ -26,20 +27,15 @@ export class SidebarComponent {
 
   isDarkMode = false;
   currentUser: any = null;
-  currentLanguage = 'fr';
 
   constructor(
-    private router: Router, 
+    private router: Router,
     private themeService: ThemeService,
     private translationService: TranslationService
   ) {
     this.loadUserData();
-    this.initializeLanguage();
     this.themeService.theme$.subscribe(theme => {
       this.isDarkMode = theme === 'dark';
-    });
-    this.translationService.currentLang$.subscribe(lang => {
-      this.currentLanguage = lang;
     });
   }
 
@@ -57,16 +53,6 @@ export class SidebarComponent {
 
   toggleTheme(): void {
     this.themeService.toggle();
-  }
-
-  toggleLanguage(): void {
-    const newLang = this.currentLanguage === 'fr' ? 'en' : 'fr';
-    this.translationService.setLanguage(newLang);
-  }
-
-  initializeLanguage(): void {
-    this.translationService.initializeLanguage();
-    this.currentLanguage = this.translationService.getCurrentLanguage();
   }
 
   navigateTo(route: string): void {

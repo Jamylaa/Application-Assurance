@@ -65,12 +65,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   pieChartData: any;
   lineChartData: any;
   polarChartData: any;
+  horizontalBarChartData: any;
   areaChartData: any;
   scatterChartData: any;
 
   chartOptions: any;
   pieChartOptions: any;
   polarOptions: any;
+  horizontalBarOptions: any;
   areaChartOptions: any;
   scatterChartOptions: any;
 
@@ -250,6 +252,45 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     };
 
+    this.horizontalBarOptions = {
+      indexAxis: 'y',
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context: any) {
+              return context.parsed.x + ' garanties';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: {
+            color: textColorSecondary
+          },
+          grid: {
+            color: surfaceBorder
+          }
+        },
+        y: {
+          ticks: {
+            color: textColor,
+            font: {
+              size: 12
+            }
+          },
+          grid: {
+            display: false
+          }
+        }
+      }
+    };
+
     // Area chart options
     this.areaChartOptions = {
       maintainAspectRatio: false,
@@ -393,6 +434,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
             'rgba(13, 115, 119, 0.7)',
             'rgba(180, 83, 9, 0.7)'
           ]
+        }
+      ]
+    };
+
+    // Horizontal bar chart: Guarantees by domain (more readable)
+    this.horizontalBarChartData = {
+      labels: sortedDomains.map(([domaine, _]) => getDomaineMedicalLabel(domaine as DomaineMedical)),
+      datasets: [
+        {
+          label: 'Garanties',
+          data: sortedDomains.map(([_, count]) => count),
+          backgroundColor: [
+            'rgba(15, 76, 129, 0.8)',
+            'rgba(13, 115, 119, 0.8)',
+            'rgba(96, 165, 250, 0.8)',
+            'rgba(21, 101, 52, 0.8)',
+            'rgba(180, 83, 9, 0.8)',
+            'rgba(185, 28, 28, 0.8)',
+            'rgba(139, 92, 246, 0.8)',
+            'rgba(236, 72, 153, 0.8)',
+            'rgba(34, 197, 94, 0.8)',
+            'rgba(251, 191, 36, 0.8)'
+          ],
+          borderRadius: 4,
+          barThickness: 30
         }
       ]
     };

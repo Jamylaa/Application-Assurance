@@ -26,6 +26,9 @@
         </div>
 
         <div class="top-bar-right">
+          <!-- Language Selector -->
+          <app-language-selector></app-language-selector>
+
           <!-- Search -->
           <div class="search-bar" [class.search-open]="searchOpen">
             <button class="search-trigger" (click)="toggleSearch()" *ngIf="!searchOpen">
@@ -33,7 +36,7 @@
             </button>
             <div class="search-input-wrap" *ngIf="searchOpen">
               <i class="bi bi-search search-icon"></i>
-              <input #searchInput type="text" class="search-input" placeholder="Rechercher..." [(ngModel)]="searchQuery" (keyup.enter)="performSearch()" (blur)="closeSearch()">
+              <input #searchInput type="text" class="search-input" placeholder="{{ 'common.search' | translate }}..." [(ngModel)]="searchQuery" (keyup.enter)="performSearch()" (blur)="closeSearch()">
               <button class="search-close" (click)="closeSearch()">
                 <i class="bi bi-x"></i>
               </button>
@@ -49,13 +52,13 @@
           <!-- Notification Dropdown -->
           <div class="notification-dropdown" *ngIf="showNotificationDropdown" (click)="$event.stopPropagation()">
             <div class="notification-header">
-              <h3>Notifications</h3>
+              <h3>{{ 'notification.title' | translate }}</h3>
               <div class="notification-actions">
                 <button class="action-link" (click)="markAllNotificationsAsRead()" *ngIf="unreadCount > 0">
-                  Tout marquer comme lu
+                  {{ 'notification.markAllRead' | translate }}
                 </button>
                 <button class="action-link" (click)="clearAllNotifications()" *ngIf="notifications.length > 0">
-                  Effacer tout
+                  {{ 'notification.clearAll' | translate }}
                 </button>
               </div>
             </div>
@@ -82,7 +85,7 @@
 
             <div class="notification-empty" *ngIf="notifications.length === 0">
               <i class="bi bi-bell-slash"></i>
-              <p>Aucune notification</p>
+              <p>{{ 'notification.noNotifications' | translate }}</p>
             </div>
           </div>
 

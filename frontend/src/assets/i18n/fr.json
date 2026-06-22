@@ -91,5 +91,28 @@
     "title": "Langue",
     "french": "Français",
     "english": "Anglais"
+  },
+  "notification": {
+    "title": "Notifications",
+    "markAllRead": "Tout marquer comme lu",
+    "clearAll": "Effacer tout",
+    "noNotifications": "Aucune notification"
+  },
+  "page": {
+    "dashboard": "Tableau de bord",
+    "users": "Utilisateurs",
+    "products": "Produits",
+    "packs": "Packs",
+    "guarantees": "Garanties",
+    "chatbot": "Assistant IA"
+  },
+  "sidebar": {
+    "mainMenu": "MENU PRINCIPAL",
+    "expand": "Déployer",
+    "collapse": "Réduire",
+    "user": "Utilisateur",
+    "lightMode": "Mode clair",
+    "darkMode": "Mode sombre",
+    "logout": "Déconnexion"
   }
 }
