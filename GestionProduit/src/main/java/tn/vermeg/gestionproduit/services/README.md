@@ -11,33 +11,9 @@ services/
 ├── GarantieService.java          # Service de gestion des garanties
 ├── PackUnifiedService.java      # Service unifié de gestion des packs
 ├── ProduitService.java          # Service de gestion des produits
-├── chatbot/                     # Services chatbot IA
-│   ├── analysis/                # Services d'analyse NLP
-│   │   ├── AIExtractionService.java
-│   │   ├── BusinessEnumLoaderService.java
-│   │   ├── ComplexGuaranteeExtractionService.java
-│   │   ├── EnhancedNumericExtractionService.java
-│   │   ├── EntityRecognitionService.java
-│   │   ├── ExtractionLoggingService.java
-│   │   ├── FuzzyProductMatcherService.java
-│   │   ├── NLPNormalizationService.java
-│   │   ├── PromptAnalyzerService.java
-│   │   └── PromptSegmentationService.java
-│   ├── orchestration/           # Services d'orchestration
-│   │   ├── ActionNormalizationService.java
-│   │   ├── BusinessRelationshipService.java
-│   │   ├── BusinessValidationService.java
-│   │   ├── ChatbotOrchestratorService.java
-│   │   └── ValidationService.java
-│   ├── scoring/                 # Services de scoring
-│   │   ├── BusinessScoringEngine.java
-│   │   └── RecommendationService.java
-│   ├── rag/                     # Services RAG
-│   │   ├── RAGService.java
-│   │   └── VectorEmbeddingService.java
-│   ├── memory/                  # Services de mémoire
-│   │   └── ConversationMemoryService.java
-│   └── core/                    # Services core
+├── scoring/                     # Services de scoring
+│   ├── BusinessScoringEngine.java
+│   └── RecommendationService.java
 ├── kafka/                       # Services Kafka
 │   └── KafkaEventProducer.java
 └── metrics/                     # Services de métriques
@@ -67,32 +43,9 @@ services/
 - Recherche par type et statut
 - Gestion des statuts
 
-### Services Chatbot
-
-#### Analysis Services
-- **AIExtractionService** : Extraction de données structurées via Gemini AI
-- **PromptAnalyzerService** : Analyse des prompts utilisateur
-- **PromptSegmentationService** : Segmentation des prompts en sections
-- **EntityRecognitionService** : Reconnaissance d'entités métier
-- **NLPNormalizationService** : Normalisation NLP des données extraites
-
-#### Orchestration Services
-- **ChatbotOrchestratorService** : Orchestrateur principal du chatbot
-- **ActionNormalizationService** : Normalisation des actions métier
-- **BusinessValidationService** : Validation métier des données
-- **BusinessRelationshipService** : Gestion des relations métier
-- **ValidationService** : Validation des données extraites
-
-#### Scoring Services
+### Services Scoring
 - **BusinessScoringEngine** : Moteur de scoring métier
 - **RecommendationService** : Service de recommandation
-
-#### Memory Services
-- **ConversationMemoryService** : Gestion de la mémoire conversationnelle
-
-#### RAG Services
-- **RAGService** : Service RAG (Retrieval Augmented Generation)
-- **VectorEmbeddingService** : Service d'embeddings vectoriels
 
 ### Services Infrastructure
 

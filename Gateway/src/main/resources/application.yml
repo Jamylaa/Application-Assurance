@@ -25,7 +25,12 @@ spring:
         - id: api-product-service
           uri: lb://GESTIONPRODUIT
           predicates:
-            - Path=/api/produits/**,/api/packs/**,/api/garanties/**,/api/chatbot/**
+            - Path=/api/produits/**,/api/packs/**,/api/garanties/**
+
+        - id: api-chatbot-service
+          uri: http://chatbot-service:9001
+          predicates:
+            - Path=/api/chatbot/**
 
         - id: api-recommendation-service
           uri: lb://GESTIONRECOMMENDATION

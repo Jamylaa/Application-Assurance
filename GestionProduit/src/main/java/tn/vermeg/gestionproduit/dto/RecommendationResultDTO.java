@@ -1,5 +1,11 @@
 package tn.vermeg.gestionproduit.dto;
 
+/**
+ * @deprecated Recommendation logic has been moved to the Python chatbot-service.
+ * This DTO is kept for backward compatibility but should not be used.
+ * Use the chatbot-service API for recommendation functionality instead.
+ */
+@Deprecated
 public class RecommendationResultDTO {
     private String id;
     private String nom;

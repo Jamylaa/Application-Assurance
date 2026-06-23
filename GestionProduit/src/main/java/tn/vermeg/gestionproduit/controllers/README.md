@@ -10,11 +10,7 @@ Ce package contient tous les contrôleurs REST du microservice GestionProduit. L
 controllers/
 ├── GarantieController.java       # Contrôleur des garanties
 ├── PackUnifiedController.java   # Contrôleur des packs
-├── ProduitController.java       # Contrôleur des produits
-├── ChatbotController.java       # Contrôleur du chatbot
-├── MemoryController.java        # Contrôleur de la mémoire
-├── RAGController.java           # Contrôleur RAG
-└── AIAnalyticsController.java   # Contrôleur des analytics
+└── ProduitController.java       # Contrôleur des produits
 ```
 
 ## 📝 Contrôleurs
@@ -88,35 +84,6 @@ controllers/
 - `PUT /{idProduit}` - Met à jour un produit
 - `PATCH /{idProduit}/desactiver` - Désactive un produit
 - `DELETE /{idProduit}` - Supprime un produit
-
-### ChatbotController
-
-**Base Path :** `/api/chatbot`
-
-**Endpoints :**
-- `POST /` - Traite un prompt utilisateur
-
-### MemoryController
-
-**Base Path :** `/api/memory`
-
-**Endpoints :**
-- Gestion de la mémoire conversationnelle
-
-### RAGController
-
-**Base Path :** `/api/rag`
-
-**Endpoints :**
-- `POST /query` - Effectue une requête RAG
-- `POST /index` - Indexe des documents
-
-### AIAnalyticsController
-
-**Base Path :** `/api/analytics`
-
-**Endpoints :**
-- Analytics et métriques IA
 
 ## 🔧 Bonnes Pratiques
 

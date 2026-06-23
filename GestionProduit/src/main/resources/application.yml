@@ -76,35 +76,6 @@ spring:
 server:
   port: 9093
 
-# Google AI Studio Configuration
-google:
-  api:
-    key: ${GOOGLE_API_KEY:}
-
-# Gemini Configuration (for chat)
-gemini:
-  api-key: ${GEMINI_API_KEY:}
-  model: ${GEMINI_MODEL:gemini-2.0-flash}
-  url: https://generativelanguage.googleapis.com/v1beta/models
-  timeout-seconds: 30
-  max-retries: 3
-  retry-delay-ms: 1000
-  enabled: ${GEMINI_ENABLED:true}
-
-chatbot:
-  ai-extraction-enabled: true
-  fallback-on-ai-error: true
-  strict-action-detection: true
-  log-prompts: true
-
-# Configuration RAG
-rag:
-  embedding:
-    enabled: ${RAG_EMBEDDING_ENABLED:false}
-  search:
-    enabled: ${RAG_SEARCH_ENABLED:false}
-    top-k: 5
-    similarity-threshold: 0.7
 
 # Spring AI Configuration - Commented out (dependencies not available)
 # spring:

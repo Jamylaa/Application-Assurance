@@ -26,7 +26,7 @@ tn.vermeg.gestionproduit/
 ├── exceptions/      # Exceptions (pluriel)
 ├── repositories/    # Repositories (pluriel)
 └── services/        # Services (pluriel)
-    ├── chatbot/     # Sous-packages en minuscule
+    ├── scoring/     # Services de scoring
     ├── kafka/
     └── metrics/
 ```
@@ -52,7 +52,6 @@ public class PackGarantie { }
 ```java
 // Format : Nom + DTO, PascalCase
 public class ProduitDTO { }
-public class ChatbotRequestDTO { }
 public class RecommendationResponseDTO { }
 ```
 
@@ -62,7 +61,6 @@ public class RecommendationResponseDTO { }
 public class ProduitService { }
 public class GarantieService { }
 public class PackUnifiedService { }
-public class ChatbotOrchestratorService { }
 ```
 
 ### Contrôleurs
@@ -71,7 +69,6 @@ public class ChatbotOrchestratorService { }
 public class ProduitController { }
 public class GarantieController { }
 public class PackUnifiedController { }
-public class ChatbotController { }
 ```
 
 ### Repositories

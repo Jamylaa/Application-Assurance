@@ -1,10 +1,10 @@
-<div class="unified-chatbot-container">
+<div class="unified-chatbot-container" appKeyboardShortcut (shortcut)="handleKeyboardShortcut($event)">
   <p-toast position="top-right"></p-toast>
 
   <!-- Header -->
   <div class="chatbot-header">
     <div class="header-left">
-      <button class="back-btn" (click)="goBack()">
+      <button class="back-btn" (click)="goBack()" aria-label="Retour">
         <i class="bi bi-arrow-left"></i>
       </button>
       <div class="chatbot-info">
@@ -16,7 +16,16 @@
       </div>
     </div>
     <div class="header-right">
-      <button class="clear-btn" (click)="clearChat()">
+      <button class="icon-btn" (click)="toggleHistory()" aria-label="Historique" title="Historique (Ctrl+H)">
+        <i class="bi bi-clock-history"></i>
+      </button>
+      <button class="icon-btn" (click)="toggleSearch()" aria-label="Rechercher" title="Rechercher (Ctrl+K)">
+        <i class="bi bi-search"></i>
+      </button>
+      <button class="icon-btn" (click)="exportConversation()" aria-label="Exporter" title="Exporter (Ctrl+E)">
+        <i class="bi bi-download"></i>
+      </button>
+      <button class="clear-btn" (click)="clearChat()" aria-label="Effacer" title="Effacer la conversation">
         <i class="bi bi-trash3"></i>
       </button>
     </div>
@@ -33,7 +42,7 @@
   </div>
 
   <div class="chat-suggestions" *ngIf="suggestionPrompts.length">
-    <span class="chat-suggestions-label">Exemples</span>
+    <span class="chat-suggestions-label">Suggestions</span>
     <div class="chat-suggestions-chips">
       <button
         type="button"
@@ -48,7 +57,7 @@
   </div>
 
   <!-- Messages Container -->
-  <div class="chat-messages" #messagesContainer>
+  <div class="chat-messages" #messagesContainer appAutoScroll>
     <div
       *ngFor="let message of messages; trackBy: trackByMessageId"
       class="message"
@@ -152,11 +161,22 @@
   <!-- Input Area -->
   <div class="chat-input-container">
     <div class="input-wrapper">
+      <button
+        class="voice-btn"
+        (click)="toggleVoiceInput()"
+        [class.active]="isListening"
+        [disabled]="isLoading"
+        aria-label="Dictée vocale"
+        title="Dictée vocale (Ctrl+V)"
+      >
+        <i *ngIf="!isListening" class="bi bi-mic"></i>
+        <i *ngIf="isListening" class="bi bi-mic-fill"></i>
+      </button>
       <textarea
         pInputTextarea
         [(ngModel)]="currentMessage"
         (keydown)="onKeyDown($event)"
-        placeholder="Tapez votre message ici..."
+        placeholder="Tapez votre message ici... (Ctrl+Entrée pour envoyer)"
         [autoResize]="true"
         rows="1"
         [disabled]="isLoading"
@@ -165,6 +185,7 @@
         class="send-btn"
         (click)="sendMessage()"
         [disabled]="!currentMessage.trim() || isLoading"
+        aria-label="Envoyer"
       >
         <i *ngIf="!isLoading" class="bi bi-send-fill"></i>
         <i *ngIf="isLoading" class="bi bi-hourglass-split"></i>
@@ -172,7 +193,7 @@
     </div>
 
     <!-- Quick Actions -->
-    <!--<div class="quick-actions">
+    <div class="quick-actions">
       <div class="quick-actions-title">
         <i class="bi bi-lightning-charge-fill"></i>
         Actions rapides
@@ -188,6 +209,76 @@
           <span>{{ intent.description }}</span>
         </button>
       </div>
-    </div>-->
+    </div>
+  </div>
+
+  <!-- History Sidebar -->
+  <div class="history-sidebar" [class.open]="showHistory" appClickOutside (clickOutside)="showHistory = false">
+    <div class="history-header">
+      <h3>Historique</h3>
+      <button class="close-btn" (click)="showHistory = false">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="history-content">
+      <input
+        type="text"
+        class="history-search"
+        placeholder="Rechercher..."
+        [(ngModel)]="historySearchQuery"
+        (input)="searchHistory()"
+      />
+      <div class="history-list">
+        <div
+          *ngFor="let conv of filteredHistory; trackBy: trackByConversationId"
+          class="history-item"
+          [class.active]="conv.id === currentConversationId"
+          (click)="loadConversation(conv.id)"
+        >
+          <div class="history-item-header">
+            <span class="history-title">{{ conv.title }}</span>
+            <button class="history-delete-btn" (click)="deleteConversation(conv.id, $event)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+          <span class="history-date">{{ formatDateRelative(conv.updatedAt) }}</span>
+        </div>
+        <div *ngIf="filteredHistory.length === 0" class="history-empty">
+          <i class="bi bi-inbox"></i>
+          <span>Aucune conversation</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Modal -->
+  <div class="search-modal" [class.open]="showSearch" appClickOutside (clickOutside)="showSearch = false">
+    <div class="search-header">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Rechercher dans les messages..."
+        [(ngModel)]="searchQuery"
+        (input)="searchMessages()"
+        autofocus
+      />
+      <button class="close-btn" (click)="showSearch = false">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="search-results">
+      <div
+        *ngFor="let result of searchResults; trackBy: trackBySearchResult"
+        class="search-result-item"
+        (click)="goToMessage(result)"
+      >
+        <div class="search-result-text" [innerHTML]="highlightSearchTerms(result.text, searchQuery)"></div>
+        <span class="search-result-date">{{ formatDateRelative(result.timestamp) }}</span>
+      </div>
+      <div *ngIf="searchResults.length === 0 && searchQuery" class="search-empty">
+        <i class="bi bi-search"></i>
+        <span>Aucun résultat trouvé</span>
+      </div>
+    </div>
   </div>
 </div>

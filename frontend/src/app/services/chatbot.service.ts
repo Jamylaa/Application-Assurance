@@ -85,8 +85,7 @@ export interface ChatbotResponseDTO {
   providedIn: 'root'
 })
 export class ChatbotService {
-  private readonly baseUrl = `${environment.apiProduit}`;
-  private readonly chatbotUrl = `${this.baseUrl}/chatbot`;
+  private readonly chatbotUrl = `${environment.apiChatbot}`;
   private currentSessionId: string | null = null;
 
   constructor(private readonly http: HttpClient) {}

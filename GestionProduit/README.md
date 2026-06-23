@@ -2,7 +2,7 @@
 
 ## Description
 
-Ce module fait partie du projet Vermeg et gère la gestion des produits d'assurance, des packs et des garanties. Il inclut un système de chatbot intelligent avec capacités de recommandation basées sur un moteur de scoring métier avancé.
+Ce module fait partie du projet Vermeg et gère la gestion des produits d'assurance, des packs et des garanties. Il inclut un moteur de scoring métier avancé pour les recommandations.
 
 **Projet de Fin d'Études d'Ingénieur - Année 2024**
 
@@ -85,25 +85,19 @@ Controller Layer → Service Layer → Repository Layer → Database
 - **Services** : Logique métier et orchestration
 - **Repositories** : Accès aux données (Spring Data MongoDB)
 
-#### 2. Pattern Orchestrator (Chatbot)
-Le système de chatbot utilise le pattern Orchestrator pour coordonner plusieurs services spécialisés :
-- Centralisation de la logique de coordination
-- Décomposition des responsabilités
-- Facilité d'extension avec de nouveaux services
-
-#### 3. Pattern DTO (Data Transfer Object)
+#### 2. Pattern DTO (Data Transfer Object)
 Séparation entre les entités de persistance et les objets de transfert de données :
 - Optimisation des échanges réseau
 - Validation des données entrantes
 - Isolation des couches
 
-#### 4. Pattern Repository
+#### 3. Pattern Repository
 Abstraction de l'accès aux données avec Spring Data MongoDB :
 - Méthodes de query automatiques
 - Pagination et tri
 - Custom queries avec @Query
 
-#### 5. Pattern Strategy (Scoring Engine)
+#### 4. Pattern Strategy (Scoring Engine)
 Le moteur de scoring utilise le pattern Strategy pour les différents critères de scoring :
 - Extensibilité des critères
 - Configurabilité des poids
@@ -148,7 +142,6 @@ GestionProduit/
 │   │   ├── Pack.java
 │   │   ├── Produit.java
 │   │   ├── Garantie.java
-│   │   ├── ConversationMemory.java
 │   │   └── ...
 │   ├── enums/                       # Énumérations (toutes unifiées ici)
 │   │   ├── DomaineMedical.java
@@ -195,16 +188,6 @@ GestionProduit/
 # Configuration MongoDB
 MONGODB_URI=mongodb://admin:password@localhost:27017/vermeg_db?authSource=admin
 MONGODB_DATABASE=vermeg_db
-
-# Configuration Gemini AI (facultatif)
-GEMINI_API_KEY=votre_clé_api_gemini
-GEMINI_MODEL=gemini-2.0-flash
-GEMINI_ENABLED=true
-
-# Configuration Spring AI (facultatif - temporairement désactivé)
-OPENAI_API_KEY=votre_clé_api_openai
-RAG_EMBEDDING_ENABLED=true
-RAG_SEARCH_ENABLED=true
 
 # Configuration Eureka
 EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://localhost:8761/eureka
@@ -293,10 +276,6 @@ La documentation inclut :
 - `PUT /api/garanties/{id}` : Met à jour une garantie
 - `DELETE /api/garanties/{id}` : Supprime une garantie
 
-#### Chatbot
-- `POST /api/chatbot/process` : Traite un prompt utilisateur et génère une réponse
-- `POST /api/chatbot/recommendations` : Génère des recommandations basées sur un profil client
-
 #### Recommandations
 - `POST /api/recommendations/generate` : Génère des recommandations basées sur un profil client
 
@@ -340,7 +319,7 @@ cors:
 ### Monitoring
 - **Actuator Endpoints** : Monitoring de l'application (`/actuator/health`, `/actuator/metrics`)
 - **Logging Aspect** : Logging AOP pour les opérations critiques
-- **Custom Metrics** : Métriques personnalisées pour le chatbot et scoring
+- **Custom Metrics** : Métriques personnalisées pour le scoring
 
 ## Tests
 

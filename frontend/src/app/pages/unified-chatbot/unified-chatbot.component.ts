@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -16,6 +16,10 @@ import { MessageService } from 'primeng/api';
 import { ChatbotService, ChatbotResponse, ChatbotIntent } from '../../services/chatbot.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
+import { KeyboardShortcutDirective, KeyboardShortcut } from '../../shared/directives/keyboard-shortcut.directive';
+import { ClickOutsideDirective } from '../../shared/directives/click-outside.directive';
+import { ConversationStorageService, Conversation } from '../../services/conversation-storage.service';
+import { ExportService } from '../../services/export.service';
 
 interface RecommendationItem {
   id: string;
@@ -43,6 +47,12 @@ interface ChatMessage {
   }>;
 }
 
+interface SearchResult {
+  message: ChatMessage;
+  text: string;
+  timestamp: Date;
+}
+
 @Component({
   selector: 'app-unified-chatbot',
   standalone: true,
@@ -56,7 +66,9 @@ interface ChatMessage {
     CardModule,
     BadgeModule,
     TagModule,
-    TooltipModule
+    TooltipModule,
+    KeyboardShortcutDirective,
+    ClickOutsideDirective
   ],
   providers: [MessageService],
   templateUrl: './unified-chatbot.component.html',
@@ -66,6 +78,22 @@ export class UnifiedChatbotComponent implements OnInit, OnDestroy {
   messages: ChatMessage[] = [];
   currentMessage = '';
   isLoading = false;
+
+  // New functionality properties
+  showHistory = false;
+  showSearch = false;
+  isListening = false;
+  historySearchQuery = '';
+  searchQuery = '';
+  searchResults: SearchResult[] = [];
+  conversations: Conversation[] = [];
+  currentConversationId = '';
+  filteredHistory: Conversation[] = [];
+
+  @ViewChild('messagesContainer', { read: ElementRef }) messagesContainer!: ElementRef;
+
+  // Voice recognition
+  private recognition: any = null;
 
   // Configuration du chatbot
   chatbotConfig = {
@@ -99,12 +127,23 @@ export class UnifiedChatbotComponent implements OnInit, OnDestroy {
     private readonly toastService: ToastService,
     private readonly breadcrumbService: BreadcrumbService,
     private readonly router: Router,
-    private readonly messageService: MessageService
+    private readonly messageService: MessageService,
+    private readonly conversationStorage: ConversationStorageService,
+    private readonly exportService: ExportService
   ) {}
 
   ngOnInit(): void {
     try {
       this.breadcrumbService.setChatbotBreadcrumb();
+
+      // Load conversations from localStorage
+      this.loadConversations();
+
+      // Initialize voice recognition
+      this.initVoiceRecognition();
+
+      // Create initial conversation
+      this.createConversation();
 
       // Message de bienvenue
       const welcomeMessage = `**${this.chatbotConfig.title}**
@@ -126,6 +165,11 @@ Comment puis-je vous aider aujourd'hui ?`;
     if (this.chatbotSubscription) {
       this.chatbotSubscription.unsubscribe();
     }
+    if (this.recognition) {
+      this.recognition.stop();
+    }
+    // Save current conversation before destroying
+    this.saveCurrentConversation();
   }
 
   sendMessage(): void {
@@ -434,6 +478,277 @@ Comment puis-je vous aider aujourd'hui ?`;
 
   trackByIntentLabel(index: number, intent: any): string {
     return intent.label;
+  }
+
+  // History functionality
+  toggleHistory(): void {
+    this.showHistory = !this.showHistory;
+    if (this.showHistory) {
+      this.filteredHistory = [...this.conversations];
+    }
+  }
+
+  loadConversations(): void {
+    this.conversationStorage.getAllConversations().subscribe({
+      next: (conversations) => {
+        this.conversations = conversations;
+        this.filteredHistory = [...conversations];
+      },
+      error: (error) => {
+        console.error('Error loading conversations', error);
+        this.conversations = [];
+      }
+    });
+  }
+
+  createConversation(): void {
+    const newConversation: Conversation = {
+      id: this.generateId(),
+      title: 'Nouvelle conversation',
+      messages: [],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.conversations.unshift(newConversation);
+    this.currentConversationId = newConversation.id;
+    this.conversationStorage.saveConversation(newConversation).subscribe();
+  }
+
+  saveCurrentConversation(): void {
+    const conversation = this.conversations.find(c => c.id === this.currentConversationId);
+    if (conversation) {
+      conversation.messages = [...this.messages];
+      conversation.updatedAt = new Date();
+
+      // Update title based on first user message
+      if (conversation.messages.length > 0) {
+        const firstUserMsg = conversation.messages.find(m => m.sender === 'user');
+        if (firstUserMsg && conversation.title === 'Nouvelle conversation') {
+          conversation.title = firstUserMsg.text.substring(0, 50) + (firstUserMsg.text.length > 50 ? '...' : '');
+        }
+      }
+
+      this.conversationStorage.saveConversation(conversation).subscribe();
+    }
+  }
+
+  loadConversation(conversationId: string): void {
+    const conversation = this.conversations.find(c => c.id === conversationId);
+    if (conversation) {
+      this.currentConversationId = conversationId;
+      this.messages = conversation.messages as ChatMessage[];
+      this.showHistory = false;
+      this.scrollToBottom();
+      this.toastService.showInfo('Conversation chargée', conversation.title);
+    }
+  }
+
+  deleteConversation(conversationId: string, event: Event): void {
+    event.stopPropagation();
+    this.conversationStorage.deleteConversation(conversationId).subscribe({
+      next: () => {
+        this.conversations = this.conversations.filter(c => c.id !== conversationId);
+        this.filteredHistory = this.filteredHistory.filter(c => c.id !== conversationId);
+
+        if (this.currentConversationId === conversationId) {
+          this.clearChat();
+          this.createConversation();
+        }
+
+        this.toastService.showSuccess('Conversation supprimée');
+      },
+      error: () => {
+        this.toastService.showError('Erreur', 'Impossible de supprimer la conversation');
+      }
+    });
+  }
+
+  searchHistory(): void {
+    if (!this.historySearchQuery.trim()) {
+      this.filteredHistory = [...this.conversations];
+      return;
+    }
+
+    this.conversationStorage.searchConversations(this.historySearchQuery).subscribe({
+      next: (results) => {
+        this.filteredHistory = results;
+      },
+      error: () => {
+        this.filteredHistory = [];
+      }
+    });
+  }
+
+  // Search functionality
+  toggleSearch(): void {
+    this.showSearch = !this.showSearch;
+    if (this.showSearch) {
+      setTimeout(() => {
+        const searchInput = document.querySelector('.search-input') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }, 100);
+    }
+  }
+
+  searchMessages(): void {
+    if (!this.searchQuery.trim()) {
+      this.searchResults = [];
+      return;
+    }
+
+    this.searchResults = [];
+
+    this.messages.forEach(msg => {
+      if (msg.text.toLowerCase().includes(this.searchQuery.toLowerCase())) {
+        this.searchResults.push({
+          message: msg,
+          text: msg.text,
+          timestamp: msg.timestamp
+        });
+      }
+    });
+  }
+
+  goToMessage(result: SearchResult): void {
+    const messageElement = document.querySelector(`[data-message-id="${result.message.id}"]`);
+    if (messageElement) {
+      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      messageElement.classList.add('highlighted');
+      setTimeout(() => {
+        messageElement.classList.remove('highlighted');
+      }, 2000);
+    }
+    this.showSearch = false;
+    this.searchQuery = '';
+    this.searchResults = [];
+  }
+
+  highlightSearchTerms(text: string, query: string): string {
+    if (!query.trim()) return text;
+    const regex = new RegExp(`(${query})`, 'gi');
+    return text.replace(regex, '<mark>$1</mark>');
+  }
+
+  // Export functionality
+  exportConversation(): void {
+    const conversation = this.conversations.find(c => c.id === this.currentConversationId);
+    if (!conversation) {
+      this.toastService.showError('Erreur', 'Aucune conversation à exporter');
+      return;
+    }
+
+    const title = conversation.title || 'Conversation';
+    
+    this.exportService.exportToTXT([conversation]).subscribe({
+      next: (content) => {
+        this.exportService.downloadFile(content, `${title.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.txt`, 'text/plain');
+        this.toastService.showSuccess('Export réussi', 'Conversation téléchargée');
+      },
+      error: () => {
+        this.toastService.showError('Erreur', 'Impossible d\'exporter la conversation');
+      }
+    });
+  }
+
+  // Voice input functionality
+  initVoiceRecognition(): void {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      this.recognition = new SpeechRecognition();
+      this.recognition.continuous = false;
+      this.recognition.interimResults = false;
+      this.recognition.lang = 'fr-FR';
+
+      this.recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        this.currentMessage = transcript;
+        this.isListening = false;
+        this.toastService.showSuccess('Dictée terminée', 'Message transcrit');
+      };
+
+      this.recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        this.isListening = false;
+        this.toastService.showError('Erreur de dictée', 'Veuillez réessayer');
+      };
+
+      this.recognition.onend = () => {
+        this.isListening = false;
+      };
+    }
+  }
+
+  toggleVoiceInput(): void {
+    if (!this.recognition) {
+      this.toastService.showError('Dictée non disponible', 'Votre navigateur ne supporte pas la reconnaissance vocale');
+      return;
+    }
+
+    if (this.isListening) {
+      this.recognition.stop();
+      this.isListening = false;
+    } else {
+      this.recognition.start();
+      this.isListening = true;
+      this.toastService.showInfo('Dictée en cours', 'Parlez maintenant...');
+    }
+  }
+
+  // Keyboard shortcuts
+  handleKeyboardShortcut(shortcut: KeyboardShortcut): void {
+    if (shortcut.ctrl && shortcut.key === 'k') {
+      this.toggleSearch();
+    } else if (shortcut.ctrl && shortcut.key === 'e') {
+      this.exportConversation();
+    } else if (shortcut.ctrl && shortcut.key === 'n') {
+      this.clearChat();
+      this.createConversation();
+    } else if (shortcut.key === 'Escape') {
+      if (this.showSearch) {
+        this.showSearch = false;
+      }
+      if (this.showHistory) {
+        this.showHistory = false;
+      }
+      if (this.isListening) {
+        this.toggleVoiceInput();
+      }
+    } else if (shortcut.key === 'Enter') {
+      this.sendMessage();
+    }
+  }
+
+  // Helper methods
+  scrollToBottom(): void {
+    setTimeout(() => {
+      if (this.messagesContainer) {
+        this.messagesContainer.nativeElement.scrollTop = this.messagesContainer.nativeElement.scrollHeight;
+      }
+    }, 100);
+  }
+
+  trackByConversationId(index: number, conv: Conversation): string {
+    return conv.id;
+  }
+
+  trackBySearchResult(index: number, result: SearchResult): string {
+    return result.message.id;
+  }
+
+  formatDateRelative(date: Date): string {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'À l\'instant';
+    if (diffMins < 60) return `Il y a ${diffMins} min`;
+    if (diffHours < 24) return `Il y a ${diffHours} h`;
+    if (diffDays < 7) return `Il y a ${diffDays} j`;
+    return date.toLocaleDateString('fr-FR');
   }
 
   getIntentExample(intentLabel: string): string {
