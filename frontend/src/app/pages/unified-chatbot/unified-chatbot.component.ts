@@ -154,7 +154,7 @@ Fonctionnalités disponibles :
 ${this.chatbotConfig.features.map(f => `• ${f}`).join('\n')}
 
 Comment puis-je vous aider aujourd'hui ?`;
-      
+
       this.addBotMessage(welcomeMessage);
     } catch (error) {
       console.error('ChatbotComponent: Error in ngOnInit', error);
@@ -198,12 +198,12 @@ Comment puis-je vous aider aujourd'hui ?`;
   private handleChatbotResponse(response: ChatbotResponse): void {
     let message = response.message;
 
-    // Ajouter les informations de validation si présentes
-    if (response.validation) {
-      if (response.validation.errors.length > 0) {
+    // Ajouter les informations de validation si présentes et seulement en cas d'erreur
+    if (response.validation && !response.success) {
+      if (response.validation.errors && response.validation.errors.length > 0) {
         message += '\n\n Erreurs : \n' + response.validation.errors.map(e => `• ${e}`).join('\n');
       }
-      if (response.validation.warnings.length > 0) {
+      if (response.validation.warnings && response.validation.warnings.length > 0) {
         message += '\n\n Avertissements :\n' + response.validation.warnings.map(w => `• ${w}`).join('\n');
       }
     }
@@ -640,7 +640,7 @@ Comment puis-je vous aider aujourd'hui ?`;
     }
 
     const title = conversation.title || 'Conversation';
-    
+
     this.exportService.exportToTXT([conversation]).subscribe({
       next: (content) => {
         this.exportService.downloadFile(content, `${title.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.txt`, 'text/plain');

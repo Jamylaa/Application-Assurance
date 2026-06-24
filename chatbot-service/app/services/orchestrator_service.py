@@ -433,16 +433,26 @@ class ChatbotOrchestratorService:
     
     def _create_success_response(self, action: ChatbotAction, result: Dict[str, Any], prompt: str) -> ChatbotResponseDTO:
         """Create success response."""
+        # Use the action from the execution result if available, otherwise use the detected action
+        action_value = result.get("action", action.value)
+        
+        # Only populate errors field if there are actual errors (not on success)
+        errors = result.get("errors") if not result.get("success") else None
+        
+        # Create specific success message based on action type
+        success_message = result.get("message", self._get_default_success_message(action_value))
+        
         return ChatbotResponseDTO(
-            success=result.get("success", False),
-            message=result.get("message", "Opération réussie"),
-            action=action.value,
+            success=result.get("success", True),
+            message=success_message,
+            action=action_value,
             result=result,
             data={
                 "prompt": prompt,
                 "extraction_method": "AI" if self.ai_extraction_service.is_ai_available() else "FALLBACK"
             },
-            errors=result.get("errors"),
+            entity_type=self._get_entity_type_from_action(action_value),
+            errors=errors,
             warnings=result.get("warnings")
         )
     
@@ -451,5 +461,34 @@ class ChatbotOrchestratorService:
         return ChatbotResponseDTO(
             success=False,
             message=message,
-            errors=errors
+            action="ERROR",
+            result={},
+            data={},
+            entity_type="UNKNOWN",
+            errors=errors if errors else [message],
+            warnings=None
         )
+    
+    def _get_default_success_message(self, action: str) -> str:
+        """Get default success message based on action type."""
+        action_messages = {
+            "CREATE_GARANTIE": "Garantie créée avec succès",
+            "CREATE_PRODUIT": "Produit créé avec succès",
+            "CREATE_PACK": "Pack créé avec succès",
+            "ADD_GARANTIE_TO_PACK": "Garantie ajoutée au pack avec succès",
+            "CONFIGURATION_PACK": "Pack configuré avec succès",
+            "RECOMMANDATION": "Recommandation générée avec succès"
+        }
+        return action_messages.get(action, "Opération réussie")
+    
+    def _get_entity_type_from_action(self, action: str) -> str:
+        """Get entity type from action."""
+        action_entity_map = {
+            "CREATE_GARANTIE": "GARANTIE",
+            "CREATE_PRODUIT": "PRODUIT",
+            "CREATE_PACK": "PACK",
+            "ADD_GARANTIE_TO_PACK": "PACK",
+            "CONFIGURATION_PACK": "PACK",
+            "RECOMMANDATION": "RECOMMANDATION"
+        }
+        return action_entity_map.get(action, "UNKNOWN")

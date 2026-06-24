@@ -12,11 +12,11 @@ class PromptAnalyzerService:
     # Keywords for each action
     ACTION_KEYWORDS = {
         ChatbotAction.GARANTIE: [
-            "garantie", "couverture", "remboursement", "assurance", "soins",
+            "garantie", "couverture", "remboursement", "soins",
             "hospitalisation", "consultation", "médical", "dentaire", "optique"
         ],
         ChatbotAction.PRODUIT: [
-            "produit", "police", "contrat d'assurance", "offre", "solution"
+            "produit", "police", "contrat d'assurance", "offre", "solution", "assurance"
         ],
         ChatbotAction.PACK: [
             "pack", "formule", "offre pack", "bundle", "ensemble"
@@ -54,7 +54,16 @@ class PromptAnalyzerService:
         # Check for creation actions
         is_creation = any(kw in prompt_lower for kw in self.CREATION_KEYWORDS)
         
-        # Score each action based on keyword matches
+        # Priority 1: Explicit entity mentions with creation
+        if is_creation:
+            if "produit" in prompt_lower:
+                return ChatbotAction.PRODUIT
+            elif "pack" in prompt_lower:
+                return ChatbotAction.PACK
+            elif "garantie" in prompt_lower:
+                return ChatbotAction.GARANTIE
+        
+        # Priority 2: Score each action based on keyword matches
         action_scores = {}
         for action, keywords in self.ACTION_KEYWORDS.items():
             score = sum(1 for kw in keywords if kw in prompt_lower)

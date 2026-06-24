@@ -118,6 +118,7 @@ class ChatbotResponseDTO(BaseModel):
     data: Optional[Dict[str, Any]] = None
     errors: Optional[List[str]] = None
     warnings: Optional[List[str]] = None
+    entity_type: Optional[str] = None
 
 
 class BusinessValidationResult(BaseModel):
@@ -139,6 +140,7 @@ class RecommendationResultDTO(BaseModel):
     why_recommended: str
     monthly_price: Optional[float] = None
     coverage_level: str
+    detailed_explanation: Optional[str] = None
 
 
 class RecommendationResponseDTO(BaseModel):

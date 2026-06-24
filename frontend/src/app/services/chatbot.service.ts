@@ -219,10 +219,10 @@ export class ChatbotService {
         success: false,
         intent,
         confidence: 0,
-        message: dto.message || dto.errors?.join('\n') || 'Échec du traitement',
+        message: dto.message || 'Échec du traitement',
         validation: {
           valid: false,
-          errors: dto.errors?.length ? dto.errors : [dto.message || 'Erreur'],
+          errors: dto.errors?.length ? dto.errors : [],
           warnings: dto.warnings || []
         },
         timestamp: ts

@@ -40,6 +40,9 @@ class RecommendationService:
                 scoring_result = self._calculate_pack_score(profile, pack)
                 
                 if scoring_result.is_recommended:
+                    # Enhanced recommendation with detailed scoring breakdown
+                    detailed_explanation = self._generate_detailed_explanation(profile, pack, scoring_result)
+                    
                     result_dto = RecommendationResultDTO(
                         id=pack.id_pack or "",
                         nom=pack.nom_pack or "",
@@ -48,7 +51,8 @@ class RecommendationService:
                         scoring_result=scoring_result.detailed_scores,
                         why_recommended=scoring_result.justification,
                         monthly_price=pack.prix_mensuel,
-                        coverage_level=pack.niveau_couverture.value if pack.niveau_couverture else "BASIC"
+                        coverage_level=pack.niveau_couverture.value if pack.niveau_couverture else "BASIC",
+                        detailed_explanation=detailed_explanation
                     )
                     recommended_packs.append(result_dto)
             
@@ -67,11 +71,18 @@ class RecommendationService:
                                       "Essayez d'ajuster votre budget ou vos critères.")
                 response.message = "Aucune recommandation disponible"
             else:
+                # Enhanced explanation with detailed breakdown
                 medical_condition = ("avec conditions médicales" if profile.chronic_diseases 
                                     else "sans conditions médicales")
-                response.explanation = (f"Basé sur votre profil de {profile.age} ans, {medical_condition}, "
-                                      "voici les packs les plus adaptés.")
-                response.message = "Recommandations générées avec succès"
+                budget_info = f"budget mensuel de {profile.monthly_budget}€" if profile.monthly_budget else "budget non spécifié"
+                
+                response.explanation = (
+                    f"Basé sur votre profil de {profile.age} ans, {medical_condition}, "
+                    f"{budget_info}, voici les packs les plus adaptés. "
+                    f"Le score de compatibilité prend en compte: l'âge (30%), le budget (25%), "
+                    f"le niveau de couverture (20%), la zone géographique (15%) et le type de client (10%)."
+                )
+                response.message = f"{len(top_packs)} recommandation(s) générée(s) avec succès"
         
         except Exception as e:
             logger.error(f"Erreur lors de la génération des recommandations", exc_info=True)
@@ -285,3 +296,42 @@ class RecommendationService:
             return 0.7
         else:
             return 0.5
+    
+    def _generate_detailed_explanation(self, profile: ClientProfile, pack: PackDTO, scoring_result: ScoringResult) -> str:
+        """Generate detailed explanation for why a pack is recommended."""
+        explanations = []
+        
+        # Age explanation
+        age_score = scoring_result.detailed_scores.get("age_compatibility", 0)
+        if age_score >= 0.8:
+            explanations.append(f"Votre âge de {profile.age} ans correspond parfaitement aux critères du pack")
+        elif age_score >= 0.5:
+            explanations.append(f"Votre âge de {profile.age} ans est acceptable pour ce pack")
+        else:
+            explanations.append(f"Votre âge de {profile.age} ans est aux limites du pack")
+        
+        # Budget explanation
+        budget_score = scoring_result.detailed_scores.get("budget_compatibility", 0)
+        if profile.monthly_budget and pack.prix_mensuel:
+            if budget_score >= 0.8:
+                explanations.append(f"Le prix de {pack.prix_mensuel}€/mois est bien dans votre budget de {profile.monthly_budget}€")
+            elif budget_score >= 0.5:
+                explanations.append(f"Le prix de {pack.prix_mensuel}€/mois est acceptable pour votre budget")
+            else:
+                explanations.append(f"Le prix de {pack.prix_mensuel}€/mois dépasse légèrement votre budget")
+        
+        # Coverage explanation
+        coverage_score = scoring_result.detailed_scores.get("coverage_level", 0)
+        if coverage_score >= 0.8:
+            explanations.append(f"Niveau de couverture {pack.niveau_couverture.value if pack.niveau_couverture else 'BASIC'} adapté à vos besoins")
+        
+        # Geographic explanation
+        geo_score = scoring_result.detailed_scores.get("geographic_coverage", 0)
+        if geo_score >= 0.8:
+            explanations.append(f"Couverture géographique {pack.couverture_geographique.value if pack.couverture_geographique else 'NATIONALE'} conforme")
+        
+        # Medical conditions
+        if profile.chronic_diseases:
+            explanations.append("Prise en compte de vos conditions médicales particulières")
+        
+        return ". ".join(explanations) + "."
