@@ -4,9 +4,11 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   Garantie as GarantieModel,
+  GarantieSimple,
   DomaineMedical,
   NiveauCouverture,
   Pack as PackModel,
+  PackSimple,
   PackGarantie,
   Produit as ProduitModel,
   Statut,
@@ -180,4 +182,24 @@ export class GestionProduitService {
 
   packsStatistics(): Observable<Record<string, unknown>> {
     return this.http.get<Record<string, unknown>>(`${this.packsUrl}/statistics`);}
+
+  // ==================== ENDPOINTS HIÉRARCHIQUES ====================
+
+  // Produit avec packs
+  getProduitWithPacks(idProduit: string): Observable<Produit> {
+    return this.http.get<Produit>(`${this.produitsUrl}/${idProduit}/with-packs`);
+  }
+
+  getProduitWithFullHierarchy(idProduit: string): Observable<Produit> {
+    return this.http.get<Produit>(`${this.produitsUrl}/${idProduit}/full-hierarchy`);
+  }
+
+  // Pack avec garanties
+  getPackWithGaranties(idPack: string): Observable<Pack> {
+    return this.http.get<Pack>(`${this.packsUrl}/${idPack}/with-garanties`);
+  }
+
+  getAllPacksWithGaranties(): Observable<Pack[]> {
+    return this.http.get<Pack[]>(`${this.packsUrl}/with-garanties`);
+  }
 }

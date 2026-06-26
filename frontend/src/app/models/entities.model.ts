@@ -168,6 +168,23 @@ export enum CouvertureGeographique {
 
 // === ENTITÉS PRINCIPALES ===
 
+// DTOs simplifiés pour éviter les relations circulaires
+export interface GarantieSimple {
+  idGarantie: string;
+  nomGarantie: string;
+  domaine?: DomaineMedical;
+  statut?: Statut;
+}
+
+export interface PackSimple {
+  idPack: string;
+  nomPack: string;
+  description: string;
+  prixMensuel: number;
+  niveauCouverture?: NiveauCouverture;
+  statut?: Statut;
+}
+
 export interface Produit {
   idProduit: string;
   nomProduit: string;
@@ -176,6 +193,7 @@ export interface Produit {
   statut: Statut;
   dateCreation: string;
   dateModification: string;
+  packs?: PackSimple[]; // Liste des packs associés
 }
 
 export interface Pack {
@@ -197,6 +215,7 @@ export interface Pack {
   domainesMedicaux?: string[];
   dateCreation: string;
   dateModification: string;
+  garanties?: GarantieSimple[]; // Liste des garanties associées
 }
 
 export interface Garantie {
@@ -220,6 +239,7 @@ export interface Garantie {
   dateCreation: string;
   dateModification: string;
   dateDesactivation?: string;
+  packId?: string; // Référence au pack parent
 }
 
 export interface PackGarantie {

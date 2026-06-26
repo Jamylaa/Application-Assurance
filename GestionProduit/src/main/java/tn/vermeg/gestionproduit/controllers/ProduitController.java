@@ -1,5 +1,6 @@
 package tn.vermeg.gestionproduit.controllers;
 
+import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -7,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import tn.vermeg.gestionproduit.entities.Produit;
 import tn.vermeg.gestionproduit.enums.Statut;
 import tn.vermeg.gestionproduit.enums.TypeProduit;
+import tn.vermeg.gestionproduit.services.HierarchicalService;
 import tn.vermeg.gestionproduit.services.ProduitService;
 
 import java.util.List;
@@ -17,8 +19,13 @@ import java.util.Optional;
 @CrossOrigin(origins = "http://localhost:4200")
 public class ProduitController {
 
+    private static final Logger logger = Logger.getLogger(ProduitController.class.getName());
+
     @Autowired
     private ProduitService produitService;
+
+    @Autowired
+    private HierarchicalService hierarchicalService;
 
     // READ
     @GetMapping
@@ -53,10 +60,13 @@ public class ProduitController {
     // CREATE
     @PostMapping
     public ResponseEntity<Produit> createProduit(@RequestBody Produit produit) {
+        logger.info("POST /api/produits - Creating product: " + produit.getNomProduit());
         try {
             Produit newProduit = produitService.createProduit(produit);
+            logger.info("POST /api/produits - Product created successfully with ID: " + newProduit.getIdProduit());
             return ResponseEntity.status(HttpStatus.CREATED).body(newProduit);
         } catch (IllegalArgumentException e) {
+            logger.severe("POST /api/produits - Failed to create product: " + e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
@@ -90,6 +100,36 @@ public class ProduitController {
         try {
             produitService.deleteProduit(idProduit);
             return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // ==================== ENDPOINTS HIÉRARCHIQUES ====================
+
+    /**
+     * Récupère un produit avec tous ses packs associés
+     * GET /api/produits/{idProduit}/with-packs
+     */
+    @GetMapping("/{idProduit}/with-packs")
+    public ResponseEntity<Produit> getProduitWithPacks(@PathVariable String idProduit) {
+        try {
+            Produit produit = hierarchicalService.getProduitWithPacks(idProduit);
+            return ResponseEntity.ok(produit);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * Récupère un produit avec la hiérarchie complète (Produit → Packs → Garanties)
+     * GET /api/produits/{idProduit}/full-hierarchy
+     */
+    @GetMapping("/{idProduit}/full-hierarchy")
+    public ResponseEntity<Produit> getProduitWithFullHierarchy(@PathVariable String idProduit) {
+        try {
+            Produit produit = hierarchicalService.getProduitWithFullHierarchy(idProduit);
+            return ResponseEntity.ok(produit);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }

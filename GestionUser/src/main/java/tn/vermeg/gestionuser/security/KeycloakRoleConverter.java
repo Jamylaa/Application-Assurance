@@ -22,7 +22,6 @@ public class KeycloakRoleConverter
 
             return Collections.emptyList();
         }
-
         List<String> roles =
                 (List<String>) realmAccess.get("roles");
 

@@ -15,28 +15,6 @@ spring:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:9090/realms/vermeg-realm}
 
-  # Redis Configuration
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
-      database: 0
-      timeout: 60000
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
-          max-wait: -1ms
-
-  # Cache Configuration
-  cache:
-    type: redis
-    redis:
-      time-to-live: 3600000 # 1 hour
-      cache-null-values: false
-
   # Actuator Configuration
   management:
     endpoints:
@@ -57,21 +35,6 @@ spring:
       tags:
         application: ${spring.application.name}
         environment: ${spring.profiles.active:local}
-
-  # Kafka Configuration
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-      acks: all
-      retries: 3
-    consumer:
-      group-id: gestion-produit-group
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      auto-offset-reset: earliest
-      enable-auto-commit: false
 
 server:
   port: 9093
@@ -127,12 +90,6 @@ spring:
     mongodb:
       uri: ${MONGODB_URI:mongodb://admin:password@mongodb:27017/vermeg_db?authSource=admin}
       database: ${MONGODB_DATABASE:vermeg_db}
-    redis:
-      host: redis
-      port: 6379
-
-  kafka:
-    bootstrap-servers: kafka:9092
 
 eureka:
   client:

@@ -143,14 +143,29 @@ export class PackDetailsComponent implements OnInit {
 
   getCoverageScore(): number {
     if (!this.pack) return 0;
-    switch (this.pack.couvertureGeographique?.toUpperCase()) {
-      case 'INTERNATIONAL': return 100;
-      case 'UE': return 80;
-      case 'MAGHREB': return 60;
-      case 'NATIONAL': return 40;
-      case 'REGIONAL': return 20;
-      default: return 0;
-    }
+
+    // Score géographique (30%)
+    const geoMap: Record<string, number> = {
+      INTERNATIONAL: 100, UE: 85, MAGHREB: 70, NATIONAL: 55, LOCAL: 30
+    };
+    const geoScore = geoMap[(this.pack.couvertureGeographique ?? '').toUpperCase()] ?? 20;
+
+    // Score niveau (30%)
+    const niveauMap: Record<string, number> = { GOLD: 100, PREMIUM: 75, BASIC: 50 };
+    const niveauScore = niveauMap[(this.pack.niveauCouverture ?? '').toUpperCase()] ?? 40;
+
+    // Score garanties (40%) — plafonné à 10 garanties = 100%
+    const garantiesScore = Math.min(this.garantiesCount * 10, 100);
+
+    return Math.round(geoScore * 0.3 + niveauScore * 0.3 + garantiesScore * 0.4);
+  }
+
+  getGeoScore(): number {
+    if (!this.pack) return 0;
+    const geoMap: Record<string, number> = {
+      INTERNATIONAL: 100, UE: 85, MAGHREB: 70, NATIONAL: 55, LOCAL: 30
+    };
+    return geoMap[(this.pack.couvertureGeographique ?? '').toUpperCase()] ?? 20;
   }
 
   getPricingCategory(): string {

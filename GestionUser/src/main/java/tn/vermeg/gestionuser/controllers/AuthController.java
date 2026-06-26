@@ -17,7 +17,6 @@ public class AuthController {
         if (authentication == null) {
             return ResponseEntity.status(401).body("Not authenticated");
         }
-
         return ResponseEntity.ok(
                 Map.of(
                         "username", authentication.getName(),

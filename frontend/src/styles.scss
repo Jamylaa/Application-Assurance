@@ -1,3 +1,6 @@
+// Import des variables de thème (CSS custom properties — doit être en premier)
+@import './styles/theme-variables.scss';
+
 // Import du design system principal (variables, mixins, keyframes)
 @import './styles/design-system.scss';
 

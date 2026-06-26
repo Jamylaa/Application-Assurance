@@ -1,429 +1,329 @@
 <div class="dashboard-page">
   <p-toast position="top-right"></p-toast>
-  <!-- Loading -->
-  <div *ngIf="loading" class="loading-state">
-    <app-ui-skeleton type="card" [count]="3"></app-ui-skeleton>
+
+  <!-- ═══ LOADING SKELETON ═══ -->
+  <div *ngIf="loading" class="dashboard-loading">
+    <div class="loading-kpis">
+      <p-skeleton *ngFor="let i of [1,2,3]" height="140px" borderRadius="14px" styleClass="mb-0"></p-skeleton>
+    </div>
+    <p-skeleton height="200px" borderRadius="14px" class="loading-metrics"></p-skeleton>
+    <div class="loading-charts">
+      <p-skeleton *ngFor="let i of [1,2,3]" height="320px" borderRadius="14px"></p-skeleton>
+    </div>
   </div>
-  <!-- Dashboard Content -->
+
+  <!-- ═══ DASHBOARD CONTENT ═══ -->
   <div *ngIf="!loading" class="dashboard-content">
-    <!-- Welcome Banner -->
-    <div class="welcome-banner animate-fade-in-down">
-      <!-- LEFT -->
+
+    <!-- ── Bannière d'accueil ── -->
+    <div class="welcome-banner">
       <div class="welcome-left">
-        <div class="welcome-avatar">
-          {{ getInitials(currentUser?.username || 'U') }}
-        </div>
-        <div class="welcome-text">
-          <h1 class="welcome-heading">
+        <div class="welcome-avatar">{{ getInitials(currentUser?.username || 'U') }}</div>
+        <div class="welcome-body">
+          <h1 class="welcome-title">
             {{ getGreeting() }},
-            <span>
-              {{ currentUser?.firstName || currentUser?.username || 'Utilisateur' }}
-            </span>
+            <span class="welcome-name">{{ currentUser?.firstName || currentUser?.username || 'Utilisateur' }}</span>
           </h1>
-          <p class="welcome-sub">Voici un résumé de votre plateforme d'assurance aujourd'hui.</p>
-          <!-- USER META -->
-          <div class="welcome-meta" *ngIf="currentUser">
-            <!-- EMAIL -->
-            <span class="meta-tag" *ngIf="currentUser?.email">
-              <i class="bi bi-envelope-fill"></i>
-              {{ currentUser.email }}
+          <p class="welcome-sub">Plateforme de gestion d'assurance — Vermeg Assurance Pro</p>
+          <div class="welcome-chips" *ngIf="currentUser">
+            <span class="wchip wchip--navy" *ngIf="currentUser?.email">
+              <i class="bi bi-envelope-fill"></i>{{ currentUser.email }}
             </span>
-            <!-- ROLES -->
-            <span class="meta-tag" *ngIf="currentUser?.roles?.length">
-              <i class="bi bi-shield-lock-fill"></i>
-              {{ currentUser.roles.join(', ') }}
+            <span class="wchip wchip--teal" *ngIf="currentUser?.roles?.length">
+              <i class="bi bi-shield-lock-fill"></i>{{ currentUser.roles[0] }}
             </span>
           </div>
         </div>
       </div>
-      <!-- RIGHT -->
       <div class="welcome-right">
         <div class="welcome-date">
           <i class="bi bi-calendar3"></i>
-          {{ today | date:'EEEE dd MMMM yyyy' }}
+          <span>{{ todayFr }}</span>
         </div>
-        <div class="welcome-stats">
-          <div class="mini-stat">
-            <span class="mini-stat-value">{{ stats.totalProduits }}</span>
-            <span class="mini-stat-label">Produits</span>
+        <div class="welcome-counters">
+          <div class="wcounter">
+            <span class="wcounter-val">{{ stats.totalProduits }}</span>
+            <span class="wcounter-lbl">Produits</span>
           </div>
-          <div class="mini-stat">
-            <span class="mini-stat-value">{{ stats.totalPacks }}</span>
-            <span class="mini-stat-label">Packs</span>
+          <div class="wcounter-sep"></div>
+          <div class="wcounter">
+            <span class="wcounter-val">{{ stats.totalPacks }}</span>
+            <span class="wcounter-lbl">Packs</span>
           </div>
-          <div class="mini-stat">
-            <span class="mini-stat-value">{{ stats.totalGaranties }}</span>
-            <span class="mini-stat-label">Garanties</span>
+          <div class="wcounter-sep"></div>
+          <div class="wcounter">
+            <span class="wcounter-val">{{ stats.totalGaranties }}</span>
+            <span class="wcounter-lbl">Garanties</span>
           </div>
         </div>
       </div>
     </div>
-    <!-- KPI STATS -->
-    <div class="stats-grid">
-      <!-- Produits -->
-      <div
-        class="stat-card stat-card--primary hover-lift animate-fade-in-up"
-        (click)="navigateToProduits()">
-        <div class="stat-card-content">
-          <div class="stat-icon stat-icon--primary">
-            <i class="bi bi-box-seam-fill"></i>
-          </div>
-          <div class="stat-info">
-            <div class="stat-value">
-              {{ stats.totalProduits }}
-            </div>
-            <div class="stat-label">
-              Produits
-            </div>
-            <div class="stat-trend stat-trend--up">
-              <i class="bi bi-arrow-up-right"></i>
-              +{{ metrics.croissanceProduits }}%
-            </div>
-          </div>
-        </div>
-        <div class="stat-card-footer">
-          <span>
-            Voir tous
-            <i class="bi bi-arrow-right"></i>
+
+    <!-- ── KPI Cards ── -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-card--navy" (click)="navigateToProduits()" role="button" tabindex="0">
+        <div class="kpi-header">
+          <div class="kpi-icon"><i class="bi bi-box-seam-fill"></i></div>
+          <span class="kpi-trend">
+            <i class="bi bi-arrow-up-right-circle-fill"></i>+{{ metrics.croissanceProduits }}%
           </span>
+        </div>
+        <div class="kpi-value">{{ stats.totalProduits }}</div>
+        <div class="kpi-label">Produits d'assurance</div>
+        <div class="kpi-footer">
+          <span>Consulter les produits</span><i class="bi bi-arrow-right"></i>
         </div>
       </div>
-      <!-- Packs -->
-      <div
-        class="stat-card stat-card--info hover-lift animate-fade-in-up"
-        (click)="navigateToPacks()">
-        <div class="stat-card-content">
-          <div class="stat-icon stat-icon--info">
-            <i class="bi bi-collection-fill"></i>
-          </div>
-          <div class="stat-info">
-            <div class="stat-value">
-              {{ stats.totalPacks }}
-            </div>
-            <div class="stat-label">
-              Packs
-            </div>
-            <div class="stat-trend stat-trend--up">
-              <i class="bi bi-arrow-up-right"></i>
-              +{{ metrics.croissancePacks }}%
-            </div>
-          </div>
-        </div>
-        <div class="stat-card-footer">
-          <span>
-            Voir tous
-            <i class="bi bi-arrow-right"></i>
+
+      <div class="kpi-card kpi-card--teal" (click)="navigateToPacks()" role="button" tabindex="0">
+        <div class="kpi-header">
+          <div class="kpi-icon"><i class="bi bi-collection-fill"></i></div>
+          <span class="kpi-trend">
+            <i class="bi bi-arrow-up-right-circle-fill"></i>+{{ metrics.croissancePacks }}%
           </span>
+        </div>
+        <div class="kpi-value">{{ stats.totalPacks }}</div>
+        <div class="kpi-label">Packs actifs</div>
+        <div class="kpi-footer">
+          <span>Consulter les packs</span><i class="bi bi-arrow-right"></i>
         </div>
       </div>
-      <!-- Garanties -->
-      <div
-        class="stat-card stat-card--success hover-lift animate-fade-in-up"
-        (click)="navigateToGaranties()">
-        <div class="stat-card-content">
-          <div class="stat-icon stat-icon--success">
-            <i class="bi bi-shield-fill-check"></i>
-          </div>
-          <div class="stat-info">
-            <div class="stat-value">
-              {{ stats.totalGaranties }}
-            </div>
-            <div class="stat-label">
-              Garanties
-            </div>
-            <div class="stat-trend stat-trend--up">
-              <i class="bi bi-arrow-up-right"></i>
-              +{{ metrics.croissanceGaranties }}%
-            </div>
-          </div>
-        </div>
-        <div class="stat-card-footer">
-          <span>
-            Voir tous
-            <i class="bi bi-arrow-right"></i>
+
+      <div class="kpi-card kpi-card--slate" (click)="navigateToGaranties()" role="button" tabindex="0">
+        <div class="kpi-header">
+          <div class="kpi-icon"><i class="bi bi-shield-fill-check"></i></div>
+          <span class="kpi-trend">
+            <i class="bi bi-arrow-up-right-circle-fill"></i>+{{ metrics.croissanceGaranties }}%
           </span>
+        </div>
+        <div class="kpi-value">{{ stats.totalGaranties }}</div>
+        <div class="kpi-label">Garanties configurées</div>
+        <div class="kpi-footer">
+          <span>Consulter les garanties</span><i class="bi bi-arrow-right"></i>
         </div>
       </div>
-      <!-- Utilisateurs -->
-      <!-- <div
-        class="stat-card stat-card--secondary hover-lift animate-fade-in-up"
-        (click)="navigateToUsers()">
-        <div class="stat-card-content">
-
-          <div class="stat-icon stat-icon--secondary">
-            <i class="bi bi-people-fill"></i>
-          </div>
-
-          <div class="stat-info">
-            <div class="stat-value">
-              {{ stats.totalUsers }}
-            </div>
-            <div class="stat-label">
-              Utilisateurs
-            </div>
-            <div class="stat-trend stat-trend--neutral">
-              <i class="bi bi-check-circle"></i>
-              Actifs
-            </div>
-          </div>
-
-        </div>
-
-        <div class="stat-card-footer">
-          <span>
-            Voir tous
-            <i class="bi bi-arrow-right"></i>
-          </span>
-        </div>
-
-      </div> -->
     </div>
-    <!-- Advanced Metrics Dashboard -->
-    <div class="advanced-metrics-grid">
-      <div class="metric-card metric-card--primary hover-lift animate-fade-in-up">
-        <div class="metric-header">
-          <i class="bi bi-currency-euro"></i>
-          <span>Prix moyen packs</span>
-        </div>
-        <div class="metric-value">{{ metrics.avgPrixPacks }} TND</div>
-        <div class="metric-indicator">
-          <div class="indicator-bar" [style.width.%]="Math.min((metrics.avgPrixPacks / 200) * 100, 100)"></div>
-        </div>
-      </div>
-      <div class="metric-card metric-card--success hover-lift animate-fade-in-up">
-        <div class="metric-header">
-          <i class="bi bi-percent"></i>
-          <span>Taux remboursement moyen</span>
-        </div>
-        <div class="metric-value">{{ metrics.avgTauxRemboursement }}%</div>
-        <div class="metric-indicator">
-          <div class="indicator-bar indicator-bar--success" [style.width.%]="metrics.avgTauxRemboursement"></div>
-        </div>
-      </div>
 
-      <div class="metric-card metric-card--info hover-lift animate-fade-in-up">
-        <div class="metric-header">
-          <i class="bi bi-layers"></i>
-          <span>Packs par produit</span>
-        </div>
-        <div class="metric-value">{{ metrics.packsParProduit }}</div>
-        <div class="metric-indicator">
-          <div class="indicator-bar indicator-bar--info" [style.width.%]="Math.min(metrics.packsParProduit * 20, 100)"></div>
+    <!-- ── Indicateurs de performance ── -->
+    <div class="section-card">
+      <div class="section-card-header">
+        <div class="section-title-group">
+          <div class="section-icon-wrap section-icon-wrap--navy">
+            <i class="bi bi-graph-up"></i>
+          </div>
+          <div>
+            <h2 class="section-title">Indicateurs de performance</h2>
+            <p class="section-subtitle">Métriques clés de la plateforme</p>
+          </div>
         </div>
       </div>
+      <div class="metrics-grid">
+        <div class="metric-row">
+          <div class="metric-info">
+            <i class="bi bi-currency-dollar metric-ico metric-ico--navy"></i>
+            <span class="metric-name">Prix moyen des packs</span>
+            <span class="metric-badge metric-badge--navy">{{ metrics.avgPrixPacks }} TND</span>
+          </div>
+          <p-progressBar
+            [value]="Math.min((metrics.avgPrixPacks / 300) * 100, 100)"
+            [showValue]="false"
+            styleClass="pbar-navy">
+          </p-progressBar>
+        </div>
 
-      <div class="metric-card metric-card--warning hover-lift animate-fade-in-up">
-        <div class="metric-header">
-          <i class="bi bi-shield-check"></i>
-          <span>Garanties par pack</span>
+        <div class="metric-row">
+          <div class="metric-info">
+            <i class="bi bi-percent metric-ico metric-ico--teal"></i>
+            <span class="metric-name">Taux de remboursement moyen</span>
+            <span class="metric-badge metric-badge--teal">{{ metrics.avgTauxRemboursement }}%</span>
+          </div>
+          <p-progressBar
+            [value]="metrics.avgTauxRemboursement"
+            [showValue]="false"
+            styleClass="pbar-teal">
+          </p-progressBar>
         </div>
-        <div class="metric-value">{{ metrics.garantiesParPack }}</div>
-        <div class="metric-indicator">
-          <div class="indicator-bar indicator-bar--warning" [style.width.%]="Math.min(metrics.garantiesParPack * 15, 100)"></div>
-        </div>
-      </div>
 
-      <div class="metric-card metric-card--primary hover-lift animate-fade-in-up">
-        <div class="metric-header">
-          <i class="bi bi-graph-up-arrow"></i>
-          <span>Taux de conversion</span>
+        <div class="metric-row">
+          <div class="metric-info">
+            <i class="bi bi-layers metric-ico metric-ico--navy"></i>
+            <span class="metric-name">Packs par produit</span>
+            <span class="metric-badge metric-badge--navy">{{ metrics.packsParProduit }}</span>
+          </div>
+          <p-progressBar
+            [value]="Math.min(metrics.packsParProduit * 20, 100)"
+            [showValue]="false"
+            styleClass="pbar-navy">
+          </p-progressBar>
         </div>
-        <div class="metric-value">{{ metrics.tauxConversion }}%</div>
-        <div class="metric-indicator">
-          <div class="indicator-bar indicator-bar--primary" [style.width.%]="metrics.tauxConversion"></div>
-        </div>
-      </div>
 
-        <!--  <div class="metric-card advanced">
-        <div class="metric-header">
-          <i class="bi bi-star-fill"></i>
-          <span>Satisfaction client</span>
+        <div class="metric-row">
+          <div class="metric-info">
+            <i class="bi bi-shield-check metric-ico metric-ico--teal"></i>
+            <span class="metric-name">Garanties par pack</span>
+            <span class="metric-badge metric-badge--teal">{{ metrics.garantiesParPack }}</span>
+          </div>
+          <p-progressBar
+            [value]="Math.min(metrics.garantiesParPack * 12, 100)"
+            [showValue]="false"
+            styleClass="pbar-teal">
+          </p-progressBar>
         </div>
-        <div class="metric-value">{{ metrics.satisfactionClient }}/5</div>
-        <div class="metric-indicator">
-          <div class="indicator-bar satisfaction" [style.width.%]="(metrics.satisfactionClient / 5) * 100"></div>
+
+        <div class="metric-row">
+          <div class="metric-info">
+            <i class="bi bi-graph-up-arrow metric-ico metric-ico--navy"></i>
+            <span class="metric-name">Taux de conversion</span>
+            <span class="metric-badge metric-badge--navy">{{ metrics.tauxConversion }}%</span>
+          </div>
+          <p-progressBar
+            [value]="metrics.tauxConversion"
+            [showValue]="false"
+            styleClass="pbar-navy">
+          </p-progressBar>
         </div>
       </div>
-    </div> -->
     </div>
+
+    <!-- ── Assistant IA ── -->
+    <div class="assistant-card" (click)="navigateToChatbot()" role="button" tabindex="0">
+      <div class="assistant-glow"></div>
+      <div class="assistant-left">
+        <div class="assistant-icon-wrap">
+          <i class="bi bi-robot"></i>
+        </div>
+        <div class="assistant-body">
+          <div class="assistant-badge-row">
+            <p-tag value="Propulsé par IA" icon="pi pi-sparkles" severity="info" styleClass="ai-tag"></p-tag>
+            <p-tag value="Disponible" icon="pi pi-circle-fill" severity="success" styleClass="ai-status-tag"></p-tag>
+          </div>
+          <h3 class="assistant-title">Assistant IA Assurance</h3>
+          <p class="assistant-desc">
+            Créez des garanties, packs et produits d'assurance en langage naturel.
+            Obtenez des recommandations intelligentes adaptées aux profils clients.
+          </p>
+          <div class="assistant-features">
+            <span class="feat-chip"><i class="bi bi-check-circle-fill"></i>Création de garanties</span>
+            <span class="feat-chip"><i class="bi bi-check-circle-fill"></i>Gestion des packs</span>
+            <span class="feat-chip"><i class="bi bi-check-circle-fill"></i>Configuration produits</span>
+            <span class="feat-chip"><i class="bi bi-check-circle-fill"></i>Recommandations intelligentes</span>
+          </div>
+        </div>
+      </div>
+      <div class="assistant-cta">
+        <p-button
+          label="Démarrer l'assistant"
+          icon="pi pi-comments"
+          styleClass="p-button-rounded assistant-btn"
+          (click)="navigateToChatbot(); $event.stopPropagation()">
+        </p-button>
+        <span class="assistant-hint">Cliquez n'importe où pour accéder</span>
+      </div>
+    </div>
+
+    <!-- ── Graphiques ── -->
+    <div class="section-card">
+      <div class="section-card-header">
+        <div class="section-title-group">
+          <div class="section-icon-wrap section-icon-wrap--teal">
+            <i class="bi bi-bar-chart-fill"></i>
+          </div>
+          <div>
+            <h2 class="section-title">Analyses et statistiques</h2>
+            <p class="section-subtitle">Vue d'ensemble de la plateforme</p>
+          </div>
+        </div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-icon-wrap chart-icon-wrap--navy"><i class="bi bi-bar-chart-fill"></i></div>
+            <div>
+              <h4 class="chart-title">Produits par type</h4>
+              <p class="chart-sub">Volume par catégorie d'assurance</p>
+            </div>
+          </div>
+          <div class="chart-body">
+            <p-chart type="bar" [data]="barChartData" [options]="chartOptions"></p-chart>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-icon-wrap chart-icon-wrap--teal"><i class="bi bi-pie-chart-fill"></i></div>
+            <div>
+              <h4 class="chart-title">Packs par niveau</h4>
+              <p class="chart-sub">Répartition des niveaux de couverture</p>
+            </div>
+          </div>
+          <div class="chart-body">
+            <p-chart type="doughnut" [data]="pieChartData" [options]="pieChartOptions"></p-chart>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-icon-wrap chart-icon-wrap--slate"><i class="bi bi-shield-check"></i></div>
+            <div>
+              <h4 class="chart-title">Garanties par domaine</h4>
+              <p class="chart-sub">Répartition par domaine médical</p>
+            </div>
+          </div>
+          <div class="chart-body">
+            <p-chart type="bar" [data]="horizontalBarChartData" [options]="horizontalBarOptions"></p-chart>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Actions rapides ── -->
+    <div class="section-card">
+      <div class="section-card-header">
+        <div class="section-title-group">
+          <div class="section-icon-wrap section-icon-wrap--navy">
+            <i class="bi bi-lightning-fill"></i>
+          </div>
+          <div>
+            <h2 class="section-title">Actions rapides</h2>
+            <p class="section-subtitle">Accès direct aux modules principaux</p>
+          </div>
+        </div>
+      </div>
+      <div class="qa-grid">
+        <button class="qa-btn qa-btn--navy" (click)="navigateToProduits()">
+          <div class="qa-icon-wrap"><i class="bi bi-box-seam-fill"></i></div>
+          <div class="qa-text">
+            <span class="qa-title">Produits</span>
+            <span class="qa-sub">Gérer les produits d'assurance</span>
+          </div>
+          <i class="bi bi-arrow-right qa-arrow"></i>
+        </button>
+        <button class="qa-btn qa-btn--teal" (click)="navigateToPacks()">
+          <div class="qa-icon-wrap"><i class="bi bi-collection-fill"></i></div>
+          <div class="qa-text">
+            <span class="qa-title">Packs</span>
+            <span class="qa-sub">Gérer les packs et couvertures</span>
+          </div>
+          <i class="bi bi-arrow-right qa-arrow"></i>
+        </button>
+        <button class="qa-btn qa-btn--slate" (click)="navigateToGaranties()">
+          <div class="qa-icon-wrap"><i class="bi bi-shield-fill-check"></i></div>
+          <div class="qa-text">
+            <span class="qa-title">Garanties</span>
+            <span class="qa-sub">Gérer les garanties médicales</span>
+          </div>
+          <i class="bi bi-arrow-right qa-arrow"></i>
+        </button>
+        <button class="qa-btn qa-btn--ai" (click)="navigateToChatbot()">
+          <div class="qa-icon-wrap"><i class="bi bi-robot"></i></div>
+          <div class="qa-text">
+            <span class="qa-title">Assistant IA</span>
+            <span class="qa-sub">Créer via langage naturel</span>
+          </div>
+          <i class="bi bi-arrow-right qa-arrow"></i>
+        </button>
+      </div>
+    </div>
+
   </div>
-    <!-- Assistant IA -->
-    <section
-      class="dashboard-assistant"
-      aria-label="Assistant IA">
-      <div
-        class="unified-chatbot-card hover-lift animate-fade-in-up"
-        (click)="navigateToChatbot()">
-        <div class="chatbot-card-header">
-          <div class="chatbot-icon">
-            <i class="bi bi-robot"></i>
-          </div>
-          <div class="chatbot-info">
-            <h3>
-              Assistant IA Assurance
-            </h3>
-            <p>
-              Votre assistant intelligent pour gérer produits,
-              garanties, packs et configurations.
-            </p>
-          </div>
-        </div>
-        <div class="chatbot-features">
-          <div class="feature-item">
-            <i class="bi bi-check-circle-fill"></i>
-            <span>Création de garanties</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-check-circle-fill"></i>
-            <span>Gestion des packs</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-check-circle-fill"></i>
-            <span>Configuration des produits</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-check-circle-fill"></i>
-            <span>Recommandations intelligentes</span>
-          </div>
-        </div>
-        <div class="chatbot-card-footer">
-          <button
-            type="button"
-            class="chatbot-action-btn">
-            <i class="bi bi-chat-square-text"></i>
-            Démarrer l'assistant
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Charts -->
-    <div class="charts-section">
-
-      <!-- BAR -->
-      <div class="chart-card chart-card--primary hover-lift animate-fade-in-up">
-        <div class="chart-header">
-          <div class="chart-title-group">
-            <div class="chart-icon">
-              <i class="bi bi-bar-chart-fill"></i>
-            </div>
-            <div>
-              <h3 class="chart-title">Répartition des Produits</h3>
-              <p class="chart-subtitle">Volume par type d'assurance</p>
-            </div>
-          </div>
-
-          <div class="chart-stats">
-            <div class="chart-stat">
-              <!--       <span class="chart-stat-value">{{ stats.totalProduits }}</span>
-              <span class="chart-stat-label">Total</span>  -->
-            </div>
-          </div>
-        </div>
-        <div class="chart-container">
-          <p-chart
-            #barChart
-            type="bar"
-            [data]="barChartData"
-            [options]="chartOptions">
-          </p-chart>
-        </div>
-      </div>
-
-      <!-- PIE -->
-      <div class="chart-card chart-card--info hover-lift animate-fade-in-up">
-        <div class="chart-header">
-          <div class="chart-title-group">
-            <div class="chart-icon">
-              <i class="bi bi-pie-chart-fill"></i>
-            </div>
-            <div>
-              <h3 class="chart-title">Packs par Niveau</h3>
-              <p class="chart-subtitle">Couverture des abonnements</p>
-            </div>
-          </div>
-          <div class="chart-stats">
-            <div class="chart-stat">
-              <!--   <span class="chart-stat-value">{{ stats.totalPacks }}</span>
-              <span class="chart-stat-label">Packs</span> -->
-            </div>
-          </div>
-        </div>
-        <div class="chart-container">
-          <p-chart
-            type="doughnut"
-            [data]="pieChartData"
-            [options]="pieChartOptions">
-          </p-chart>
-        </div>
-      </div>
-      <!-- HORIZONTAL BAR -->
-      <div class="chart-card chart-card--success hover-lift animate-fade-in-up">
-        <div class="chart-header">
-          <div class="chart-title-group">
-            <div class="chart-icon">
-              <i class="bi bi-bar-chart-fill"></i>
-            </div>
-            <div>
-              <h3 class="chart-title">Types de Garanties</h3>
-              <p class="chart-subtitle">Répartition par domaine médical</p>
-            </div>
-          </div>
-          <div class="chart-stats">
-            <div class="chart-stat">
-              <!--      <span class="chart-stat-value">{{ stats.totalGaranties }}</span>
-                    <span class="chart-stat-label">Garanties</span>  -->
-            </div>
-          </div>
-        </div>
-        <div class="chart-container">
-          <p-chart
-            type="bar"
-            [data]="horizontalBarChartData"
-            [options]="horizontalBarOptions">
-          </p-chart>
-        </div>
-      </div>
-    </div>
-    <!-- QUICK ACTIONS -->
-    <div class="quick-actions-card animate-fade-in-up">
-      <div class="section-header">
-        <h2 class="section-title">
-          Actions rapides
-        </h2>
-      </div>
-      <div class="quick-actions-grid">
-        <!-- PRODUITS -->
-        <button
-          class="quick-action-btn quick-action-btn--primary hover-lift"
-          (click)="navigateToProduits()">
-          <div class="qa-icon">
-            <i class="bi bi-box-seam-fill"></i>
-          </div>
-          <span>Gérer les produits</span>
-          <i class="bi bi-arrow-right qa-arrow"></i>
-        </button>
-        <!-- PACKS -->
-        <button
-          class="quick-action-btn quick-action-btn--info hover-lift"
-          (click)="navigateToPacks()">
-
-          <div class="qa-icon">
-            <i class="bi bi-collection-fill"></i>
-          </div>
-          <span>Gérer les packs</span>
-          <i class="bi bi-arrow-right qa-arrow"></i>
-        </button>
-        <!-- GARANTIES -->
-        <button
-          class="quick-action-btn quick-action-btn--success hover-lift"
-          (click)="navigateToGaranties()">
-          <div class="qa-icon">
-            <i class="bi bi-shield-fill-check"></i>
-          </div>
-          <span>Gérer les garanties</span>
-          <i class="bi bi-arrow-right qa-arrow"></i>
-        </button>
-      </div>
-    </div>
-  </div>
+</div>

@@ -1,120 +1,140 @@
-<div class="unified-chatbot-container" appKeyboardShortcut (shortcut)="handleKeyboardShortcut($event)">
+<div class="chatbot-page" appKeyboardShortcut (shortcut)="handleKeyboardShortcut($event)">
   <p-toast position="top-right"></p-toast>
 
-  <!-- Header -->
+  <!-- ═══ HEADER ═══ -->
   <div class="chatbot-header">
     <div class="header-left">
-      <button class="back-btn" (click)="goBack()" aria-label="Retour">
+      <button class="back-btn" (click)="goBack()" aria-label="Retour au tableau de bord">
         <i class="bi bi-arrow-left"></i>
       </button>
-      <div class="chatbot-info">
-        <h1 class="chatbot-title">
+      <div class="header-brand">
+        <div class="header-avatar">
           <i class="bi bi-robot"></i>
-          {{ chatbotConfig.title }}
-        </h1>
-        <p class="chatbot-subtitle">{{ chatbotConfig.subtitle }}</p>
+          <span class="header-status-dot"></span>
+        </div>
+        <div class="header-info">
+          <h1 class="header-title">{{ chatbotConfig.title }}</h1>
+          <div class="header-meta">
+            <span class="header-status">En ligne</span>
+            <span class="header-model">Propulsé par IA</span>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="header-right">
-      <button class="icon-btn" (click)="toggleHistory()" aria-label="Historique" title="Historique (Ctrl+H)">
+
+    <div class="header-actions">
+      <button class="hdr-btn" (click)="toggleHistory()"
+              aria-label="Historique des conversations" title="Historique (Ctrl+H)">
         <i class="bi bi-clock-history"></i>
+        <span class="hdr-btn-label">Historique</span>
       </button>
-      <button class="icon-btn" (click)="toggleSearch()" aria-label="Rechercher" title="Rechercher (Ctrl+K)">
+      <button class="hdr-btn" (click)="toggleSearch()"
+              aria-label="Rechercher dans les messages" title="Rechercher (Ctrl+K)">
         <i class="bi bi-search"></i>
+        <span class="hdr-btn-label">Rechercher</span>
       </button>
-      <button class="icon-btn" (click)="exportConversation()" aria-label="Exporter" title="Exporter (Ctrl+E)">
+      <button class="hdr-btn" (click)="exportConversation()"
+              aria-label="Exporter la conversation" title="Exporter (Ctrl+E)">
         <i class="bi bi-download"></i>
+        <span class="hdr-btn-label">Exporter</span>
       </button>
-      <button class="clear-btn" (click)="clearChat()" aria-label="Effacer" title="Effacer la conversation">
+      <button class="hdr-btn hdr-btn--danger" (click)="clearChat()"
+              aria-label="Effacer la conversation">
         <i class="bi bi-trash3"></i>
+        <span class="hdr-btn-label">Effacer</span>
       </button>
     </div>
   </div>
 
-  <!-- Features Banner -->
+  <!-- ═══ FEATURES BANNER ═══ -->
   <div class="features-banner">
-    <div class="features-grid">
-      <div *ngFor="let feature of chatbotConfig.features" class="feature-item">
+    <div class="features-inner">
+      <div *ngFor="let feature of chatbotConfig.features" class="feature-chip">
         <i class="bi bi-check-circle-fill"></i>
         <span>{{ feature }}</span>
       </div>
     </div>
   </div>
 
-  <div class="chat-suggestions" *ngIf="suggestionPrompts.length">
-    <span class="chat-suggestions-label">Suggestions</span>
-    <div class="chat-suggestions-chips">
+  <!-- ═══ SUGGESTIONS (visibles tant que peu de messages) ═══ -->
+  <div class="suggestions-bar" *ngIf="suggestionPrompts.length && messages.length <= 1">
+    <span class="suggestions-label">
+      <i class="bi bi-lightbulb"></i> Essayez :
+    </span>
+    <div class="suggestions-chips">
       <button
         type="button"
-        class="suggestion-chip"
+        class="sugg-chip"
         *ngFor="let s of suggestionPrompts"
         (click)="applySuggestion(s)"
-        [disabled]="isLoading"
-      >
+        [disabled]="isLoading">
         {{ s }}
       </button>
     </div>
   </div>
 
-  <!-- Messages Container -->
+  <!-- ═══ MESSAGES ═══ -->
   <div class="chat-messages" #messagesContainer appAutoScroll>
+
     <div
       *ngFor="let message of messages; trackBy: trackByMessageId"
-      class="message"
-      [class.user-message]="message.sender === 'user'"
-      [class.bot-message]="message.sender === 'bot'"
-    >
+      class="msg-row"
+      [class.msg-row--user]="message.sender === 'user'"
+      [class.msg-row--bot]="message.sender === 'bot'">
+
       <!-- Avatar -->
-      <div class="message-avatar">
+      <div class="msg-avatar" [class.msg-avatar--user]="message.sender === 'user'">
         <i *ngIf="message.sender === 'user'" class="bi bi-person-fill"></i>
         <i *ngIf="message.sender === 'bot'" class="bi bi-robot"></i>
       </div>
 
-      <!-- Message Content -->
-      <div class="message-content">
-        <!-- Message Header for Bot -->
-        <div *ngIf="message.sender === 'bot' && message.intent" class="message-header">
-          <p-tag [value]="getIntentLabel(message.intent)" [severity]="getIntentSeverity(message.intent)"></p-tag>
-          <i class="bi {{ getIntentIcon(message.intent) }}"></i>
+      <!-- Bulle -->
+      <div class="msg-bubble">
+
+        <!-- Intent tag (bot uniquement) -->
+        <div *ngIf="message.sender === 'bot' && message.intent" class="msg-intent">
+          <p-tag
+            [value]="getIntentLabel(message.intent)"
+            [severity]="getIntentSeverity(message.intent)">
+          </p-tag>
         </div>
 
-        <!-- Message Text -->
-        <div class="message-text" [innerHTML]="formatMessage(message.text)"></div>
+        <!-- Texte du message -->
+        <div class="msg-text" [innerHTML]="formatMessage(message.text)"></div>
 
-        <!-- Recommendations Display -->
+        <!-- Recommandations IA -->
         <ng-container *ngIf="getRecommendations(message).length > 0">
-          <div class="recommendations-container">
-            <div class="recommendations-header">
-              <i class="bi bi-lightbulb"></i>
-              <span>Recommandations</span>
+          <div class="reco-container">
+            <div class="reco-header">
+              <i class="bi bi-lightbulb-fill"></i>
+              <span>Recommandations IA</span>
             </div>
-            <div *ngIf="getExplanation(message)" class="recommendations-explanation">
+            <div *ngIf="getExplanation(message)" class="reco-explanation">
               {{ getExplanation(message) }}
             </div>
-            <div *ngFor="let rec of getRecommendations(message); let i = index" class="recommendation-card">
-              <div class="recommendation-header">
-                <span class="recommendation-number">{{ i + 1 }}.</span>
-                <span class="recommendation-title">{{ rec.nom }}</span>
+            <div *ngFor="let rec of getRecommendations(message); let i = index" class="reco-card">
+              <div class="reco-card-header">
+                <span class="reco-rank">{{ i + 1 }}</span>
+                <span class="reco-name">{{ rec.nom }}</span>
+                <span *ngIf="rec.compatibilityScore" class="reco-score">
+                  {{ rec.compatibilityScore.toFixed(1) }}%
+                </span>
               </div>
-              <div class="recommendation-details">
-                <div *ngIf="rec.compatibilityScore" class="recommendation-item">
-                  <i class="bi bi-percent"></i>
-                  <span>Score de compatibilité: {{ rec.compatibilityScore.toFixed(1) }}%</span>
-                </div>
-                <div *ngIf="rec.monthlyPrice" class="recommendation-item">
+              <div class="reco-details">
+                <div *ngIf="rec.monthlyPrice" class="reco-item">
                   <i class="bi bi-currency-euro"></i>
-                  <span>Prix mensuel: {{ rec.monthlyPrice }}€</span>
+                  <span>{{ rec.monthlyPrice }} TND / mois</span>
                 </div>
-                <div *ngIf="rec.coverageLevel" class="recommendation-item">
+                <div *ngIf="rec.coverageLevel" class="reco-item">
                   <i class="bi bi-shield-check"></i>
-                  <span>Niveau de couverture: {{ rec.coverageLevel }}</span>
+                  <span>{{ rec.coverageLevel }}</span>
                 </div>
-                <div *ngIf="rec.description" class="recommendation-item">
+                <div *ngIf="rec.description" class="reco-item">
                   <i class="bi bi-info-circle"></i>
                   <span>{{ rec.description }}</span>
                 </div>
-                <div *ngIf="rec.whyRecommended" class="recommendation-item">
-                  <i class="bi bi-check-circle"></i>
+                <div *ngIf="rec.whyRecommended" class="reco-item reco-item--why">
+                  <i class="bi bi-check-circle-fill"></i>
                   <span>{{ rec.whyRecommended }}</span>
                 </div>
               </div>
@@ -122,89 +142,92 @@
           </div>
         </ng-container>
 
-        <!-- Message Time -->
-        <div class="message-time">{{ formatTime(message.timestamp) }}</div>
+        <!-- Horodatage -->
+        <div class="msg-time">{{ formatTime(message.timestamp) }}</div>
 
-        <!-- Actions -->
-        <div *ngIf="message.actions && message.actions.length > 0" class="message-actions">
-          <div class="actions-container">
-            <button
-              *ngFor="let action of message.actions; trackBy: trackByActionLabel"
-              class="action-btn"
-              (click)="executeAction(action)"
-              [class.primary]="action.type === 'CREATE' || action.type === 'NAVIGATE'"
-              [class.secondary]="action.type === 'LIST'"
-            >
-              <i class="bi" [ngClass]="getActionIcon(action.type)"></i>
-              {{ action.label }}
-            </button>
-          </div>
+        <!-- Boutons d'action -->
+        <div *ngIf="message.actions && message.actions.length > 0" class="msg-actions">
+          <button
+            *ngFor="let action of message.actions; trackBy: trackByActionLabel"
+            class="msg-action-btn"
+            [class.msg-action-btn--primary]="action.type === 'CREATE' || action.type === 'NAVIGATE'"
+            [class.msg-action-btn--secondary]="action.type === 'LIST'"
+            (click)="executeAction(action)">
+            <i class="bi" [ngClass]="getActionIcon(action.type)"></i>
+            {{ action.label }}
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Loading Indicator -->
-    <div *ngIf="isLoading" class="message bot-message">
-      <div class="message-avatar">
+    <!-- Indicateur de frappe -->
+    <div *ngIf="isLoading" class="msg-row msg-row--bot">
+      <div class="msg-avatar">
         <i class="bi bi-robot"></i>
       </div>
-      <div class="message-content">
-        <div class="typing-indicator">
-          <span></span>
-          <span></span>
-          <span></span>
+      <div class="msg-bubble msg-bubble--typing">
+        <div class="typing-dots">
+          <span></span><span></span><span></span>
         </div>
+        <span class="typing-label">L'assistant analyse...</span>
       </div>
     </div>
+
   </div>
 
-  <!-- Input Area -->
-  <div class="chat-input-container">
-    <div class="input-wrapper">
+  <!-- ═══ ZONE DE SAISIE ═══ -->
+  <div class="input-zone">
+
+    <!-- Barre de saisie -->
+    <div class="input-bar">
       <button
         class="voice-btn"
         (click)="toggleVoiceInput()"
-        [class.active]="isListening"
+        [class.voice-btn--active]="isListening"
         [disabled]="isLoading"
-        aria-label="Dictée vocale"
-        title="Dictée vocale (Ctrl+V)"
-      >
-        <i *ngIf="!isListening" class="bi bi-mic"></i>
-        <i *ngIf="isListening" class="bi bi-mic-fill"></i>
+        [attr.aria-label]="isListening ? 'Arrêter la dictée vocale' : 'Démarrer la dictée vocale'"
+        title="Dictée vocale (Ctrl+V)">
+        <i class="bi" [class.bi-mic]="!isListening" [class.bi-mic-fill]="isListening"></i>
       </button>
+
       <textarea
         pInputTextarea
         [(ngModel)]="currentMessage"
         (keydown)="onKeyDown($event)"
-        placeholder="Tapez votre message ici... (Ctrl+Entrée pour envoyer)"
+        placeholder="Décrivez ce que vous souhaitez créer ou configurer..."
         [autoResize]="true"
         rows="1"
-        [disabled]="isLoading"
-      ></textarea>
+        [disabled]="isLoading">
+      </textarea>
+
       <button
         class="send-btn"
         (click)="sendMessage()"
         [disabled]="!currentMessage.trim() || isLoading"
-        aria-label="Envoyer"
-      >
+        aria-label="Envoyer le message">
         <i *ngIf="!isLoading" class="bi bi-send-fill"></i>
         <i *ngIf="isLoading" class="bi bi-hourglass-split"></i>
       </button>
     </div>
 
-    <!-- Quick Actions -->
+    <!-- Raccourcis clavier -->
+    <div class="input-hint">
+      <i class="bi bi-keyboard"></i>
+      <span>Ctrl+Entrée pour envoyer &nbsp;·&nbsp; Ctrl+K pour rechercher &nbsp;·&nbsp; Ctrl+H pour l'historique</span>
+    </div>
+
+    <!-- Actions rapides -->
     <div class="quick-actions">
-      <div class="quick-actions-title">
+      <div class="qa-label">
         <i class="bi bi-lightning-charge-fill"></i>
-        Actions rapides
+        <span>Actions rapides</span>
       </div>
-      <div class="quick-actions-grid">
+      <div class="qa-btns">
         <button
           *ngFor="let intent of chatbotConfig.intents; trackBy: trackByIntentLabel"
-          class="quick-action-btn"
+          class="qa-chip"
           (click)="currentMessage = getIntentExample(intent.label); sendMessage()"
-          [disabled]="isLoading"
-        >
+          [disabled]="isLoading">
           <i class="bi {{ intent.icon }}"></i>
           <span>{{ intent.description }}</span>
         </button>
@@ -212,38 +235,46 @@
     </div>
   </div>
 
-  <!-- History Sidebar -->
-  <div class="history-sidebar" [class.open]="showHistory" appClickOutside (clickOutside)="showHistory = false">
-    <div class="history-header">
-      <h3>Historique</h3>
-      <button class="close-btn" (click)="showHistory = false">
+  <!-- ═══ PANNEAU HISTORIQUE ═══ -->
+  <div class="history-panel"
+       [class.history-panel--open]="showHistory"
+       appClickOutside
+       (clickOutside)="showHistory = false">
+    <div class="panel-header">
+      <h3 class="panel-title">
+        <i class="bi bi-clock-history"></i> Historique
+      </h3>
+      <button class="panel-close" (click)="showHistory = false"
+              aria-label="Fermer l'historique">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
-    <div class="history-content">
-      <input
-        type="text"
-        class="history-search"
-        placeholder="Rechercher..."
-        [(ngModel)]="historySearchQuery"
-        (input)="searchHistory()"
-      />
+    <div class="panel-body">
+      <div class="panel-search">
+        <i class="bi bi-search"></i>
+        <input
+          type="text"
+          placeholder="Rechercher une conversation..."
+          [(ngModel)]="historySearchQuery"
+          (input)="searchHistory()" />
+      </div>
       <div class="history-list">
         <div
           *ngFor="let conv of filteredHistory; trackBy: trackByConversationId"
-          class="history-item"
-          [class.active]="conv.id === currentConversationId"
-          (click)="loadConversation(conv.id)"
-        >
-          <div class="history-item-header">
-            <span class="history-title">{{ conv.title }}</span>
-            <button class="history-delete-btn" (click)="deleteConversation(conv.id, $event)">
+          class="hist-item"
+          [class.hist-item--active]="conv.id === currentConversationId"
+          (click)="loadConversation(conv.id)">
+          <div class="hist-item-row">
+            <span class="hist-title">{{ conv.title }}</span>
+            <button class="hist-delete"
+                    (click)="deleteConversation(conv.id, $event)"
+                    aria-label="Supprimer la conversation">
               <i class="bi bi-trash"></i>
             </button>
           </div>
-          <span class="history-date">{{ formatDateRelative(conv.updatedAt) }}</span>
+          <span class="hist-date">{{ formatDateRelative(conv.updatedAt) }}</span>
         </div>
-        <div *ngIf="filteredHistory.length === 0" class="history-empty">
+        <div *ngIf="filteredHistory.length === 0" class="panel-empty">
           <i class="bi bi-inbox"></i>
           <span>Aucune conversation</span>
         </div>
@@ -251,34 +282,41 @@
     </div>
   </div>
 
-  <!-- Search Modal -->
-  <div class="search-modal" [class.open]="showSearch" appClickOutside (clickOutside)="showSearch = false">
-    <div class="search-header">
-      <input
-        type="text"
-        class="search-input"
-        placeholder="Rechercher dans les messages..."
-        [(ngModel)]="searchQuery"
-        (input)="searchMessages()"
-        autofocus
-      />
-      <button class="close-btn" (click)="showSearch = false">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
-    <div class="search-results">
-      <div
-        *ngFor="let result of searchResults; trackBy: trackBySearchResult"
-        class="search-result-item"
-        (click)="goToMessage(result)"
-      >
-        <div class="search-result-text" [innerHTML]="highlightSearchTerms(result.text, searchQuery)"></div>
-        <span class="search-result-date">{{ formatDateRelative(result.timestamp) }}</span>
+  <!-- ═══ MODAL RECHERCHE ═══ -->
+  <div class="search-overlay"
+       [class.search-overlay--open]="showSearch"
+       appClickOutside
+       (clickOutside)="showSearch = false">
+    <div class="search-box">
+      <div class="search-box-header">
+        <i class="bi bi-search search-ico"></i>
+        <input
+          type="text"
+          class="search-box-input"
+          placeholder="Rechercher dans les messages..."
+          [(ngModel)]="searchQuery"
+          (input)="searchMessages()"
+          autofocus />
+        <button class="panel-close" (click)="showSearch = false"
+                aria-label="Fermer la recherche">
+          <i class="bi bi-x-lg"></i>
+        </button>
       </div>
-      <div *ngIf="searchResults.length === 0 && searchQuery" class="search-empty">
-        <i class="bi bi-search"></i>
-        <span>Aucun résultat trouvé</span>
+      <div class="search-box-results">
+        <div
+          *ngFor="let result of searchResults; trackBy: trackBySearchResult"
+          class="search-result"
+          (click)="goToMessage(result)">
+          <div class="search-result-text"
+               [innerHTML]="highlightSearchTerms(result.text, searchQuery)"></div>
+          <span class="search-result-date">{{ formatDateRelative(result.timestamp) }}</span>
+        </div>
+        <div *ngIf="searchResults.length === 0 && searchQuery" class="panel-empty">
+          <i class="bi bi-search"></i>
+          <span>Aucun résultat pour "{{ searchQuery }}"</span>
+        </div>
       </div>
     </div>
   </div>
+
 </div>

@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { Garantie, Pack, PackGarantie, Produit } from '../models/entities.model';
+import { KeycloakService } from 'keycloak-angular';
 
 export enum ChatbotIntent {
   CREATE_PRODUIT = 'CREATE_PRODUIT',
@@ -72,11 +73,18 @@ export interface ChatbotResponse {
 export interface ChatbotResponseDTO {
   success: boolean;
   action?: string;
+  intent?: string;
   result?: unknown;
   prompt?: string;
   message?: string;
   errors?: string[];
   warnings?: string[];
+  missing_fields?: string[];
+  refresh_targets?: string[];
+  created_entity?: { type: string; id: string; name?: string };
+  confidence?: number;
+  fallback_used?: boolean;
+  entity_type?: string;
   timestamp?: number;
   data?: Record<string, unknown>;
 }
@@ -88,22 +96,28 @@ export class ChatbotService {
   private readonly chatbotUrl = `${environment.apiChatbot}`;
   private currentSessionId: string | null = null;
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly keycloak: KeycloakService
+  ) {}
 
   processPrompt(request: ChatbotRequest): Observable<ChatbotResponse> {
-    const requestBody: { prompt: string; sessionId?: string } = { prompt: request.prompt };
+    const sessionId = request.sessionId || this.currentSessionId || undefined;
 
-    if (request.sessionId) {
-      requestBody.sessionId = request.sessionId;
-    } else if (this.currentSessionId) {
-      requestBody.sessionId = this.currentSessionId;
-    }
+    // Obtenir le token Keycloak de manière synchrone ou via promise
+    const token = this.keycloak.getKeycloakInstance()?.token || undefined;
+
+    const requestBody: Record<string, unknown> = {
+      prompt: request.prompt,
+      session_id: sessionId,
+      jwt_token: token
+    };
 
     return this.http.post<ChatbotResponseDTO>(`${this.chatbotUrl}/process`, requestBody).pipe(
       map((dto) => {
         const response = this.mapDtoToChatbotResponse(dto);
         if (dto.data?.['sessionId'] && typeof dto.data['sessionId'] === 'string') {
-          this.currentSessionId = dto.data['sessionId'];
+          this.currentSessionId = dto.data['sessionId'] as string;
         }
         return response;
       }),
@@ -179,17 +193,33 @@ export class ChatbotService {
 
   private mapActionToIntent(action?: string): ChatbotIntent {
     switch ((action || '').toUpperCase()) {
+      case 'CREATE_GARANTIE':
       case 'GARANTIE':
         return ChatbotIntent.CREATE_GARANTIE;
+      case 'CREATE_PRODUIT':
       case 'PRODUIT':
         return ChatbotIntent.CREATE_PRODUIT;
+      case 'CREATE_PACK':
       case 'PACK':
         return ChatbotIntent.CREATE_PACK;
+      case 'UPDATE_GARANTIE':
+        return ChatbotIntent.UPDATE_GARANTIE;
+      case 'UPDATE_PRODUIT':
+        return ChatbotIntent.UPDATE_PRODUIT;
+      case 'UPDATE_PACK':
+        return ChatbotIntent.UPDATE_PACK;
+      case 'DELETE_GARANTIE':
+        return ChatbotIntent.DELETE_GARANTIE;
+      case 'DELETE_PRODUIT':
+        return ChatbotIntent.DELETE_PRODUIT;
+      case 'DELETE_PACK':
+        return ChatbotIntent.DELETE_PACK;
       case 'CONFIGURATION_PACK':
-        return ChatbotIntent.CONFIGURE_PACK;
       case 'AJOUT_GARANTIE_PACK':
+      case 'ADD_GARANTIE_TO_PACK':
         return ChatbotIntent.CONFIGURE_PACK;
       case 'RECOMMANDATION':
+      case 'RECOMMENDATION':
         return ChatbotIntent.RECOMMANDATION;
       default:
         return ChatbotIntent.UNKNOWN;
@@ -197,7 +227,8 @@ export class ChatbotService {
   }
 
   private mapDtoToChatbotResponse(dto: ChatbotResponseDTO): ChatbotResponse {
-    const intent = this.mapActionToIntent(dto.action);
+    // Utiliser intent OU action (Python retourne les deux)
+    const intent = this.mapActionToIntent(dto.intent || dto.action);
     const ts = dto.timestamp ?? Date.now();
 
     if (!dto.success) {
@@ -307,13 +338,13 @@ export class ChatbotService {
     }
 
     // Handle RECOMMANDATION separately since it doesn't use entity
-    if (dto.action === 'RECOMMANDATION') {
-      const resultData = result['result'] as Record<string, unknown> | undefined;
-      data.recommendations = (resultData?.['recommendedPacks'] || result['recommendedPacks'] || result['recommendations'] || result['packs']) as unknown[];
-      const explanation = resultData?.['explanation'] || result['explanation'];
+    const isRecommendation = (dto.intent || dto.action || '').toUpperCase() === 'RECOMMANDATION' ||
+                             (dto.intent || dto.action || '').toUpperCase() === 'RECOMMENDATION';
+    if (isRecommendation) {
+      // Python retourne les recs dans result.recommendations
+      data.recommendations = (result['recommendations'] || result['recommendedPacks'] || result['packs']) as unknown[];
+      const explanation = result['explanation'] || result['message'];
       data.explanation = typeof explanation === 'string' ? explanation : undefined;
-      console.log('[ChatbotService] RECOMMANDATION - extracted recommendations:', data.recommendations);
-      console.log('[ChatbotService] RECOMMANDATION - extracted explanation:', data.explanation);
     }
 
     const message = isPartial ?

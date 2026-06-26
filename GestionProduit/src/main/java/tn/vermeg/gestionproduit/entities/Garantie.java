@@ -40,6 +40,9 @@ public class Garantie {
     private int dureeMaxContrat;
     private boolean resiliableAnnuellement;
 
+    // RÉFÉRENCE AU PACK PARENT
+    private String packId;
+
     // AUDIT
     private String creePar;
     @CreatedDate
@@ -136,4 +139,7 @@ public class Garantie {
     public void setDateModification(Instant dateModification) { this.dateModification = dateModification; }
     public Instant getDateDesactivation() { return dateDesactivation; }
     public void setDateDesactivation(Instant dateDesactivation) { this.dateDesactivation = dateDesactivation; }
+
+    public String getPackId() { return packId; }
+    public void setPackId(String packId) { this.packId = packId; }
 }

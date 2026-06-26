@@ -38,10 +38,17 @@ public class Pack {
     
     // Domaines médicaux couverts par le pack
     private List<String> domainesMedicaux;
+
     @CreatedDate
     private Instant dateCreation;
     @LastModifiedDate
     private Instant dateModification;
+
+    // NOTE: Les garanties associées ne sont pas stockées directement dans le document MongoDB
+    // pour éviter les problèmes de performance. Elles sont récupérées via le service
+    // et construites dynamiquement dans les entités.
+    private transient List<Garantie> garanties;
+
     public Pack() {}
     public Pack(String idPack, String nomPack, String description, String produitId, String nomProduit,
                 Integer ageMinimum, Integer ageMaximum, List<TypeClient> typeClients,
@@ -125,4 +132,7 @@ public class Pack {
 
     public List<String> getDomainesMedicaux() { return domainesMedicaux; }
     public void setDomainesMedicaux(List<String> domainesMedicaux) { this.domainesMedicaux = domainesMedicaux; }
+
+    public List<Garantie> getGaranties() { return garanties; }
+    public void setGaranties(List<Garantie> garanties) { this.garanties = garanties; }
 }

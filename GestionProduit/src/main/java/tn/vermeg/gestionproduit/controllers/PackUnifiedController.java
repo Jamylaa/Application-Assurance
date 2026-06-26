@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.logging.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import tn.vermeg.gestionproduit.enums.TypeClient;
 import tn.vermeg.gestionproduit.enums.TypeMontant;
 import tn.vermeg.gestionproduit.enums.TypePlafond;
 import tn.vermeg.gestionproduit.enums.TypeProduit;
+import tn.vermeg.gestionproduit.services.HierarchicalService;
 import tn.vermeg.gestionproduit.services.PackUnifiedService;
 import java.util.HashMap;
 import java.util.List;
@@ -30,10 +32,16 @@ import java.util.Map;
 @Tag(name = "Gestion des Packs", description = "API pour la gestion complète des packs d'assurance")
 public class PackUnifiedController {
 
-    private final PackUnifiedService packUnifiedService;
+    private static final Logger logger = Logger.getLogger(PackUnifiedController.class.getName());
 
-    public PackUnifiedController(PackUnifiedService packUnifiedService) {
-        this.packUnifiedService = packUnifiedService;}
+    private final PackUnifiedService packUnifiedService;
+    private final HierarchicalService hierarchicalService;
+
+    public PackUnifiedController(PackUnifiedService packUnifiedService,
+                                HierarchicalService hierarchicalService) {
+        this.packUnifiedService = packUnifiedService;
+        this.hierarchicalService = hierarchicalService;
+    }
 
     @GetMapping
     @Operation(summary = "Récupérer tous les packs", description = "Retourne la liste complète de tous les packs d'assurance disponibles")
@@ -170,7 +178,9 @@ public class PackUnifiedController {
     public ResponseEntity<Pack> createPack(
             @Parameter(description = "Informations du pack à créer", required = true)
             @Valid @RequestBody Pack pack) {
+        logger.info("POST /api/packs - Creating pack: " + pack.getNomPack());
         Pack createdPack = packUnifiedService.createPack(pack);
+        logger.info("POST /api/packs - Pack created successfully with ID: " + createdPack.getIdPack());
         return ResponseEntity.status(HttpStatus.CREATED).body(createdPack);
     }
 
@@ -382,5 +392,35 @@ public class PackUnifiedController {
             @Parameter(description = "ID du pack", required = true)
             @PathVariable String id) {
         return ResponseEntity.ok(packUnifiedService.getPackById(id));
+    }
+
+    // ==================== ENDPOINTS HIÉRARCHIQUES ====================
+
+    /**
+     * Récupère un pack avec toutes ses garanties associées
+     * GET /api/packs/{id}/with-garanties
+     */
+    @GetMapping("/{id}/with-garanties")
+    @Operation(summary = "Récupérer un pack avec ses garanties", description = "Retourne un pack avec toutes ses garanties associées")
+    public ResponseEntity<Pack> getPackWithGaranties(
+            @Parameter(description = "ID du pack", required = true)
+            @PathVariable String id) {
+        try {
+            Pack pack = hierarchicalService.getPackWithGaranties(id);
+            return ResponseEntity.ok(pack);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * Récupère tous les packs avec leurs garanties associées
+     * GET /api/packs/with-garanties
+     */
+    @GetMapping("/with-garanties")
+    @Operation(summary = "Récupérer tous les packs avec leurs garanties", description = "Retourne tous les packs avec leurs garanties associées")
+    public ResponseEntity<List<Pack>> getAllPacksWithGaranties() {
+        List<Pack> packs = hierarchicalService.getAllPacksWithGaranties();
+        return ResponseEntity.ok(packs);
     }
 }

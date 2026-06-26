@@ -16,7 +16,6 @@ import java.util.Optional;
 public class UserController {
 
     private final UserServiceImpl userService;
-
     public UserController(UserServiceImpl userService) {
         this.userService = userService;
     }
@@ -30,13 +29,10 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{idUser}")
     public ResponseEntity<User> getUserById(@PathVariable String idUser) {
-
         Optional<User> user = userService.getUserById(idUser);
-
         return user.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
@@ -48,7 +44,6 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
-
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{idUser}")
     public ResponseEntity<User> updateUser(@PathVariable String idUser,

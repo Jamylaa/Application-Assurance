@@ -21,8 +21,7 @@ public class User {
     private Date dateCreation;
     private String departement;
 
-    public User() {
-    }
+    public User() {}
 
     public User(String idUser, String username, String email, String password, Integer phone, Date dateCreation, String departement) {
         this.idUser = idUser;

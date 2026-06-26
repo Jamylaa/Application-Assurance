@@ -1,5 +1,6 @@
 package tn.vermeg.gestionproduit.controllers;
 
+import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,8 @@ import java.util.List;
 @RequestMapping("/api/garanties")
 @CrossOrigin(origins = "http://localhost:4200")
 public class GarantieController {
+
+    private static final Logger logger = Logger.getLogger(GarantieController.class.getName());
 
     @Autowired
     private GarantieService garantieService;
@@ -74,12 +77,17 @@ public class GarantieController {
 
     @PostMapping
     public ResponseEntity<Garantie> createGarantie(@Valid @RequestBody Garantie garantie) {
+        logger.info("POST /api/garanties - Creating guarantee: " + garantie.getNomGarantie());
         try {
+            Garantie createdGarantie = garantieService.createGarantie(garantie);
+            logger.info("POST /api/garanties - Guarantee created successfully with ID: " + createdGarantie.getIdGarantie());
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(garantieService.createGarantie(garantie));
+                    .body(createdGarantie);
         } catch (IllegalArgumentException e) {
+            logger.severe("POST /api/garanties - Failed to create guarantee: " + e.getMessage());
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
+            logger.severe("POST /api/garanties - Internal server error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

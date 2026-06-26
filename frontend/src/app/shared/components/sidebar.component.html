@@ -1,9 +1,10 @@
 <div class="sidebar" [class.collapsed]="isCollapsed">
-  <!-- Header with logo and toggle -->
+
+  <!-- ── Logo ── -->
   <div class="sidebar-header">
     <div class="logo-section">
       <div class="logo" (click)="navigateToDashboard()">
-        <div class="logo-icon-wrapper">
+        <div class="logo-icon-wrap">
           <i class="pi pi-shield"></i>
         </div>
         <div class="logo-text" *ngIf="!isCollapsed">
@@ -12,105 +13,120 @@
         </div>
       </div>
     </div>
-    <button class="toggle-btn" (click)="toggleSidebar()" [title]="isCollapsed ? ('sidebar.expand' | translate) : ('sidebar.collapse' | translate)">
+    <button
+      class="toggle-btn"
+      (click)="toggleSidebar()"
+      [title]="isCollapsed ? 'Déployer' : 'Réduire'"
+      [attr.aria-label]="isCollapsed ? 'Déployer le menu latéral' : 'Réduire le menu latéral'">
       <i class="pi" [class.pi-angle-left]="!isCollapsed" [class.pi-angle-right]="isCollapsed"></i>
     </button>
   </div>
 
-  <!-- Navigation -->
+  <!-- ── Navigation ── -->
   <nav class="sidebar-nav">
-    <div class="nav-section-label" *ngIf="!isCollapsed">{{ 'sidebar.mainMenu' | translate }}</div>
+    <div class="nav-section-label" *ngIf="!isCollapsed">MENU PRINCIPAL</div>
+
     <ul class="nav-list">
+      <!-- Tableau de bord -->
       <li class="nav-item">
-        <a
-          class="nav-link"
-          [class.active]="isActiveRoute('/dashboard')"
-          (click)="navigateTo('/dashboard'); $event.preventDefault()"
-          href="#"
-          [title]="'page.dashboard' | translate">
-          <div class="nav-icon-wrapper">
-            <i class="bi bi-grid-1x2-fill nav-icon"></i>
+        <a class="nav-link"
+           [class.active]="isActiveRoute('/dashboard')"
+           (click)="navigateTo('/dashboard'); $event.preventDefault()"
+           href="#"
+           title="Tableau de bord">
+          <div class="nav-icon-wrap">
+            <i class="bi bi-grid-1x2-fill"></i>
           </div>
-          <span class="nav-text" *ngIf="!isCollapsed">{{ 'page.dashboard' | translate }}</span>
+          <span class="nav-text" *ngIf="!isCollapsed">Tableau de bord</span>
         </a>
       </li>
 
+      <!-- Produits -->
       <li class="nav-item">
-        <a
-          class="nav-link"
-          [class.active]="isActiveRoute('/produits')"
-          (click)="navigateTo('/produits'); $event.preventDefault()"
-          href="#"
-          [title]="'page.products' | translate">
-          <div class="nav-icon-wrapper">
-            <i class="bi bi-box-seam-fill nav-icon"></i>
+        <a class="nav-link"
+           [class.active]="isActiveRoute('/produits')"
+           (click)="navigateTo('/produits'); $event.preventDefault()"
+           href="#"
+           title="Produits">
+          <div class="nav-icon-wrap">
+            <i class="bi bi-box-seam-fill"></i>
           </div>
-          <span class="nav-text" *ngIf="!isCollapsed">{{ 'page.products' | translate }}</span>
+          <span class="nav-text" *ngIf="!isCollapsed">Produits</span>
         </a>
       </li>
 
+      <!-- Packs -->
       <li class="nav-item">
-        <a
-          class="nav-link"
-          [class.active]="isActiveRoute('/packs')"
-          (click)="navigateTo('/packs'); $event.preventDefault()"
-          href="#"
-          [title]="'page.packs' | translate">
-          <div class="nav-icon-wrapper">
-            <i class="bi bi-collection-fill nav-icon"></i>
+        <a class="nav-link"
+           [class.active]="isActiveRoute('/packs')"
+           (click)="navigateTo('/packs'); $event.preventDefault()"
+           href="#"
+           title="Packs">
+          <div class="nav-icon-wrap">
+            <i class="bi bi-collection-fill"></i>
           </div>
-          <span class="nav-text" *ngIf="!isCollapsed">{{ 'page.packs' | translate }}</span>
+          <span class="nav-text" *ngIf="!isCollapsed">Packs</span>
         </a>
       </li>
 
+      <!-- Garanties -->
       <li class="nav-item">
-        <a
-          class="nav-link"
-          [class.active]="isActiveRoute('/garanties')"
-          (click)="navigateTo('/garanties'); $event.preventDefault()"
-          href="#"
-          [title]="'page.guarantees' | translate">
-          <div class="nav-icon-wrapper">
-            <i class="bi bi-shield-fill-check nav-icon"></i>
+        <a class="nav-link"
+           [class.active]="isActiveRoute('/garanties')"
+           (click)="navigateTo('/garanties'); $event.preventDefault()"
+           href="#"
+           title="Garanties">
+          <div class="nav-icon-wrap">
+            <i class="bi bi-shield-fill-check"></i>
           </div>
-          <span class="nav-text" *ngIf="!isCollapsed">{{ 'page.guarantees' | translate }}</span>
+          <span class="nav-text" *ngIf="!isCollapsed">Garanties</span>
+        </a>
+      </li>
+
+      <!-- Assistant IA -->
+      <li class="nav-item nav-item--ai">
+        <a class="nav-link nav-link--ai"
+           [class.active]="isActiveRoute('/chatbot')"
+           (click)="navigateTo('/chatbot'); $event.preventDefault()"
+           href="#"
+           title="Assistant IA">
+          <div class="nav-icon-wrap nav-icon-wrap--ai">
+            <i class="bi bi-robot"></i>
+          </div>
+          <span class="nav-text" *ngIf="!isCollapsed">
+            Assistant IA
+            <span class="ai-badge">IA</span>
+          </span>
         </a>
       </li>
     </ul>
   </nav>
 
-  <!-- User Profile Section -->
-  <div class="user-profile-section" *ngIf="!isCollapsed">
-    <div class="user-profile-card">
-      <div class="user-avatar">
-        {{ getUserInitials() }}
-      </div>
-      <div class="user-details">
-        <div class="user-name">{{ currentUser?.firstName || currentUser?.username || ('sidebar.user' | translate) }}</div>
+  <!-- ── Profil utilisateur ── -->
+  <div class="user-section" *ngIf="!isCollapsed">
+    <div class="user-card">
+      <div class="user-avatar">{{ getUserInitials() }}</div>
+      <div class="user-info">
+        <div class="user-name">{{ currentUser?.firstName || currentUser?.username || 'Utilisateur' }}</div>
         <div class="user-role">{{ getUserRole() }}</div>
       </div>
     </div>
   </div>
 
-  <!-- Footer Section -->
+  <!-- ── Pied de page ── -->
   <div class="sidebar-footer">
-    <!-- Theme Toggle -->
-    <button class="theme-toggle-btn" (click)="toggleTheme()" [title]="isDarkMode ? ('sidebar.lightMode' | translate) : ('sidebar.darkMode' | translate)">
+    <button class="theme-btn"
+            (click)="toggleTheme()"
+            [title]="isDarkMode ? 'Mode clair' : 'Mode sombre'"
+            [attr.aria-label]="isDarkMode ? 'Activer le mode clair' : 'Activer le mode sombre'">
       <i class="bi" [class.bi-sun-fill]="isDarkMode" [class.bi-moon-stars-fill]="!isDarkMode"></i>
-      <span *ngIf="!isCollapsed">{{ isDarkMode ? ('sidebar.lightMode' | translate) : ('sidebar.darkMode' | translate) }}</span>
+      <span *ngIf="!isCollapsed">{{ isDarkMode ? 'Mode clair' : 'Mode sombre' }}</span>
     </button>
 
-    <!-- Logout Button -->
-    <ng-container *ngIf="!isCollapsed">
-      <button class="logout-btn" (click)="logout()" [title]="'sidebar.logout' | translate">
-        <i class="bi bi-box-arrow-right"></i>
-        <span>{{ 'sidebar.logout' | translate }}</span>
-      </button>
-    </ng-container>
-    <ng-container *ngIf="isCollapsed">
-      <button class="logout-btn-icon-only" (click)="logout()" [title]="'sidebar.logout' | translate">
-        <i class="bi bi-box-arrow-right"></i>
-      </button>
-    </ng-container>
+    <button class="logout-btn" (click)="logout()" title="Déconnexion">
+      <i class="bi bi-box-arrow-right"></i>
+      <span *ngIf="!isCollapsed">Déconnexion</span>
+    </button>
   </div>
+
 </div>

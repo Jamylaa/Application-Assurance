@@ -15,7 +15,7 @@ class RecommendationService:
     def __init__(self, spring_boot_client: SpringBootClient):
         self.spring_boot_client = spring_boot_client
     
-    def generate_recommendations(self, request: RecommendationRequestDTO) -> RecommendationResponseDTO:
+    def generate_recommendations(self, request: RecommendationRequestDTO, jwt_token: Optional[str] = None) -> RecommendationResponseDTO:
         """Generate recommendations for a client profile."""
         logger.info(f"Génération de recommandations pour le profil: {request.session_id}")
         
@@ -30,8 +30,8 @@ class RecommendationService:
             # Convert request to client profile
             profile = self._convert_to_client_profile(request)
             
-            # Fetch all active packs from Spring Boot
-            all_packs = self.spring_boot_client.get_all_packs()
+            # Fetch all active packs from Spring Boot with JWT token
+            all_packs = self.spring_boot_client.get_all_packs_sync(jwt_token)
             active_packs = [p for p in all_packs if p.statut and p.statut.value == "ACTIF"]
             
             # Calculate scores for each pack

@@ -24,7 +24,7 @@ public class SwaggerConfig {
         server.setDescription("Development server");
 
         Contact contact = new Contact();
-        contact.setEmail("contact@vermeg.tn");
+        contact.setEmail("benabdeljamyla@gmail.com");
         contact.setName("Vermeg Tunisia");
 
         License license = new License()

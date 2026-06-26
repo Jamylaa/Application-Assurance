@@ -23,4 +23,7 @@ public interface GarantieRepository extends MongoRepository<Garantie, String> {
     List<Garantie> findByDomaineAndStatutAndDateDesactivationIsNull(DomaineMedical domaine, Statut statut);
     long countByDomaine(DomaineMedical domaine);
  boolean existsByDomaine(DomaineMedical domaine);
+    
+    // Méthodes pour les relations hiérarchiques
+    List<Garantie> findByPackId(String packId);
 }

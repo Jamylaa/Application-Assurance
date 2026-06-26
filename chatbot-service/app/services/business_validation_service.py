@@ -10,17 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 class BusinessValidationService:
-    """Service for light validation to provide immediate user feedback.
-    
-    Note: Final business validation is performed by the Java gestionproduit service.
-    This service only provides basic validation for immediate feedback to the user.
-    """
     
     def validate_pack_for_scoring(self, pack: PackDTO, original_score: float) -> BusinessValidationResult:
-        """Light validation of a pack entity before sending to Java service.
-        
-        This is only for immediate feedback. Final validation happens in Java.
-        """
         errors = []
         warnings = []
         missing_fields = {}
@@ -45,7 +36,7 @@ class BusinessValidationService:
             score_penalty += 0.1
         
         adjusted_score = max(0.0, original_score - score_penalty)
-        is_valid = score_penalty < 0.3  # More lenient since Java validates
+        is_valid = score_penalty < 0.5  # More lenient since Java validates
         
         logger.info(f"Pack light validation - Original: {original_score}, Adjusted: {adjusted_score}, "
                    f"Penalty: {score_penalty}, Valid: {is_valid}")
@@ -61,10 +52,6 @@ class BusinessValidationService:
         )
     
     def validate_garantie_for_scoring(self, garantie: GarantieDTO, original_score: float) -> BusinessValidationResult:
-        """Light validation of a guarantee entity before sending to Java service.
-        
-        This is only for immediate feedback. Final validation happens in Java.
-        """
         errors = []
         warnings = []
         missing_fields = {}
@@ -97,7 +84,7 @@ class BusinessValidationService:
             score_penalty += 0.1
         
         adjusted_score = max(0.0, original_score - score_penalty)
-        is_valid = score_penalty < 0.3  # More lenient since Java validates
+        is_valid = score_penalty < 0.5  # More lenient since Java validates
         
         logger.info(f"Garantie light validation - Original: {original_score}, Adjusted: {adjusted_score}, "
                    f"Penalty: {score_penalty}, Valid: {is_valid}")
@@ -113,10 +100,6 @@ class BusinessValidationService:
         )
     
     def validate_produit_for_scoring(self, produit: ProduitDTO, original_score: float) -> BusinessValidationResult:
-        """Light validation of a product entity before sending to Java service.
-        
-        This is only for immediate feedback. Final validation happens in Java.
-        """
         errors = []
         warnings = []
         missing_fields = {}
@@ -135,7 +118,7 @@ class BusinessValidationService:
             suggestions.append("Indiquez le type de produit (SANTE, AUTO, HABITATION, VIE, EPARGNE)")
         
         adjusted_score = max(0.0, original_score - score_penalty)
-        is_valid = score_penalty < 0.3  # More lenient since Java validates
+        is_valid = score_penalty < 0.5  # More lenient since Java validates
         
         logger.info(f"Produit light validation - Original: {original_score}, Adjusted: {adjusted_score}, "
                    f"Penalty: {score_penalty}, Valid: {is_valid}")
@@ -151,10 +134,6 @@ class BusinessValidationService:
         )
     
     def validate_pack_configuration_for_scoring(self, pack_garantie: PackGarantieDTO, original_score: float) -> BusinessValidationResult:
-        """Light validation of a pack configuration before sending to Java service.
-        
-        This is only for immediate feedback. Final validation happens in Java.
-        """
         errors = []
         warnings = []
         missing_fields = {}
@@ -173,7 +152,7 @@ class BusinessValidationService:
             suggestions.append("Spécifiez le plafond pour cette garantie dans le pack")
         
         adjusted_score = max(0.0, original_score - score_penalty)
-        is_valid = score_penalty < 0.3  # More lenient since Java validates
+        is_valid = score_penalty < 0.5  # More lenient since Java validates
         
         logger.info(f"Pack configuration light validation - Original: {original_score}, Adjusted: {adjusted_score}, "
                    f"Penalty: {score_penalty}, Valid: {is_valid}")

@@ -8,6 +8,7 @@ import tn.vermeg.gestionproduit.enums.Statut;
 import tn.vermeg.gestionproduit.enums.TypeProduit;
 
 import java.time.Instant;
+import java.util.List;
 
 @Document(collection = "produits")
 public class Produit {
@@ -22,6 +23,9 @@ public class Produit {
     private Instant dateCreation;
     @LastModifiedDate
     private Instant dateModification;
+
+    // Liste des packs associés (non persistée en MongoDB, construite dynamiquement)
+    private transient List<Pack> packs;
 
     // CONSTRUCTEURS
 
@@ -72,4 +76,7 @@ public class Produit {
 
     public Instant getDateModification() { return dateModification; }
     public void setDateModification(Instant dateModification) { this.dateModification = dateModification; }
+
+    public List<Pack> getPacks() { return packs; }
+    public void setPacks(List<Pack> packs) { this.packs = packs; }
 }

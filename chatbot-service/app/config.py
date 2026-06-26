@@ -1,5 +1,8 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
+from pathlib import Path
+
+_ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
 
 
 class Settings(BaseSettings):
@@ -7,26 +10,32 @@ class Settings(BaseSettings):
     fastapi_env: str = "development"
     fastapi_port: int = 9001
     fastapi_host: str = "0.0.0.0"
-    
+
     # Spring Boot Service Configuration
-    spring_boot_base_url: str = "http://localhost:8080/api"
-    
-    # Google Gemini API Configuration
-    gemini_api_key: str = "GITHUB_API_KEY"
-    gemini_model: str = "gemini-2.0-flash"
-    gemini_url: str = "https://generativelanguage.googleapis.com/v1beta/models"
-    gemini_timeout_seconds: int = 30
-    gemini_max_retries: int = 3
-    gemini_retry_delay_ms: int = 1000
-    gemini_enabled: bool = True
-    
+    spring_boot_base_url: str = "http://gestionProduit:9093/api"
+    spring_boot_timeout: int = 30
+    spring_boot_max_retries: int = 3
+    spring_boot_retry_delay: int = 1000
+
+    # GitHub AI Models API Configuration
+    github_api_key: Optional[str] = None
+    github_model: str = "gpt-4o-mini"  # Default model for GitHub Models
+    github_url: str = "https://models.inference.ai.azure.com"  # GitHub Models via Azure
+    github_timeout_seconds: int = 30
+    github_max_retries: int = 3
+    github_retry_delay_ms: int = 1000
+    github_enabled: bool = True
+
     # Chatbot Configuration
     ai_extraction_enabled: bool = True
     fallback_on_ai_error: bool = True
-    
+    enable_detailed_logging: bool = True
+    strict_validation: bool = True
+
     class Config:
-        env_file = ".env"
+        env_file = str(_ENV_FILE)
         case_sensitive = False
+        extra = "ignore"  # Allow extra env variables
 
 
 settings = Settings()

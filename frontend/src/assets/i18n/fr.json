@@ -21,20 +21,132 @@
     "error": "Erreur",
     "success": "Succès",
     "warning": "Avertissement",
-    "info": "Information"
+    "info": "Information",
+    "confirm": "Confirmer",
+    "yes": "Oui",
+    "no": "Non",
+    "close": "Fermer",
+    "open": "Ouvrir",
+    "view": "Consulter",
+    "create": "Créer",
+    "update": "Mettre à jour",
+    "reset": "Réinitialiser",
+    "apply": "Appliquer",
+    "export": "Exporter",
+    "import": "Importer",
+    "refresh": "Actualiser",
+    "noData": "Aucune donnée disponible",
+    "actions": "Actions",
+    "status": "Statut",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "all": "Tous",
+    "name": "Nom",
+    "description": "Description",
+    "date": "Date",
+    "total": "Total",
+    "details": "Détails",
+    "required": "Requis",
+    "optional": "Optionnel"
   },
   "auth": {
     "loginTitle": "Connexion à Vermeg Assurance",
-    "loginSubtitle": "Accédez à votre espace client",
-    "email": "Email",
+    "loginSubtitle": "Accédez à votre espace de gestion",
+    "email": "Adresse e-mail",
     "password": "Mot de passe",
     "forgotPassword": "Mot de passe oublié ?",
-    "noAccount": "Pas de compte ?",
+    "noAccount": "Pas encore de compte ?",
     "signUp": "S'inscrire",
-    "rememberMe": "Se souvenir de moi"
+    "rememberMe": "Se souvenir de moi",
+    "loginButton": "Se connecter",
+    "logoutTitle": "Déconnexion",
+    "logoutConfirm": "Voulez-vous vraiment vous déconnecter ?"
+  },
+  "page": {
+    "dashboard": "Tableau de bord",
+    "users": "Utilisateurs",
+    "products": "Produits",
+    "packs": "Packs",
+    "guarantees": "Garanties",
+    "chatbot": "Assistant IA",
+    "settings": "Paramètres",
+    "profile": "Profil"
+  },
+  "navigation": {
+    "home": "Accueil",
+    "products": "Produits",
+    "users": "Utilisateurs",
+    "recommendations": "Recommandations",
+    "chatbot": "Assistant IA",
+    "analytics": "Analyses",
+    "settings": "Paramètres",
+    "packs": "Packs",
+    "guarantees": "Garanties",
+    "dashboard": "Tableau de bord"
+  },
+  "sidebar": {
+    "mainMenu": "MENU PRINCIPAL",
+    "expand": "Déployer",
+    "collapse": "Réduire",
+    "user": "Utilisateur",
+    "lightMode": "Mode clair",
+    "darkMode": "Mode sombre",
+    "logout": "Déconnexion",
+    "aiAssistant": "Assistant IA",
+    "products": "Produits",
+    "packs": "Packs",
+    "guarantees": "Garanties",
+    "dashboard": "Tableau de bord"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "subtitle": "Vue d'ensemble de la plateforme d'assurance",
+    "welcomeMessage": "Bonjour",
+    "welcomeSub": "Plateforme de gestion d'assurance — Vermeg Assurance Pro",
+    "kpi": {
+      "products": "Produits d'assurance",
+      "packs": "Packs actifs",
+      "guarantees": "Garanties configurées",
+      "users": "Utilisateurs"
+    },
+    "metrics": {
+      "title": "Indicateurs de performance",
+      "subtitle": "Métriques clés de la plateforme",
+      "avgPrice": "Prix moyen des packs",
+      "avgRate": "Taux de remboursement moyen",
+      "packsPerProduct": "Packs par produit",
+      "guaranteesPerPack": "Garanties par pack",
+      "conversionRate": "Taux de conversion"
+    },
+    "charts": {
+      "title": "Analyses et statistiques",
+      "subtitle": "Vue d'ensemble de la plateforme",
+      "productsByType": "Produits par type",
+      "productsByTypeDesc": "Volume par catégorie d'assurance",
+      "packsByLevel": "Packs par niveau",
+      "packsByLevelDesc": "Répartition des niveaux de couverture",
+      "guaranteesByDomain": "Garanties par domaine",
+      "guaranteesByDomainDesc": "Répartition par domaine médical"
+    },
+    "assistant": {
+      "title": "Assistant IA Assurance",
+      "description": "Créez des garanties, packs et produits d'assurance en langage naturel.",
+      "badge": "Propulsé par IA",
+      "status": "Disponible",
+      "cta": "Démarrer l'assistant",
+      "hint": "Cliquez n'importe où pour accéder"
+    },
+    "quickActions": {
+      "title": "Actions rapides",
+      "subtitle": "Accès direct aux modules principaux",
+      "manageProducts": "Gérer les produits d'assurance",
+      "managePacks": "Gérer les packs et couvertures",
+      "manageGuarantees": "Gérer les garanties médicales",
+      "useAI": "Créer via langage naturel"
+    }
   },
   "products": {
-    "title": "Produits d'Assurance",
+    "title": "Produits d'assurance",
     "list": "Liste des produits",
     "details": "Détails du produit",
     "addProduct": "Ajouter un produit",
@@ -44,22 +156,139 @@
     "description": "Description",
     "price": "Prix",
     "category": "Catégorie",
+    "type": "Type",
+    "domain": "Domaine",
+    "status": "Statut",
     "searchPlaceholder": "Rechercher un produit...",
-    "noProducts": "Aucun produit trouvé"
+    "noProducts": "Aucun produit trouvé",
+    "confirmDelete": "Confirmer la suppression",
+    "deleteMessage": "Êtes-vous sûr de vouloir supprimer ce produit ?",
+    "deleteSuccess": "Produit supprimé avec succès",
+    "createSuccess": "Produit créé avec succès",
+    "updateSuccess": "Produit mis à jour avec succès"
+  },
+  "packs": {
+    "title": "Packs d'assurance",
+    "list": "Liste des packs",
+    "details": "Détails du pack",
+    "addPack": "Ajouter un pack",
+    "editPack": "Modifier le pack",
+    "deletePack": "Supprimer le pack",
+    "name": "Nom du pack",
+    "description": "Description",
+    "monthlyPrice": "Prix mensuel",
+    "coverageLevel": "Niveau de couverture",
+    "geographicCoverage": "Couverture géographique",
+    "status": "Statut",
+    "searchPlaceholder": "Rechercher un pack...",
+    "noPacks": "Aucun pack trouvé",
+    "guarantees": "Garanties associées",
+    "noGuarantees": "Aucune garantie associée",
+    "confirmDelete": "Confirmer la suppression",
+    "deleteMessage": "Êtes-vous sûr de vouloir supprimer ce pack ?",
+    "deleteSuccess": "Pack supprimé avec succès",
+    "createSuccess": "Pack créé avec succès",
+    "updateSuccess": "Pack mis à jour avec succès",
+    "coverageLevels": {
+      "BASIC": "Essentiel",
+      "PREMIUM": "Premium",
+      "GOLD": "Gold"
+    },
+    "geoCoverages": {
+      "LOCAL": "Local",
+      "NATIONAL": "National",
+      "MAGHREB": "Maghreb",
+      "UE": "Union Européenne",
+      "INTERNATIONAL": "International"
+    }
+  },
+  "guarantees": {
+    "title": "Garanties médicales",
+    "list": "Liste des garanties",
+    "details": "Détails de la garantie",
+    "addGuarantee": "Ajouter une garantie",
+    "editGuarantee": "Modifier la garantie",
+    "deleteGuarantee": "Supprimer la garantie",
+    "name": "Nom de la garantie",
+    "description": "Description",
+    "reimbursementRate": "Taux de remboursement",
+    "annualCeiling": "Plafond annuel",
+    "franchise": "Franchise",
+    "waitingPeriod": "Délai de carence",
+    "domain": "Domaine médical",
+    "amountType": "Type de montant",
+    "status": "Statut",
+    "optional": "Optionnelle",
+    "searchPlaceholder": "Rechercher une garantie...",
+    "noGuarantees": "Aucune garantie trouvée",
+    "confirmDelete": "Confirmer la suppression",
+    "deleteMessage": "Êtes-vous sûr de vouloir supprimer cette garantie ?",
+    "deleteSuccess": "Garantie supprimée avec succès",
+    "createSuccess": "Garantie créée avec succès",
+    "updateSuccess": "Garantie mise à jour avec succès",
+    "domains": {
+      "DENTAIRE": "Dentaire",
+      "OPTIQUE": "Optique",
+      "PHARMACIE": "Pharmacie",
+      "HOSPITALISATION": "Hospitalisation",
+      "MATERNITE": "Maternité",
+      "PEDIATRIE": "Pédiatrie",
+      "CHIRURGIE": "Chirurgie",
+      "RADIOLOGIE": "Radiologie",
+      "BIOLOGIE": "Biologie",
+      "KINESITHERAPIE": "Kinésithérapie",
+      "MEDECINE_GENERALE": "Médecine générale",
+      "MEDECINE_SPECIALISEE": "Médecine spécialisée",
+      "PSYCHIATRIE": "Psychiatrie",
+      "URGENCES": "Urgences",
+      "AUTRE": "Autre"
+    },
+    "amountTypes": {
+      "FORFAIT": "Forfait",
+      "FRAIS_REELS": "Frais réels",
+      "TARIF_CONVENTIONNE": "Tarif conventionné"
+    }
   },
   "users": {
-    "title": "Gestion des Utilisateurs",
+    "title": "Gestion des utilisateurs",
     "list": "Liste des utilisateurs",
     "addUser": "Ajouter un utilisateur",
     "editUser": "Modifier l'utilisateur",
     "deleteUser": "Supprimer l'utilisateur",
     "firstName": "Prénom",
     "lastName": "Nom",
-    "email": "Email",
+    "email": "Adresse e-mail",
     "role": "Rôle",
     "status": "Statut",
     "active": "Actif",
-    "inactive": "Inactif"
+    "inactive": "Inactif",
+    "searchPlaceholder": "Rechercher un utilisateur...",
+    "noUsers": "Aucun utilisateur trouvé"
+  },
+  "chatbot": {
+    "title": "Assistant IA Assurance",
+    "subtitle": "Créez vos produits d'assurance en langage naturel",
+    "placeholder": "Ex: Créer un pack santé premium avec hospitalisation et optique...",
+    "send": "Envoyer",
+    "clear": "Effacer",
+    "newChat": "Nouvelle conversation",
+    "typing": "L'assistant rédige...",
+    "thinking": "Analyse en cours...",
+    "error": "Une erreur s'est produite",
+    "retry": "Réessayer",
+    "welcome": "Bonjour ! Je suis votre assistant IA Assurance. Comment puis-je vous aider ?",
+    "suggestions": {
+      "createPack": "Créer un pack santé",
+      "createGuarantee": "Ajouter une garantie",
+      "createProduct": "Créer un produit",
+      "getRecommendation": "Recommandation client"
+    },
+    "features": {
+      "createGuarantees": "Création de garanties",
+      "managePacks": "Gestion des packs",
+      "configProducts": "Configuration produits",
+      "recommendations": "Recommandations intelligentes"
+    }
   },
   "recommendation": {
     "title": "Recommandations IA",
@@ -67,52 +296,80 @@
     "getRecommendation": "Obtenir des recommandations",
     "basedOn": "Basé sur",
     "confidence": "Confiance",
-    "reason": "Raison"
-  },
-  "chatbot": {
-    "title": "Assistant IA",
-    "placeholder": "Posez votre question ici...",
-    "send": "Envoyer",
-    "clear": "Effacer",
-    "typing": "L'IA rédige...",
-    "error": "Une erreur s'est produite",
-    "retry": "Réessayer"
-  },
-  "navigation": {
-    "home": "Accueil",
-    "products": "Produits",
-    "users": "Utilisateurs",
-    "recommendations": "Recommandations",
-    "chatbot": "Assistant IA",
-    "analytics": "Analytiques",
-    "settings": "Paramètres"
-  },
-  "language": {
-    "title": "Langue",
-    "french": "Français",
-    "english": "Anglais"
+    "reason": "Raison",
+    "score": "Score",
+    "noRecommendations": "Aucune recommandation disponible"
   },
   "notification": {
     "title": "Notifications",
     "markAllRead": "Tout marquer comme lu",
     "clearAll": "Effacer tout",
-    "noNotifications": "Aucune notification"
+    "noNotifications": "Aucune notification",
+    "new": "Nouveau",
+    "unread": "Non lu"
   },
-  "page": {
+  "language": {
+    "title": "Langue",
+    "french": "Français",
+    "english": "Anglais",
+    "change": "Changer la langue"
+  },
+  "theme": {
+    "light": "Mode clair",
+    "dark": "Mode sombre",
+    "toggle": "Changer le thème"
+  },
+  "breadcrumb": {
+    "home": "Accueil",
     "dashboard": "Tableau de bord",
-    "users": "Utilisateurs",
     "products": "Produits",
     "packs": "Packs",
     "guarantees": "Garanties",
-    "chatbot": "Assistant IA"
+    "users": "Utilisateurs",
+    "chatbot": "Assistant IA",
+    "details": "Détails",
+    "create": "Création",
+    "edit": "Modification"
   },
-  "sidebar": {
-    "mainMenu": "MENU PRINCIPAL",
-    "expand": "Déployer",
-    "collapse": "Réduire",
-    "user": "Utilisateur",
-    "lightMode": "Mode clair",
-    "darkMode": "Mode sombre",
-    "logout": "Déconnexion"
+  "errors": {
+    "required": "Ce champ est obligatoire",
+    "invalidEmail": "Adresse e-mail invalide",
+    "minLength": "Longueur minimale non atteinte",
+    "maxLength": "Longueur maximale dépassée",
+    "serverError": "Erreur serveur. Veuillez réessayer.",
+    "notFound": "Ressource introuvable",
+    "unauthorized": "Accès non autorisé",
+    "networkError": "Erreur réseau. Vérifiez votre connexion.",
+    "loadError": "Impossible de charger les données"
+  },
+  "table": {
+    "search": "Rechercher...",
+    "noResults": "Aucun résultat trouvé",
+    "showing": "Affichage de",
+    "to": "à",
+    "of": "sur",
+    "entries": "entrées",
+    "rowsPerPage": "Lignes par page",
+    "first": "Premier",
+    "last": "Dernier",
+    "previous": "Précédent",
+    "next": "Suivant"
+  },
+  "form": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "reset": "Réinitialiser",
+    "submit": "Soumettre",
+    "required": "* Champ obligatoire",
+    "selectPlaceholder": "Sélectionner...",
+    "uploadFile": "Télécharger un fichier",
+    "chooseFile": "Choisir un fichier"
+  },
+  "confirm": {
+    "title": "Confirmation",
+    "deleteTitle": "Confirmer la suppression",
+    "deleteMessage": "Cette action est irréversible. Voulez-vous continuer ?",
+    "yes": "Oui, confirmer",
+    "no": "Non, annuler"
   }
 }

@@ -1,5 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from typing import Dict, Any
+import uuid
+from datetime import datetime
 from app.models.schemas import (
     ChatbotRequestDTO, ChatbotResponseDTO, RecommendationRequestDTO,
     RecommendationResponseDTO
@@ -7,7 +9,9 @@ from app.models.schemas import (
 from app.services.orchestrator_service import ChatbotOrchestratorService
 from app.services.recommendation_service import RecommendationService
 from app.services.spring_boot_client import SpringBootClient
+from app.config import settings
 import logging
+import traceback
 
 # Import analytics store for tracking metrics
 from app.api.analytics import analytics_store
@@ -23,7 +27,7 @@ recommendation_service = RecommendationService(spring_boot_client)
 
 
 @router.post("/process", response_model=ChatbotResponseDTO)
-async def process_prompt(request: ChatbotRequestDTO):
+async def process_prompt(request: ChatbotRequestDTO, http_request: Request):
     """
     Process a natural language prompt and execute the appropriate action.
     
@@ -35,33 +39,106 @@ async def process_prompt(request: ChatbotRequestDTO):
     - AJOUT_GARANTIE_PACK: Add a guarantee to a pack
     - RECOMMANDATION: Generate recommendations
     """
+    # Generate or use correlation ID
+    correlation_id = request.correlation_id or str(uuid.uuid4())
+    debug_trace = [] if request.enable_debug else None
+    
+    def log_debug(message: str):
+        """Add debug message if debug mode is enabled."""
+        if debug_trace is not None:
+            debug_trace.append({"timestamp": str(datetime.now()), "message": message})
+        logger.info(f"[{correlation_id}] {message}")
+    
     try:
-        logger.info(f"Processing prompt: {request.prompt}")
+        log_debug(f"📨 START Processing prompt: {request.prompt[:100]}...")
+        log_debug(f"🔍 Request details - session_id: {request.session_id}, enable_debug: {request.enable_debug}")
+        
+        # Validate request
+        if not request.prompt or not request.prompt.strip():
+            error_msg = "Prompt cannot be empty"
+            log_debug(f"❌ Validation error: {error_msg}")
+            return ChatbotResponseDTO(
+                success=False,
+                intent="ERROR",
+                message=error_msg,
+                errors=[error_msg],
+                correlation_id=correlation_id,
+                debug_trace=debug_trace
+            )
+        
+        # Check AI service availability (but don't block - fallback will handle it)
+        ai_available = orchestrator.ai_extraction_service.is_ai_available()
+        log_debug(f"🤖 AI Service Available: {ai_available}")
+        log_debug(f"🔑 API Key configured: {bool(orchestrator.ai_extraction_service.api_key and orchestrator.ai_extraction_service.api_key.strip())}")
+        log_debug(f"🔧 AI enabled: {orchestrator.ai_extraction_service.github_enabled}")
+        log_debug(f"🔧 AI extraction enabled: {orchestrator.ai_extraction_service.ai_extraction_enabled}")
+        
+        if not ai_available:
+            log_debug("ℹ️ AI service unavailable, orchestrator will use fallback parser")
+        
+        # Pass correlation_id and debug flag to orchestrator
         response = orchestrator.process_prompt(request)
+        response.correlation_id = correlation_id
+        if request.enable_debug:
+            response.debug_trace = debug_trace
+        
+        log_debug(f"✅ Response generated successfully - success: {response.success}, intent: {response.intent}")
         return response
+    except HTTPException as he:
+        log_debug(f"❌ HTTP error processing prompt: {he.detail}")
+        log_debug(f"❌ HTTP status code: {he.status_code}")
+        log_debug(f"❌ Stacktrace: {traceback.format_exc()}")
+        raise he
     except Exception as e:
-        logger.error(f"Error processing prompt: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        error_msg = f"Internal server error: {str(e)}"
+        log_debug(f"❌ Unexpected error processing prompt: {error_msg}")
+        log_debug(f"❌ Stacktrace: {traceback.format_exc()}")
+        
+        # Return error response instead of raising HTTPException to avoid silent 400
+        return ChatbotResponseDTO(
+            success=False,
+            intent="ERROR",
+            message=error_msg,
+            errors=[error_msg],
+            correlation_id=correlation_id,
+            debug_trace=debug_trace
+        )
 
 
 @router.post("/recommendations", response_model=RecommendationResponseDTO)
 async def generate_recommendations(request: RecommendationRequestDTO):
     """
     Generate personalized recommendations based on client profile.
-    
     Returns the top 3 packs and products that match the client's needs.
     """
+    correlation_id = request.correlation_id or str(uuid.uuid4())
+    debug_trace = [] if request.enable_debug else None
+    
+    def log_debug(message: str):
+        if debug_trace is not None:
+            debug_trace.append({"timestamp": str(datetime.now()), "message": message})
+        logger.info(f"[{correlation_id}] {message}")
+    
     try:
-        logger.info(f"Generating recommendations for session: {request.session_id}")
+        log_debug(f"📊 START Generating recommendations for session: {request.session_id}")
+        log_debug(f"🔍 Client profile - age: {request.age}, gender: {request.gender}, budget: {request.monthly_budget}")
+        
         response = recommendation_service.generate_recommendations(request)
+        response.correlation_id = correlation_id
+        if request.enable_debug:
+            response.debug_trace = debug_trace
         
         # Track recommendation generation
         analytics_store["recommendations_generated"] = analytics_store.get("recommendations_generated", 0) + 1
         
+        log_debug(f"✅ Recommendations generated successfully - {len(response.recommended_packs)} packs, {len(response.recommended_products)} products")
         return response
     except Exception as e:
-        logger.error(f"Error generating recommendations: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        error_msg = f"Error generating recommendations: {str(e)}"
+        log_debug(f"❌ {error_msg}")
+        log_debug(f"❌ Stacktrace: {traceback.format_exc()}")
+        
+        raise HTTPException(status_code=500, detail=error_msg)
 
 
 @router.get("/health")
@@ -73,7 +150,15 @@ async def health_check():
         "description": "Chatbot intelligent pour la création et configuration des garanties, produits et packs",
         "version": "1.0.0",
         "architecture": "FastAPI Microservice",
-        "ai_available": orchestrator.ai_extraction_service.is_ai_available()
+        "ai_available": orchestrator.ai_extraction_service.is_ai_available(),
+        "ai_details": {
+            "api_key_configured": bool(orchestrator.ai_extraction_service.api_key and orchestrator.ai_extraction_service.api_key.strip()),
+            "github_enabled": orchestrator.ai_extraction_service.github_enabled,
+            "ai_extraction_enabled": orchestrator.ai_extraction_service.ai_extraction_enabled,
+            "fallback_on_error": orchestrator.ai_extraction_service.fallback_on_error,
+            "model": orchestrator.ai_extraction_service.model_name,
+            "api_url": orchestrator.ai_extraction_service.api_url
+        }
     }
 
 
@@ -125,7 +210,7 @@ async def get_ai_status():
     
     return {
         "aiAvailable": ai_available,
-        "provider": "Google AI (Gemini)",
+        "provider": "GitHub Models (gpt-4o-mini)",
         "fallbackMode": not ai_available,
         "message": (
             "Service IA disponible - Extraction intelligente activée" if ai_available

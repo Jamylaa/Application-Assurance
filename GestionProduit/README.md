@@ -2,9 +2,11 @@
 
 ## Description
 
-Ce module fait partie du projet Vermeg et gère la gestion des produits d'assurance, des packs et des garanties. Il inclut un moteur de scoring métier avancé pour les recommandations.
+Ce module fait partie du projet Vermeg et gère la gestion des produits d'assurance, des packs et des garanties. Il est responsable uniquement du domaine métier et de la persistance des données.
 
 **Projet de Fin d'Études d'Ingénieur - Année 2024**
+
+**Note**: Les fonctionnalités d'IA, de chatbot et de recommandation ont été déplacées vers le service `chatbot-service` (Python FastAPI). Ce service GestionProduit contient uniquement la logique métier CRUD et la validation.
 
 ## Fonctionnalités Principales
 
@@ -15,47 +17,19 @@ Ce module fait partie du projet Vermeg et gère la gestion des produits d'assura
 - Système de validation robuste des données
 - Gestion des statuts et des niveaux de couverture
 
-### 2. Système de Chatbot Intelligent
-Architecture de chatbot basée sur le pattern **Orchestrator** avec services spécialisés :
+### 2. Gestion des Packs
+- Association de garanties aux packs
+- Gestion de la hiérarchie packs-produits
+- Validation des configurations de packs
+- Calcul des prix mensuels
 
-- **PromptAnalyzerService** : Analyse les prompts utilisateurs pour détecter les actions et intentions
-- **PromptSegmentationService** : Segmente les prompts en sections (produits, garanties, packs)
-- **AIExtractionService** : Extrait des données structurées à partir de prompts naturels (intégration Gemini AI)
-- **ActionNormalizationService** : Normalise les actions détectées selon les règles métier
-- **ValidationService** : Valide les données extraites avec des règles de validation complexes
-- **ChatbotOrchestratorService** : Orchestre tous les services du chatbot avec gestion des erreurs
+### 3. Gestion des Garanties
+- CRUD complet des garanties
+- Gestion des domaines médicaux
+- Configuration des plafonds et taux
+- Validation des règles métier
 
-### 3. Moteur de Scoring Métier (BusinessScoringEngine)
-Système de recommandation intelligent basé sur des critères pondérés :
-
-#### Critères de Scoring
-- **Âge (15%)** : Éligibilité selon les limites d'âge du pack
-- **Budget (20%)** : Adéquation entre le prix et le budget du client
-- **Bénéficiaires (15%)** : Correspondance avec le type de famille
-- **Risque Médical (20%)** : Prise en compte des maladies chroniques
-- **Correspondance des Garanties (20%)** : Adéquation des garanties avec les besoins
-- **Niveau de Couverture (10%)** : Correspondance du niveau de couverture souhaité
-
-#### DTOs Principaux
-- **ClientProfile** : Profil client complet (démographie, santé, préférences)
-- **ScoringResult** : Résultat de scoring détaillé par critère
-- **RecommendationResultDTO** : Résultat de recommandation avec justifications
-- **RecommendationRequestDTO** : Demande de recommandation
-- **RecommendationResponseDTO** : Réponse complète avec packs et produits recommandés
-
-### 4. Services de Mémoire Conversationnelle
-- **ConversationMemoryService** : Gestion de l'historique des conversations
-- Sauvegarde des profils clients
-- Enregistrement des recommandations fournies
-- Suivi des échanges messages
-- Intégration Redis pour le cache des conversations
-
-### 5. Services RAG (Retrieval-Augmented Generation)
-- **VectorEmbeddingService** : Génération d'embeddings pour la recherche sémantique
-- **RAGService** : Recherche de documents pertinents basée sur les embeddings
-- *Note : Ces services sont temporairement désactivés car les dépendances Spring AI ne sont pas disponibles*
-
-### 6. Documentation API
+### 4. Documentation API
 - **Swagger/OpenAPI 3.0** : Documentation interactive de l'API accessible via `/swagger-ui.html`
 - Configuration de sécurité JWT Keycloak
 - Descriptions détaillées de tous les endpoints
@@ -97,53 +71,18 @@ Abstraction de l'accès aux données avec Spring Data MongoDB :
 - Pagination et tri
 - Custom queries avec @Query
 
-#### 4. Pattern Strategy (Scoring Engine)
-Le moteur de scoring utilise le pattern Strategy pour les différents critères de scoring :
-- Extensibilité des critères
-- Configurabilité des poids
-- Isolation des algorithmes de scoring
-
-### Architecture Microservices
-
-Le module GestionProduit est conçu comme un microservice autonome :
-
-```
-┌─────────────────────────────────────────────────┐
-│          API Gateway / Load Balancer            │
-└─────────────────┬───────────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────────┐
-│              Eureka Server                      │
-│         (Service Discovery)                      │
-└─────────────────┬───────────────────────────────┘
-                  │
-    ┌─────────────┼─────────────┐
-    │             │             │
-┌───▼────┐  ┌───▼────┐  ┌───▼────┐
-│ Gestion│  │ Chatbot│  │   Auth │
-│ Produit│  │ Service│  │Service │
-└────────┘  └────────┘  └────────┘
-```
-
 ### Structure du Projet
 
 ```
 GestionProduit/
 ├── src/main/java/tn/vermeg/gestionproduit/
 │   ├── dto/                          # Data Transfer Objects
-│   │   ├── ChatbotResponseDTO.java
-│   │   ├── ClientProfile.java
-│   │   ├── RecommendationRequestDTO.java
-│   │   ├── RecommendationResponseDTO.java
-│   │   ├── RecommendationResultDTO.java
-│   │   ├── ScoringResult.java
-│   │   └── ...
 │   ├── entities/                     # Entités JPA
 │   │   ├── Pack.java
 │   │   ├── Produit.java
 │   │   ├── Garantie.java
-│   │   └── ...
-│   ├── enums/                       # Énumérations (toutes unifiées ici)
+│   │   └── PackGarantie.java
+│   ├── enums/                       # Énumérations
 │   │   ├── DomaineMedical.java
 │   │   ├── Statut.java
 │   │   ├── TypeClient.java
@@ -154,29 +93,17 @@ GestionProduit/
 │   │   └── CouvertureGeographique.java
 │   ├── repositories/                # Repositories Spring Data
 │   ├── services/                    # Services Métier
-│   │   ├── chatbot/                # Services Chatbot
-│   │   │   ├── BusinessScoringEngine.java
-│   │   │   ├── ChatbotOrchestratorService.java
-│   │   │   ├── PromptAnalyzerService.java
-│   │   │   ├── AIExtractionService.java
-│   │   │   ├── ActionNormalizationService.java
-│   │   │   ├── ValidationService.java
-│   │   │   ├── ConversationMemoryService.java
-│   │   │   ├── RecommendationService.java
-│   │   │   ├── RAGService.java
-│   │   │   └── VectorEmbeddingService.java
 │   │   ├── GarantieService.java
 │   │   ├── PackUnifiedService.java
 │   │   └── ProduitService.java
+│   ├── controllers/                 # REST Controllers
+│   ├── config/                      # Configuration Spring
 │   └── GestionProduitApplication.java
 ├── src/main/resources/
 │   ├── application.yml              # Configuration principale
 │   └── ...
 └── src/test/                        # Tests
     └── java/tn/vermeg/gestionproduit/
-        ├── services/
-        │   └── chatbot/
-        │       └── BusinessScoringEngineTest.java
         └── GestionProduitApplicationTests.java
 ```
 
@@ -210,8 +137,7 @@ SPRING_PROFILES_ACTIVE=local
 - Java 21 ou supérieur
 - Maven 3.6+
 - MongoDB 4.4+
-- Keycloak (optionnel, pour OAuth2)
-- Eureka Server (optionnel, pour service discovery)
+- Keycloak (pour OAuth2/JWT)
 
 ### Compilation
 
@@ -267,7 +193,6 @@ La documentation inclut :
 - `PUT /api/packs/{id}` : Met à jour un pack
 - `DELETE /api/packs/{id}` : Supprime un pack
 - `POST /api/packs/{packId}/garanties/{garantieId}` : Associe une garantie à un pack
-- `DELETE /api/packs/{packId}/dissociate-produit` : Dissocie un pack d'un produit
 
 #### Garanties
 - `GET /api/garanties` : Liste toutes les garanties
@@ -275,9 +200,6 @@ La documentation inclut :
 - `POST /api/garanties` : Crée une nouvelle garantie
 - `PUT /api/garanties/{id}` : Met à jour une garantie
 - `DELETE /api/garanties/{id}` : Supprime une garantie
-
-#### Recommandations
-- `POST /api/recommendations/generate` : Génère des recommandations basées sur un profil client
 
 ## Sécurité
 
@@ -325,8 +247,9 @@ cors:
 
 ### Tests Unitaires
 Le projet inclut des tests unitaires pour :
-- **BusinessScoringEngine** : Tests du moteur de scoring avec différents scénarios
 - **ProduitService** : Tests des opérations CRUD sur les produits
+- **PackUnifiedService** : Tests des opérations sur les packs
+- **GarantieService** : Tests des opérations sur les garanties
 - **GestionProduitApplicationTests** : Test de chargement du contexte Spring
 
 ### Exécution des Tests

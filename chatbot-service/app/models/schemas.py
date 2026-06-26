@@ -7,19 +7,30 @@ from app.models.enums import (
     TypeProduit, NiveauCouverture, TypeClient, Statut, TypePlafond
 )
 
+
+def _camel(field_name: str) -> str:
+    parts = field_name.split('_')
+    return parts[0] + ''.join(w.capitalize() for w in parts[1:])
+
+
 # Configuration pour utiliser camelCase dans la sérialisation JSON
 class CamelCaseModel(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
-        alias_generator=lambda field_name: ''.join(
-            word.capitalize() if i > 0 else word
-            for i, word in enumerate(field_name.split('_'))
-        )
+        alias_generator=_camel
     )
+
+
 # ========== Request DTOs ==========
 class ChatbotRequestDTO(BaseModel):
+    """DTO reçu depuis Angular — accepte camelCase ET snake_case."""
+    model_config = ConfigDict(populate_by_name=True, alias_generator=_camel)
+
     prompt: str
-    session_id: Optional[str] = None
+    session_id: Optional[str] = Field(None, alias='sessionId')
+    jwt_token: Optional[str] = Field(None, alias='jwtToken')
+    correlation_id: Optional[str] = Field(None, alias='correlationId')
+    enable_debug: bool = Field(False, alias='enableDebug')
 class RecommendationRequestDTO(BaseModel):
     session_id: str
     age: int
@@ -31,8 +42,8 @@ class RecommendationRequestDTO(BaseModel):
     geographical_zone: Optional[str] = None
     coverage_type: Optional[str] = None
     profession: Optional[str] = None
-
-
+    correlation_id: Optional[str] = None
+    enable_debug: bool = False
 # ========== Entity DTOs ==========
 
 class GarantieDTO(CamelCaseModel):
@@ -56,6 +67,24 @@ class GarantieDTO(CamelCaseModel):
     date_creation: Optional[datetime] = None
     date_modification: Optional[datetime] = None
     date_desactivation: Optional[datetime] = None
+    pack_id: Optional[str] = None  # Référence au pack parent
+
+
+# DTOs simplifiés pour éviter les relations circulaires
+class GarantieSimpleDTO(CamelCaseModel):
+    id_garantie: Optional[str] = None
+    nom_garantie: Optional[str] = None
+    domaine: Optional[DomaineMedical] = None
+    statut: Optional[Statut] = None
+
+
+class PackSimpleDTO(CamelCaseModel):
+    id_pack: Optional[str] = None
+    nom_pack: Optional[str] = None
+    description: Optional[str] = None
+    prix_mensuel: Optional[float] = None
+    niveau_couverture: Optional[NiveauCouverture] = None
+    statut: Optional[Statut] = None
 
 
 class PackDTO(CamelCaseModel):
@@ -77,6 +106,7 @@ class PackDTO(CamelCaseModel):
     domaines_medicaux: Optional[List[str]] = None
     date_creation: Optional[datetime] = None
     date_modification: Optional[datetime] = None
+    garanties: Optional[List[GarantieSimpleDTO]] = None  # Liste des garanties associées
 
 
 class ProduitDTO(CamelCaseModel):
@@ -87,6 +117,7 @@ class ProduitDTO(CamelCaseModel):
     statut: Optional[Statut] = None
     date_creation: Optional[datetime] = None
     date_modification: Optional[datetime] = None
+    packs: Optional[List[PackSimpleDTO]] = None  # Liste des packs associés
 
 
 class PackGarantieDTO(CamelCaseModel):
@@ -96,8 +127,12 @@ class PackGarantieDTO(CamelCaseModel):
     taux_remboursement: Optional[float] = None
     plafond: Optional[float] = None
     franchise: Optional[float] = None
+    delai_carence: Optional[int] = None
+    type_montant: Optional[TypeMontant] = None
     optionnelle: Optional[bool] = None
+    actif: Optional[bool] = None
     supplement_prix: Optional[float] = None
+    priorite: Optional[int] = None
 
 
 class ComplexGuaranteeDTO(CamelCaseModel):
@@ -112,13 +147,21 @@ class ComplexGuaranteeDTO(CamelCaseModel):
 
 class ChatbotResponseDTO(BaseModel):
     success: bool
+    intent: Optional[str] = None
     message: str
-    action: Optional[str] = None
-    result: Optional[Dict[str, Any]] = None
     data: Optional[Dict[str, Any]] = None
+    created_entity: Optional[Dict[str, str]] = None
+    refresh_targets: Optional[List[str]] = None
     errors: Optional[List[str]] = None
     warnings: Optional[List[str]] = None
+    missing_fields: Optional[List[str]] = None
+    confidence: Optional[float] = None
+    fallback_used: bool = False
+    action: Optional[str] = None
+    result: Optional[Dict[str, Any]] = None
     entity_type: Optional[str] = None
+    correlation_id: Optional[str] = None
+    debug_trace: Optional[Dict[str, Any]] = None
 
 
 class BusinessValidationResult(BaseModel):
@@ -144,6 +187,8 @@ class RecommendationResultDTO(BaseModel):
 
 
 class RecommendationResponseDTO(BaseModel):
+    correlation_id: Optional[str] = None
+    debug_trace: Optional[Dict[str, Any]] = None
     session_id: str
     success: bool
     message: str

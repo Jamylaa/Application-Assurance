@@ -1,13 +1,12 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ThemeService } from './core/theme.service';
-import { ThemeSwitcherComponent } from './shared/theme-switcher/theme-switcher.component';
 import { TranslationService } from './services/translation.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ThemeSwitcherComponent],
+  imports: [RouterOutlet],
   templateUrl: './app.component.html'
 })
 export class AppComponent {
