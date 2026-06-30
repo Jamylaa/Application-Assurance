@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     spring_boot_base_url: str = "http://localhost:8080/api"
     
     # Google Gemini API Configuration
-    gemini_api_key: str = ""
+    gemini_api_key: str = "GITHUB_API_KEY"
     gemini_model: str = "gemini-2.0-flash"
     gemini_url: str = "https://generativelanguage.googleapis.com/v1beta/models"
     gemini_timeout_seconds: int = 30
