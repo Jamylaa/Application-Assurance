@@ -6,11 +6,9 @@ import tn.vermeg.gestionproduit.entities.Garantie;
 import tn.vermeg.gestionproduit.entities.Pack;
 import tn.vermeg.gestionproduit.entities.PackGarantie;
 import tn.vermeg.gestionproduit.entities.Produit;
-import tn.vermeg.gestionproduit.enums.CouvertureGeographique;
 import tn.vermeg.gestionproduit.enums.DomaineMedical;
 import tn.vermeg.gestionproduit.enums.NiveauCouverture;
-import tn.vermeg.gestionproduit.enums.Statut;
-import tn.vermeg.gestionproduit.enums.TypeClient;
+import tn.vermeg.gestionproduit.enums.StatutWorkflow;
 import tn.vermeg.gestionproduit.enums.TypeMontant;
 import tn.vermeg.gestionproduit.enums.TypePlafond;
 import tn.vermeg.gestionproduit.enums.TypeProduit;
@@ -33,15 +31,18 @@ public class PackUnifiedService {
     private final PackGarantieRepository packGarantieRepository;
     private final GarantieRepository garantieRepository;
     private final ProduitRepository produitRepository;
+    private final AssociationValidationService associationValidationService;
 
     public PackUnifiedService(PackUnifiedRepository packRepository,
                             PackGarantieRepository packGarantieRepository,
                             GarantieRepository garantieRepository,
-                            ProduitRepository produitRepository) {
+                            ProduitRepository produitRepository,
+                            AssociationValidationService associationValidationService) {
         this.packRepository = packRepository;
         this.packGarantieRepository = packGarantieRepository;
         this.garantieRepository = garantieRepository;
         this.produitRepository = produitRepository;
+        this.associationValidationService = associationValidationService;
     }
 
     // ==================== GESTION DES PACKS ====================
@@ -52,7 +53,7 @@ public class PackUnifiedService {
     //Récupère un pack par son ID
     public Pack getPackById(String idPack) {
         return packRepository.findById(idPack)
-                .orElseThrow(() -> new ResourceNotFoundException("Pack", idPack, 
+                .orElseThrow(() -> new ResourceNotFoundException("Pack", idPack,
                     "Pack non trouvé avec l'ID: " + idPack));
     }
 // Crée un nouveau pack
@@ -63,7 +64,6 @@ public class PackUnifiedService {
             throw new IllegalArgumentException("Un pack avec ce nom existe déjà.");
         }
 
-        pack.setStatut(Statut.ACTIF);
         pack.setDateCreation(Instant.now());
         pack.setDateModification(Instant.now());
 
@@ -72,10 +72,10 @@ public class PackUnifiedService {
         //Met à jour un pack existant
       public Pack updatePack(String idPack, @Valid Pack details) {
         Pack existingPack = getPackById(idPack);
-        
+
         validatePack(details);
 
-        if (!existingPack.getNomPack().equals(details.getNomPack()) && 
+        if (!existingPack.getNomPack().equals(details.getNomPack()) &&
             packRepository.existsByNomPackIgnoreCase(details.getNomPack())) {
             throw new IllegalArgumentException("Un pack avec ce nom existe déjà.");
         }
@@ -83,17 +83,9 @@ public class PackUnifiedService {
         // Mise à jour des champs
         existingPack.setNomPack(details.getNomPack());
         existingPack.setDescription(details.getDescription());
-        existingPack.setAgeMinimum(details.getAgeMinimum());
-        existingPack.setAgeMaximum(details.getAgeMaximum());
-        existingPack.setTypeClients(details.getTypeClients());
-        existingPack.setAncienneteContratMois(details.getAncienneteContratMois());
-        existingPack.setCouvertureGeographique(details.getCouvertureGeographique());
         existingPack.setPrixMensuel(details.getPrixMensuel());
-        existingPack.setDureeMinContrat(details.getDureeMinContrat());
-        existingPack.setDureeMaxContrat(details.getDureeMaxContrat());
         existingPack.setNiveauCouverture(details.getNiveauCouverture());
-        existingPack.setStatut(details.getStatut());
-        existingPack.setDomainesMedicaux(details.getDomainesMedicaux());
+        existingPack.setVersionPack(details.getVersionPack());
         existingPack.setDateModification(Instant.now());
 
         return packRepository.save(existingPack);
@@ -101,7 +93,7 @@ public class PackUnifiedService {
 //Supprime un pack
     public void deletePack(String idPack) {
         Pack pack = getPackById(idPack);
-        
+
         // Vérifier si des garanties sont associées
         List<PackGarantie> associations = packGarantieRepository.findByPackId(idPack);
         if (!associations.isEmpty()) {
@@ -115,12 +107,12 @@ public class PackUnifiedService {
 // Associe un pack à un produit
     public Pack associatePackToProduit(String packId, String produitId) {
         Pack pack = getPackById(packId);
-        Produit produit = produitRepository.findById(produitId)
-                .orElseThrow(() -> new ResourceNotFoundException("Produit", produitId, 
-                    "Produit non trouvé avec l'ID: " + produitId));
+        if (!produitRepository.existsById(produitId)) {
+            throw new ResourceNotFoundException("Produit", produitId,
+                    "Produit non trouvé avec l'ID: " + produitId);
+        }
 
         pack.setProduitId(produitId);
-        pack.setNomProduit(produit.getNomProduit());
         pack.setDateModification(Instant.now());
 
         return packRepository.save(pack);
@@ -128,9 +120,8 @@ public class PackUnifiedService {
 //Dissocie un pack d'un produit
     public Pack dissociatePackFromProduit(String packId) {
         Pack pack = getPackById(packId);
-        
+
         pack.setProduitId(null);
-        pack.setNomProduit(null);
         pack.setDateModification(Instant.now());
 
         return packRepository.save(pack);
@@ -145,24 +136,11 @@ public class PackUnifiedService {
         return packRepository.findByNomPackIgnoreCaseContaining(nomPack.trim());
     }
 
-    public List<Pack> getPacksByStatut(Statut statut) {
-        return packRepository.findByStatut(statut);
-    }
-
     public List<Pack> getPacksByNiveau(NiveauCouverture niveauCouverture) {
         return packRepository.findByNiveauCouverture(niveauCouverture);}
 
-    public List<Pack> getPacksByTypeClient(TypeClient typeClient) {
-        return packRepository.findByTypeClientsContaining(typeClient);}
-
     public List<Pack> getPacksByPrixRange(double prixMin, double prixMax) {
         return packRepository.findByPrixMensuelBetween(prixMin, prixMax);}
-
-    public Pack desactiverPack(String idPack) {
-        Pack pack = getPackById(idPack);
-        pack.setStatut(Statut.INACTIF);
-        pack.setDateModification(Instant.now());
-        return packRepository.save(pack);}
 
     public List<Garantie> getGarantiesDisponiblesPourPack(String packId) {
         getPackById(packId);
@@ -190,7 +168,7 @@ public class PackUnifiedService {
     //Récupère une association pack-garantie par son ID
     public PackGarantie getPackGarantieById(String idPackGarantie) {
         return packGarantieRepository.findById(idPackGarantie)
-                .orElseThrow(() -> new ResourceNotFoundException("PackGarantie", idPackGarantie, 
+                .orElseThrow(() -> new ResourceNotFoundException("PackGarantie", idPackGarantie,
                     "Association Pack-Garantie non trouvée avec l'ID: " + idPackGarantie));
     }
 //Récupère toutes les garanties d'un pack
@@ -205,9 +183,13 @@ public class PackUnifiedService {
    //Ajoute une garantie à un pack
     public PackGarantie ajouterGarantieAuPack(String packId, String garantieId, @Valid PackGarantie packGarantie) {
         Pack pack = getPackById(packId);
-        Garantie garantie = garantieRepository.findById(garantieId)
-                .orElseThrow(() -> new ResourceNotFoundException("Garantie", garantieId, 
-                    "Garantie non trouvée avec l'ID: " + garantieId));
+        if (pack.getStatutWorkflow() != StatutWorkflow.PUBLIE) {
+            throw new IllegalStateException(
+                    "Impossible d'associer une garantie : le pack '" + pack.getNomPack()
+                            + "' n'est pas PUBLIE (statut actuel = " + pack.getStatutWorkflow() + ").");
+        }
+
+        Garantie garantie = associationValidationService.validateGarantieExisteEtActive(garantieId);
 
         // Vérifier duplication
         if (packGarantieRepository.existsByPackIdAndGarantieId(packId, garantieId)) {
@@ -217,9 +199,8 @@ public class PackUnifiedService {
         packGarantie.setPackId(packId);
         packGarantie.setGarantieId(garantieId);
         packGarantie.setNomGarantie(garantie.getNomGarantie());
-        packGarantie.setPriorite(packGarantie.getPriorite() <= 0 ? 1 : packGarantie.getPriorite());
+        packGarantie.setCodeGarantie(garantie.getCodeGarantie());
         packGarantie.setActif(true);
-        packGarantie.setDelaiCarence(Math.max(packGarantie.getDelaiCarence(), 0));
         packGarantie.setDateActivation(Instant.now());
 
         return packGarantieRepository.save(packGarantie);
@@ -230,12 +211,10 @@ public class PackUnifiedService {
         validatePackGarantie(details);
 
         // Mise à jour des champs
-        existing.setTauxRemboursement(details.getTauxRemboursement());
-        existing.setPlafond(details.getPlafond());
-        existing.setFranchise(details.getFranchise());
+        existing.setTauxRemboursementSpecifique(details.getTauxRemboursementSpecifique());
+        existing.setPlafondSpecifique(details.getPlafondSpecifique());
+        existing.setFranchiseSpecifique(details.getFranchiseSpecifique());
         existing.setTypeMontant(details.getTypeMontant());
-        existing.setDelaiCarence(details.getDelaiCarence());
-        existing.setPriorite(details.getPriorite());
         existing.setOptionnelle(details.isOptionnelle());
         existing.setSupplementPrix(details.getSupplementPrix());
 
@@ -267,37 +246,14 @@ public class PackUnifiedService {
             throw new IllegalArgumentException("Le nom du pack est obligatoire");
         }
 
-        if (pack.getAgeMinimum() != null && pack.getAgeMaximum() != null) {
-            if (pack.getAgeMinimum() > pack.getAgeMaximum()) {
-                throw new IllegalArgumentException("L'âge minimum ne peut pas être supérieur à l'âge maximum");}
-            if (pack.getAgeMinimum() < 0 || pack.getAgeMaximum() > 120) {
-                throw new IllegalArgumentException("Les âges doivent être compris entre 0 et 120 ans");}}
-
         if (pack.getPrixMensuel() < 0) {
             throw new IllegalArgumentException("Le prix mensuel ne peut pas être négatif");}
-
-        if (pack.getDureeMinContrat() > pack.getDureeMaxContrat()) {
-            throw new IllegalArgumentException("La durée minimale ne peut pas être supérieure à la durée maximale");}
-
-        if (pack.getAncienneteContratMois() < 0) {
-            throw new IllegalArgumentException("L'ancienneté de contrat ne peut pas être négative");}
     }
 
     private void validatePackGarantie(PackGarantie packGarantie) {
-        if (packGarantie.getTauxRemboursement() < 0 || packGarantie.getTauxRemboursement() > 1) {
-            throw new IllegalArgumentException("Le taux de remboursement doit être entre 0 et 1");}
-
-        if (packGarantie.getPlafond() < 0) {
-            throw new IllegalArgumentException("Le plafond ne peut pas être négatif");}
-
-        if (packGarantie.getFranchise() < 0) {
-            throw new IllegalArgumentException("La franchise ne peut pas être négative");}
-
-        if (packGarantie.getDelaiCarence() < 0) {
-            throw new IllegalArgumentException("Le délai de carence ne peut pas être négatif");}
-
-        if (packGarantie.getPriorite() < 1) {
-            throw new IllegalArgumentException("La priorité doit être supérieure ou égale à 1");}
+        if (packGarantie.getTauxRemboursementSpecifique() != null &&
+                (packGarantie.getTauxRemboursementSpecifique() < 0 || packGarantie.getTauxRemboursementSpecifique() > 100)) {
+            throw new IllegalArgumentException("Le taux de remboursement doit être entre 0 et 100");}
 
         if (packGarantie.getSupplementPrix() < 0) {
             throw new IllegalArgumentException("Le supplément de prix ne peut pas être négatif");}

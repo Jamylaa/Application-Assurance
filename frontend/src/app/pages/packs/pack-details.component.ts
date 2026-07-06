@@ -7,14 +7,22 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { GestionProduitService, Pack } from '../../services/gestion-produit.service';
-import { PackGarantie } from '../../models/entities.model';
+import {
+  PackGarantie,
+  StatutWorkflow,
+  getStatutWorkflowLabel,
+  getStatutWorkflowBadgeVariant,
+  isStatutWorkflowOutlined,
+  formatDate
+} from '../../models/entities.model';
 import { ToastService } from '../../shared/services/toast.service';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
+import { UiBadgeComponent } from '../../shared/components/ui-badge/ui-badge.component';
 
 @Component({
   selector: 'app-pack-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, CardModule, ButtonModule, ProgressSpinnerModule, TagModule, ToastModule],
+  imports: [CommonModule, RouterModule, CardModule, ButtonModule, ProgressSpinnerModule, TagModule, ToastModule, UiBadgeComponent],
   templateUrl: './pack-details.component.html',
   styleUrls: ['./pack-details.component.css']
 })
@@ -26,6 +34,7 @@ export class PackDetailsComponent implements OnInit {
   packRating: number = 0;
   packGaranties: PackGarantie[] = [];
   loadingGaranties: boolean = false;
+  packNamesById: Map<string, string> = new Map();
 
   Math = Math;
 
@@ -70,6 +79,21 @@ export class PackDetailsComponent implements OnInit {
         this.toastService.showError('Impossible de charger le pack');
       }
     });
+
+    // Résolution des références croisées (optionsPackIds, packsCompatibles, packsIncompatibles) en noms lisibles
+    this.packService.getAllPacks().subscribe({
+      next: (packs) => {
+        this.packNamesById = new Map(packs.map(p => [p.idPack, p.nomPack]));
+      },
+      error: () => {
+        this.packNamesById = new Map();
+      }
+    });
+  }
+
+  resolvePackNames(ids?: string[]): string[] {
+    if (!ids || ids.length === 0) return [];
+    return ids.map(id => this.packNamesById.get(id) || id);
   }
 
   private loadPackGaranties(idPack: string): void {
@@ -112,17 +136,6 @@ export class PackDetailsComponent implements OnInit {
     this.router.navigate(['/packs/edit', this.packId]);
   }
 
-  getStatusSeverity(statut?: string): 'success' | 'danger' | 'info' | 'secondary' {
-    switch ((statut || '').toUpperCase()) {
-      case 'ACTIF':
-        return 'success';
-      case 'INACTIF':
-        return 'danger';
-      default:
-        return 'info';
-    }
-  }
-
   getNiveauClass(niveau?: string): string {
     switch (niveau?.toUpperCase()) {
       case 'PREMIUM': return 'premium';
@@ -134,38 +147,33 @@ export class PackDetailsComponent implements OnInit {
     }
   }
 
-  getAgeRange(): string {
-    if (!this.pack) return '—';
-    const min = this.pack.ageMinimum ?? 0;
-    const max = this.pack.ageMaximum ?? 120;
-    return `${min} - ${max} ans`;
-  }
-
   getCoverageScore(): number {
     if (!this.pack) return 0;
 
-    // Score géographique (30%)
-    const geoMap: Record<string, number> = {
-      INTERNATIONAL: 100, UE: 85, MAGHREB: 70, NATIONAL: 55, LOCAL: 30
-    };
-    const geoScore = geoMap[(this.pack.couvertureGeographique ?? '').toUpperCase()] ?? 20;
-
-    // Score niveau (30%)
+    // Score niveau (43%)
     const niveauMap: Record<string, number> = { GOLD: 100, PREMIUM: 75, BASIC: 50 };
     const niveauScore = niveauMap[(this.pack.niveauCouverture ?? '').toUpperCase()] ?? 40;
 
-    // Score garanties (40%) — plafonné à 10 garanties = 100%
+    // Score garanties (57%) — plafonné à 10 garanties = 100%
     const garantiesScore = Math.min(this.garantiesCount * 10, 100);
 
-    return Math.round(geoScore * 0.3 + niveauScore * 0.3 + garantiesScore * 0.4);
+    return Math.round(niveauScore * 0.43 + garantiesScore * 0.57);
   }
 
-  getGeoScore(): number {
-    if (!this.pack) return 0;
-    const geoMap: Record<string, number> = {
-      INTERNATIONAL: 100, UE: 85, MAGHREB: 70, NATIONAL: 55, LOCAL: 30
-    };
-    return geoMap[(this.pack.couvertureGeographique ?? '').toUpperCase()] ?? 20;
+  getStatutLabel(statut?: StatutWorkflow): string {
+    return statut ? getStatutWorkflowLabel(statut) : '—';
+  }
+
+  getStatutBadgeVariant(statut?: StatutWorkflow): 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+    return statut ? getStatutWorkflowBadgeVariant(statut) : 'neutral';
+  }
+
+  isStatutOutlined(statut?: StatutWorkflow): boolean {
+    return statut ? isStatutWorkflowOutlined(statut) : false;
+  }
+
+  formatDateValue(date?: string): string {
+    return date ? formatDate(date) : '—';
   }
 
   getPricingCategory(): string {

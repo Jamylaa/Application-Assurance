@@ -1,11 +1,27 @@
 import re
 import json
 import logging
+import unicodedata
 from typing import Dict, Any, Optional
 import httpx
 from app.config import settings
 
+
+def _strip_accents(text: str) -> str:
+    """Normalise le texte en retirant les accents (ex: 'maternité' -> 'maternite'),
+    pour un matching de mots-clés robuste indépendamment de l'accentuation saisie."""
+    return ''.join(c for c in unicodedata.normalize('NFKD', text) if not unicodedata.combining(c))
+
 logger = logging.getLogger(__name__)
+
+# Domaines médicaux reconnus en langage naturel pour le profil de recommandation
+# (sans accents — comparés en fallback contre les noms d'enum DomaineMedical côté backend).
+_RECOMMENDATION_DOMAINE_KEYWORDS = [
+    "cardiologie", "hospitalisation", "rhumatologie", "kinesitherapie",
+    "dentaire", "optique", "pharmacie", "maternite", "gynecologie",
+    "pediatrie", "ophtalmologie", "orl", "dermatologie", "psychiatrie",
+    "psychologie", "radiologie", "chirurgie", "obstetrique",
+]
 
 
 class AIExtractionService:
@@ -55,14 +71,10 @@ class AIExtractionService:
 
 Extrais les informations pour créer une garantie d'assurance. IMPORTANT:
 - Retourne un JSON avec: nom, description, domaine (domaine médical parmi: CONSULTATION_GENERALE, CARDIOLOGIE, DENTAIRE, OPHTALMOLOGIE, HOSPITALISATION, ORL, PHARMACIE, MATERNITE, GYNECOLOGIE, PEDIATRIE, KINESITHERAPIE, RADIOLOGIE, URGENCES_MEDICALES, etc.)
-- tauxRemboursement (en décimal, ex: 0.8 pour 80%)
+- tauxRemboursement (en pourcentage, ex: 80 pour 80%)
 - typeMontant (TARIF_CONVENTIONNE/FRAIS_REELS/FORFAIT - EXACTEMENT ces valeurs)
 - plafondAnnuel, plafondMensuel, plafondParActe
-- franchise, coutMoyenParSinistre
-- dureeMinContrat, dureeMaxContrat (DEUX valeurs distinctes, en mois)
-- resiliableAnnuellement (true/false)
-- statut (ACTIF/INACTIF)
-- Pour les plages de durée (ex: '12 à 36 mois'), séparez en dureeMinContrat=12 et dureeMaxContrat=36
+- franchise
 - Utilise null si vraiment absent.
 """
 
@@ -90,7 +102,6 @@ Extrais les informations pour créer une garantie d'assurance. IMPORTANT:
 Extrais les informations pour créer un produit d'assurance. Retourne un JSON avec:
 - nom, description
 - typeProduit (SANTE/AUTO/HABITATION/VIE)
-- statut (ACTIF/INACTIF)
 Utilise null si absent.
 """
             return self._call_github_ai_with_retry(enhanced_prompt)
@@ -107,31 +118,22 @@ Extrais les informations pour créer un pack d'assurance. Retourne UNIQUEMENT un
 
 Champs du pack:
 - nom, description
-- ageMin, ageMax (entiers)
-- typeClients: "INDIVIDUEL", "FAMILLE", "SENIOR", "ETUDIANT" ou "ENTREPRISE"
-- couvertureGeographique: "LOCAL", "NATIONAL" ou "INTERNATIONAL"
 - prixMensuel (nombre décimal, ex: 95.0)
-- dureeMinContrat, dureeMaxContrat (en mois, entiers)
 - niveauCouverture: "BASIC", "PREMIUM" ou "GOLD"
-- statut: "ACTIF" ou "INACTIF"
 - nomProduit: nom exact du produit associé
-- ancienneteContratMois: ancienneté minimale en mois (entier)
 - garanties: liste de TOUTES les garanties mentionnées dans le prompt, chacune avec:
   {
     "nomGarantie": string,
     "tauxRemboursement": float entre 0 et 1 (ex: 0.9 pour 90%),
     "plafond": float (plafond en TND),
     "franchise": float,
-    "delaiCarence": int (jours),
     "typeMontant": "FORFAIT" | "FRAIS_REELS" | "TARIF_CONVENTIONNE",
     "optionnelle": bool,
-    "supplementPrix": float (0 si non mentionné),
-    "priorite": int
+    "supplementPrix": float (0 si non mentionné)
   }
 
 Règles importantes:
 - niveauCouverture GOLD si "gold" dans le nom/description, PREMIUM si "premium", BASIC sinon
-- typeClients SENIOR si "senior"/"sénior" dans le nom, FAMILLE si "famille", INDIVIDUEL sinon
 - garanties: [] si aucune garantie mentionnée
 - Utilise null pour les champs vraiment absents du texte
 """
@@ -146,8 +148,10 @@ Règles importantes:
         try:
             enhanced_prompt = prompt + """
 
-Extrais les informations pour configurer un pack:
-- packId, garantieId, tauxRemboursement, plafond, franchise, optionnelle, supplementPrix
+Extrais les informations pour reconfigurer une garantie déjà associée à un pack:
+- nomPack, nomGarantie
+- tauxRemboursement (en pourcentage, ex: 90 pour 90%)
+- plafond, franchise, optionnelle, supplementPrix
 Utilise null si absent.
 """
             return self._call_github_ai_with_retry(enhanced_prompt)
@@ -174,6 +178,94 @@ Utilise null si absent.
         except Exception as e:
             logger.error(f"Erreur extraction ajout garantie pack IA: {e}", exc_info=True)
             return self._extract_add_garantie_to_pack_data_fallback(prompt)
+
+    def extract_recommendation_profile_data(self, prompt: str) -> Dict[str, Any]:
+        """Extract a client profile for the weighted recommendation engine from a natural
+        language prompt. AI-first, complété par le fallback regex pour les champs manquants."""
+        try:
+            enhanced_prompt = prompt + """
+
+Extrais le profil client pour une recommandation d'assurance. Retourne un JSON avec:
+- age (entier)
+- gender: "homme" ou "femme"
+- maritalStatus: "célibataire", "marié(e)", "divorcé(e)" ou "veuf(ve)"
+- numberOfChildren (entier, 0 si non mentionné)
+- monthlyBudget (nombre, budget mensuel en TND)
+- medicalNeeds: liste de domaines médicaux souhaités, sans accents (ex: ["cardiologie", "dentaire", "maternite"])
+- smoker (booléen)
+- geographicalZone: "LOCAL", "NATIONAL", "INTERNATIONAL", "UE" ou "MAGHREB"
+- profession (texte libre)
+Utilise null si vraiment absent.
+"""
+            result = self._call_github_ai_with_retry(enhanced_prompt)
+
+            if not result or result.get("age") is None or not result.get("gender"):
+                logger.warning("IA n'a pas extrait un profil complet, complément par fallback regex")
+                fallback = self._extract_recommendation_profile_fallback(prompt)
+                return {**fallback, **{k: v for k, v in (result or {}).items() if v is not None}}
+
+            return result
+        except Exception as e:
+            logger.error(f"Erreur extraction profil recommandation IA: {e}", exc_info=True)
+            return self._extract_recommendation_profile_fallback(prompt)
+
+    def _extract_recommendation_profile_fallback(self, prompt: str) -> Dict[str, Any]:
+        """Fallback regex extraction for a client recommendation profile."""
+        result: Dict[str, Any] = {}
+        prompt_lower = prompt.lower()
+
+        age_match = re.search(r'(\d+)\s*ans?\b', prompt_lower)
+        if age_match:
+            result["age"] = int(age_match.group(1))
+
+        if re.search(r'\bfemme\b|\bféminin\b|\bfeminin\b|\bmariée\b|\bdivorcée\b|\bveuve\b', prompt_lower):
+            result["gender"] = "femme"
+        elif re.search(r'\bhomme\b|\bmasculin\b|\bmarié\b|\bdivorcé\b|\bveuf\b', prompt_lower):
+            result["gender"] = "homme"
+
+        if re.search(r'marié|mariée|mariage', prompt_lower):
+            result["maritalStatus"] = "marié(e)"
+        elif re.search(r'célibataire|celibataire', prompt_lower):
+            result["maritalStatus"] = "célibataire"
+        elif re.search(r'divorcé|divorcée|divorce', prompt_lower):
+            result["maritalStatus"] = "divorcé(e)"
+        elif re.search(r'veuf|veuve', prompt_lower):
+            result["maritalStatus"] = "veuf(ve)"
+
+        enfants_match = re.search(r'(\d+)\s*enfants?', prompt_lower)
+        if enfants_match:
+            result["numberOfChildren"] = int(enfants_match.group(1))
+        elif "sans enfant" in prompt_lower:
+            result["numberOfChildren"] = 0
+
+        budget_match = re.search(r'budget\s+(?:mensuel\s+)?(?:de\s+)?(\d+(?:[.,]\d+)?)', prompt_lower)
+        if not budget_match:
+            budget_match = re.search(r'(\d+(?:[.,]\d+)?)\s*(?:tnd|dt|dinars?)\s*(?:par\s+mois|/mois|mensuel)?', prompt_lower)
+        if budget_match:
+            result["monthlyBudget"] = float(budget_match.group(1).replace(",", "."))
+
+        prompt_sans_accents = _strip_accents(prompt_lower)
+        needs = [kw for kw in _RECOMMENDATION_DOMAINE_KEYWORDS if kw in prompt_sans_accents]
+        if needs:
+            result["medicalNeeds"] = needs
+
+        if re.search(r'non[\s-]fumeur|ne fume pas|non[\s-]fumeuse', prompt_lower):
+            result["smoker"] = False
+        elif re.search(r'\bfumeur\b|\bfumeuse\b|\bfume\b', prompt_lower):
+            result["smoker"] = True
+
+        if "international" in prompt_lower:
+            result["geographicalZone"] = "INTERNATIONAL"
+        elif "maghreb" in prompt_lower:
+            result["geographicalZone"] = "MAGHREB"
+        elif re.search(r'\bue\b|union européenne|europe', prompt_lower):
+            result["geographicalZone"] = "UE"
+        elif "national" in prompt_lower:
+            result["geographicalZone"] = "NATIONAL"
+        elif "local" in prompt_lower:
+            result["geographicalZone"] = "LOCAL"
+
+        return result
 
     # ------------------------------------------------------------------
     # API call
@@ -365,13 +457,6 @@ Utilise null si absent.
                 data["niveauCouverture"] = niveau
                 logger.info(f"Niveau de couverture déduit: {niveau}")
 
-        # Deduce client type if missing
-        if not data.get("typeClients"):
-            type_client = self._deduce_client_type(pack_name, prompt_lower)
-            if type_client:
-                data["typeClients"] = type_client
-                logger.info(f"Type de client déduit: {type_client}")
-
         # Extract price with regex if missing or zero
         if not data.get("prixMensuel") or data.get("prixMensuel", 0) <= 0:
             prix = self._extract_price_from_prompt(prompt_lower)
@@ -395,18 +480,6 @@ Utilise null si absent.
         elif any(kw in pack_name or kw in prompt for kw in ["essentiel", "basic", "standard", "confort"]):
             return "BASIC"
         return None
-
-    def _deduce_client_type(self, pack_name: str, prompt: str) -> Optional[str]:
-        """Deduce client type from pack name or prompt."""
-        if "famille" in pack_name or "enfants" in pack_name or "famille" in prompt:
-            return "FAMILLE"
-        elif "senior" in pack_name or "sénior" in pack_name or "senior" in prompt or "sénior" in prompt:
-            return "SENIOR"
-        elif "étudiant" in pack_name or "etudiant" in pack_name or "étudiant" in prompt:
-            return "ETUDIANT"
-        elif "entreprise" in pack_name or "entreprise" in prompt:
-            return "ENTREPRISE"
-        return "INDIVIDUEL"
 
     def _extract_price_from_prompt(self, prompt: str) -> Optional[float]:
         """Extract price from prompt using regex."""

@@ -23,13 +23,6 @@ export const routes: Routes = [
             .then(m => m.DashboardComponent),
         title: 'Dashboard'
       },
-      // {
-      //   path: 'users',
-      //   loadComponent: () =>
-      //     import('./pages/users/users.component')
-      //       .then(m => m.UsersComponent),
-      //   title: 'Gestion des utilisateurs'
-      // },
       {
         path: 'produits',
         loadComponent: () =>

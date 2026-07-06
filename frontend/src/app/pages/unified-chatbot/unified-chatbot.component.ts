@@ -222,21 +222,25 @@ Comment puis-je vous aider aujourd'hui ?`;
     let formatted = '\n\n---\n';
 
     if (data.produit) {
-      const produit = data.produit as { nomProduit: string; description: string; typeProduit: string; statut: string };
+      const produit = data.produit as { nomProduit: string; description: string; typeProduit: string };
       formatted += `\n📦 **Produit**: ${produit.nomProduit}`;
-      formatted += `\n   Type: ${produit.typeProduit} | Statut: ${produit.statut}`;
+      formatted += `\n   Type: ${produit.typeProduit}`;
       if (produit.description && produit.description.length < 100) {
         formatted += `\n   ${produit.description}`;
       }
     }
 
     if (data.garantie) {
-      const garantie = data.garantie as { nomGarantie: string; description: string; domaine?: string; tauxRemboursement: number; statut: string; dureeMinContrat?: number; dureeMaxContrat?: number; typeMontant?: string };
+      const garantie = data.garantie as {
+        nomGarantie: string; description: string; domaine?: string;
+        tauxRemboursementBase?: number; typeRemboursement?: string;
+        plafond?: { plafondAnnuel?: number; plafondMensuel?: number };
+      };
       const cleanedName = this.cleanGarantieName(garantie.nomGarantie);
       formatted += `\n🛡️ **Garantie**: ${cleanedName}`;
-      formatted += `\n   Taux: ${(garantie.tauxRemboursement * 100).toFixed(0)}% | Domaine: ${garantie.domaine ?? '—'} | Statut: ${garantie.statut}`;
-      if (garantie.dureeMinContrat || garantie.dureeMaxContrat) {
-        formatted += `\n   Durée: ${garantie.dureeMinContrat || 0} – ${garantie.dureeMaxContrat || 0} mois`;
+      formatted += `\n   Taux: ${(garantie.tauxRemboursementBase ?? 0).toFixed(0)}% | Domaine: ${garantie.domaine ?? '—'}`;
+      if (garantie.plafond?.plafondAnnuel || garantie.plafond?.plafondMensuel) {
+        formatted += `\n   Plafond: ${garantie.plafond?.plafondAnnuel ?? 0} TND/an – ${garantie.plafond?.plafondMensuel ?? 0} TND/mois`;
       }
       if (garantie.description && garantie.description.length < 80) {
         formatted += `\n   ${garantie.description}`;
@@ -244,18 +248,23 @@ Comment puis-je vous aider aujourd'hui ?`;
     }
 
     if (data.pack) {
-      const pack = data.pack as { nomPack: string; description: string; prixMensuel: number; niveauCouverture: string; statut: string };
+      const pack = data.pack as { nomPack: string; description: string; prixMensuel: number; niveauCouverture: string };
       formatted += `\n📋 **Pack**: ${pack.nomPack}`;
-      formatted += `\n   Prix: ${pack.prixMensuel}€/mois | Niveau: ${pack.niveauCouverture} | Statut: ${pack.statut}`;
+      formatted += `\n   Prix: ${pack.prixMensuel} TND/mois | Niveau: ${pack.niveauCouverture}`;
       if (pack.description && pack.description.length < 80) {
         formatted += `\n   ${pack.description}`;
       }
     }
 
     if (data.packGarantie) {
-      const pg = data.packGarantie as { packId: string; garantieId: string; tauxRemboursement: number; plafond: number };
+      const pg = data.packGarantie as {
+        packId: string; garantieId: string;
+        tauxRemboursementSpecifique?: number; plafondSpecifique?: { plafondAnnuel?: number };
+      };
       formatted += `\n🔗 **Association**: Pack → Garantie`;
-      formatted += `\n   Taux: ${(Number(pg.tauxRemboursement) * 100).toFixed(0)}% | Plafond: ${pg.plafond}€`;
+      const taux = pg.tauxRemboursementSpecifique != null ? `${Number(pg.tauxRemboursementSpecifique).toFixed(0)}%` : '—';
+      const plafond = pg.plafondSpecifique?.plafondAnnuel != null ? `${pg.plafondSpecifique.plafondAnnuel} TND` : '—';
+      formatted += `\n   Taux: ${taux} | Plafond: ${plafond}`;
     }
 
     if (data.recommendations) {
@@ -263,7 +272,7 @@ Comment puis-je vous aider aujourd'hui ?`;
       data.recommendations.slice(0, 3).forEach((rec: unknown, index: number) => {
         const recObj = rec as { id: string; nom: string; description: string; compatibilityScore: number; monthlyPrice?: number; coverageLevel?: string; whyRecommended?: string; explanation?: string };
         formatted += `\n${index + 1}. **${recObj.nom}** (${recObj.compatibilityScore.toFixed(1)}%)`;
-        if (recObj.monthlyPrice) formatted += ` - ${recObj.monthlyPrice}€/mois`;
+        if (recObj.monthlyPrice) formatted += ` - ${recObj.monthlyPrice} TND/mois`;
         if (recObj.whyRecommended && recObj.whyRecommended.length < 100) {
           formatted += `\n   ✅ ${recObj.whyRecommended}`;
         }

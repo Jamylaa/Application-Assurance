@@ -4,16 +4,25 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
-import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { GestionProduitService, Produit } from '../../services/gestion-produit.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
+import { UiBadgeComponent } from '../../shared/components/ui-badge/ui-badge.component';
+import {
+  StatutWorkflow,
+  CouvertureGeographique,
+  getStatutWorkflowLabel,
+  getStatutWorkflowBadgeVariant,
+  isStatutWorkflowOutlined,
+  getCouvertureGeographiqueLabel,
+  formatDate
+} from '../../models/entities.model';
 
 @Component({
   selector: 'app-produit-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, ProgressSpinnerModule, CardModule, ButtonModule, TagModule, ToastModule],
+  imports: [CommonModule, RouterModule, ProgressSpinnerModule, CardModule, ButtonModule, ToastModule, UiBadgeComponent],
   templateUrl: './produit-details.component.html',
   styleUrls: ['./produit-details.component.css']
 })
@@ -71,12 +80,11 @@ export class ProduitDetailsComponent implements OnInit {
     // Calculer le nombre de packs (simulé pour l'instant)
     this.packsCount = this.produit.idProduit ? Math.floor(Math.random() * 8) + 2 : 0;
 
-    // Calculer une note basée sur le type et le statut
+    // Calculer une note basée sur le type de produit
     const typeScore = this.produit.typeProduit === 'SANTE' ? 100 :
                      this.produit.typeProduit === 'VIE' ? 90 :
                      this.produit.typeProduit === 'HABITATION' ? 85 : 70;
-    const statutScore = this.produit.statut === 'ACTIF' ? 100 : 50;
-    this.productRating = Math.round((typeScore + statutScore) / 2);
+    this.productRating = typeScore;
   }
 
   back(): void {
@@ -88,17 +96,6 @@ export class ProduitDetailsComponent implements OnInit {
     this.router.navigate(['/produits/edit', this.produitId]);
   }
 
-  getStatusSeverity(statut?: string): 'success' | 'danger' | 'info' | 'secondary' {
-    switch ((statut || '').toUpperCase()) {
-      case 'ACTIF':
-        return 'success';
-      case 'INACTIF':
-        return 'danger';
-      default:
-        return 'info';
-    }
-  }
-
   getTypeClass(type?: string): string {
     switch (type?.toUpperCase()) {
       case 'SANTE': return 'sante';
@@ -108,6 +105,26 @@ export class ProduitDetailsComponent implements OnInit {
       case 'EPARGNE': return 'epargne';
       default: return 'unknown';
     }
+  }
+
+  getStatutLabel(statut?: StatutWorkflow): string {
+    return statut ? getStatutWorkflowLabel(statut) : '—';
+  }
+
+  getStatutBadgeVariant(statut?: StatutWorkflow): 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+    return statut ? getStatutWorkflowBadgeVariant(statut) : 'neutral';
+  }
+
+  isStatutOutlined(statut?: StatutWorkflow): boolean {
+    return statut ? isStatutWorkflowOutlined(statut) : false;
+  }
+
+  getCouvertureLabel(couverture?: CouvertureGeographique): string {
+    return couverture ? getCouvertureGeographiqueLabel(couverture) : '—';
+  }
+
+  formatDateValue(date?: string): string {
+    return date ? formatDate(date) : '—';
   }
 
   getProductCategory(): string {

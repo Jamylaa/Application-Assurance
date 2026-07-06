@@ -65,18 +65,49 @@
                 <span class="info-label">Nom</span>
                 <span class="info-value primary">{{ g.nomGarantie || '—' }}</span>
               </div>
+              <div class="info-item" *ngIf="g.nomCourt">
+                <span class="info-label">Nom court</span>
+                <span class="info-value">{{ g.nomCourt }}</span>
+              </div>
               <div class="info-item">
                 <span class="info-label">Description</span>
                 <span class="info-value">{{ g.description || '—' }}</span>
+              </div>
+              <div class="info-item" *ngIf="g.descriptionTechnique">
+                <span class="info-label">Description technique</span>
+                <span class="info-value small">{{ g.descriptionTechnique }}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">Domaine</span>
                 <span class="info-value">{{ getDomaineOrTypeLabel(g) }}</span>
               </div>
               <div class="info-item">
-                <span class="info-label">Statut</span>
-                <p-tag [severity]="getStatusSeverity(g.statut)" [value]="g.statut || 'INCONNU'"></p-tag>
+                <span class="info-label">Obligatoire par défaut</span>
+                <app-ui-badge [variant]="g.garantieObligatoireParDefaut ? 'warning' : 'neutral'" size="sm">
+                  {{ g.garantieObligatoireParDefaut ? 'Oui' : 'Non' }}
+                </app-ui-badge>
               </div>
+            </div>
+          </div>
+
+          <!-- Workflow -->
+          <div class="details-section">
+            <h3><i class="bi bi-signpost-split"></i> Workflow</h3>
+            <div class="section-grid">
+              <div class="info-item">
+                <span class="info-label">Statut</span>
+                <app-ui-badge [variant]="getStatutBadgeVariant(g.statutWorkflow)" [outlined]="isStatutOutlined(g.statutWorkflow)" size="sm">
+                  {{ getStatutLabel(g.statutWorkflow) }}
+                </app-ui-badge>
+              </div>
+            </div>
+          </div>
+
+          <!-- Événements couverts -->
+          <div class="details-section" *ngIf="g.evenementsCouvertsParDefaut && g.evenementsCouvertsParDefaut.length > 0">
+            <h3><i class="bi bi-list-check"></i> Événements couverts par défaut</h3>
+            <div class="tags-wrap">
+              <app-ui-badge *ngFor="let evenement of g.evenementsCouvertsParDefaut" variant="info" size="sm">{{ evenement }}</app-ui-badge>
             </div>
           </div>
 
@@ -86,22 +117,22 @@
             <div class="section-grid">
               <div class="info-item highlight">
                 <span class="info-label">Taux</span>
-                <span class="info-value taux">{{ ((g.tauxRemboursement ?? 0) * 100) | number:'1.0-0' }}%</span>
+                <span class="info-value taux">{{ g.tauxRemboursementBase ?? 0 | number:'1.0-0' }}%</span>
                 <div class="taux-indicator">
-                  <div class="taux-bar" [style.width.%]="((g.tauxRemboursement ?? 0) * 100)"></div>
+                  <div class="taux-bar" [style.width.%]="g.tauxRemboursementBase ?? 0"></div>
                 </div>
               </div>
               <div class="info-item">
-                <span class="info-label">Type montant</span>
-                <span class="info-value">{{ g.typeMontant || '—' }}</span>
+                <span class="info-label">Type de remboursement</span>
+                <span class="info-value">{{ g.typeRemboursement || '—' }}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">Franchise</span>
-                <span class="info-value">{{ g.franchise ?? '—' }} €</span>
+                <span class="info-value">{{ g.franchise?.montantFixe ?? '—' }} TND</span>
               </div>
               <div class="info-item">
-                <span class="info-label">Type plafond</span>
-                <span class="info-value">{{ g.typePlafond || '—' }}</span>
+                <span class="info-label">Type plafond principal</span>
+                <span class="info-value">{{ g.plafond?.typePrincipal || '—' }}</span>
               </div>
             </div>
           </div>
@@ -112,33 +143,92 @@
             <div class="section-grid">
               <div class="info-item">
                 <span class="info-label">Annuel</span>
-                <span class="info-value">{{ g.plafondAnnuel ?? '—' }} €</span>
+                <span class="info-value">{{ g.plafond?.plafondAnnuel ?? '—' }} TND</span>
               </div>
               <div class="info-item">
                 <span class="info-label">Mensuel</span>
-                <span class="info-value">{{ g.plafondMensuel ?? '—' }} €</span>
+                <span class="info-value">{{ g.plafond?.plafondMensuel ?? '—' }} TND</span>
               </div>
               <div class="info-item">
                 <span class="info-label">Par acte</span>
-                <span class="info-value">{{ g.plafondParActe ?? '—' }} €</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Durée contrat</span>
-                <span class="info-value">{{ g.dureeMinContrat ?? '—' }} – {{ g.dureeMaxContrat ?? '—' }} mois</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Résiliable annuellement</span>
-                <span class="info-value">
-                  <p-tag [severity]="g.resiliableAnnuellement ? 'success' : 'danger'"
-                         [value]="g.resiliableAnnuellement ? 'Oui' : 'Non'"></p-tag>
-                </span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Coût moyen par sinistre</span>
-                <span class="info-value">{{ g.coutMoyenParSinistre ?? '—' }} €</span>
+                <span class="info-value">{{ g.plafond?.plafondParActe ?? '—' }} TND</span>
               </div>
             </div>
           </div>
+          <!-- Données actuarielles -->
+          <div class="details-section">
+            <h3><i class="bi bi-graph-up"></i> Données actuarielles</h3>
+            <div class="section-grid">
+              <div class="info-item">
+                <span class="info-label">Prime pure de base</span>
+                <span class="info-value">{{ g.primePureBase != null ? (g.primePureBase + ' TND/mois') : '—' }}</span>
+              </div>
+              <div class="info-item" *ngIf="g.parametresDynamiques && entriesOf(g.parametresDynamiques).length > 0">
+                <span class="info-label">Paramètres dynamiques</span>
+                <div class="kv-list">
+                  <div class="kv-list-row" *ngFor="let entry of entriesOf(g.parametresDynamiques)">
+                    <span class="kv-list-key">{{ entry.key }}</span>
+                    <span class="kv-list-value">{{ entry.value }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Règle de calcul -->
+          <div class="details-section" *ngIf="g.regleCalcul">
+            <h3><i class="bi bi-calculator"></i> Règle de calcul</h3>
+            <div class="section-grid">
+              <div class="info-item" *ngIf="g.regleCalcul.formule">
+                <span class="info-label">Formule</span>
+                <span class="info-value formule">{{ g.regleCalcul.formule }}</span>
+              </div>
+              <div class="info-item" *ngIf="g.regleCalcul.descriptionFormule">
+                <span class="info-label">Explication</span>
+                <span class="info-value small">{{ g.regleCalcul.descriptionFormule }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Priorité de calcul</span>
+                <span class="info-value">{{ g.regleCalcul.prioriteCalcul ?? 1 }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Plafond appliqué après calcul</span>
+                <span class="info-value">{{ g.regleCalcul.appliquerPlafondApresCalcul ? 'Oui' : 'Non' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Franchise déduite avant plafond</span>
+                <span class="info-value">{{ g.regleCalcul.deduireFranchiseAvantPlafond ? 'Oui' : 'Non' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Base tarif conventionné</span>
+                <span class="info-value">{{ g.regleCalcul.baseConventionnee ? 'Oui' : 'Non' }}</span>
+              </div>
+              <div class="info-item" *ngIf="g.regleCalcul.parametresFormule && g.regleCalcul.parametresFormule.length > 0">
+                <span class="info-label">Paramètres de la formule</span>
+                <div class="tags-wrap">
+                  <app-ui-badge *ngFor="let param of g.regleCalcul.parametresFormule" variant="neutral" size="sm">{{ param }}</app-ui-badge>
+                </div>
+              </div>
+              <div class="info-item" *ngIf="g.regleCalcul.valeursDefaut && entriesOf(g.regleCalcul.valeursDefaut).length > 0">
+                <span class="info-label">Valeurs par défaut</span>
+                <div class="kv-list">
+                  <div class="kv-list-row" *ngFor="let entry of entriesOf(g.regleCalcul.valeursDefaut)">
+                    <span class="kv-list-key">{{ entry.key }}</span>
+                    <span class="kv-list-value">{{ entry.value }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Prérequis -->
+          <div class="details-section" *ngIf="g.prerequisGarantieIds && g.prerequisGarantieIds.length > 0">
+            <h3><i class="bi bi-link-45deg"></i> Garanties prérequises</h3>
+            <div class="tags-wrap">
+              <app-ui-badge *ngFor="let nom of resolveGarantieNames(g.prerequisGarantieIds)" variant="secondary" size="sm">{{ nom }}</app-ui-badge>
+            </div>
+          </div>
+
           <!-- Métadonnées -->
           <div class="details-section meta">
             <h3><i class="bi bi-gear"></i> Métadonnées</h3>

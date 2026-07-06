@@ -1,0 +1,37 @@
+<div class="kv-editor">
+  <div class="kv-rows">
+    <div class="kv-row" *ngFor="let row of rows.controls; let i = index">
+      <input
+        pInputText
+        [formControl]="$any(row).controls.key"
+        [placeholder]="keyPlaceholder"
+        class="kv-key-input" />
+      <p-inputNumber
+        [formControl]="$any(row).controls.value"
+        [placeholder]="valuePlaceholder"
+        mode="decimal"
+        [minFractionDigits]="0"
+        [maxFractionDigits]="4"
+        styleClass="kv-value-input">
+      </p-inputNumber>
+      <button
+        type="button"
+        pButton
+        icon="pi pi-trash"
+        class="p-button-text p-button-danger p-button-sm"
+        (click)="removeRow(i)">
+      </button>
+    </div>
+  </div>
+
+  <button
+    type="button"
+    pButton
+    icon="pi pi-plus"
+    [label]="addLabel"
+    class="p-button-outlined p-button-sm kv-add-btn"
+    (click)="addRow()">
+  </button>
+
+  <p class="kv-empty" *ngIf="rows.length === 0">Aucune entrée — cliquez sur "{{ addLabel }}" pour en ajouter une.</p>
+</div>

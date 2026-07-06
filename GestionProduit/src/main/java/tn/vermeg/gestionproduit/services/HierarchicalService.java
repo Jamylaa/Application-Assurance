@@ -1,15 +1,21 @@
 package tn.vermeg.gestionproduit.services;
 
 import org.springframework.stereotype.Service;
+import tn.vermeg.gestionproduit.dto.PackDetailDTO;
+import tn.vermeg.gestionproduit.dto.ProduitDetailDTO;
 import tn.vermeg.gestionproduit.entities.Garantie;
 import tn.vermeg.gestionproduit.entities.Pack;
+import tn.vermeg.gestionproduit.entities.PackGarantie;
 import tn.vermeg.gestionproduit.entities.Produit;
+import tn.vermeg.gestionproduit.enums.DomaineMedical;
 import tn.vermeg.gestionproduit.exceptions.ResourceNotFoundException;
 import tn.vermeg.gestionproduit.repositories.GarantieRepository;
+import tn.vermeg.gestionproduit.repositories.PackGarantieRepository;
 import tn.vermeg.gestionproduit.repositories.PackUnifiedRepository;
 import tn.vermeg.gestionproduit.repositories.ProduitRepository;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Service pour gérer les relations hiérarchiques entre Produit → Pack → Garantie
@@ -20,13 +26,16 @@ public class HierarchicalService {
 
     private final ProduitRepository produitRepository;
     private final PackUnifiedRepository packRepository;
+    private final PackGarantieRepository packGarantieRepository;
     private final GarantieRepository garantieRepository;
 
     public HierarchicalService(ProduitRepository produitRepository,
                                PackUnifiedRepository packRepository,
+                               PackGarantieRepository packGarantieRepository,
                                GarantieRepository garantieRepository) {
         this.produitRepository = produitRepository;
         this.packRepository = packRepository;
+        this.packGarantieRepository = packGarantieRepository;
         this.garantieRepository = garantieRepository;
     }
 
@@ -71,8 +80,7 @@ public class HierarchicalService {
                 .orElseThrow(() -> new ResourceNotFoundException("Pack", packId,
                     "Pack non trouvé avec l'ID: " + packId));
 
-        List<Garantie> garanties = garantieRepository.findByPackId(packId);
-        pack.setGaranties(garanties);
+        pack.setGaranties(packGarantieRepository.findByPackIdAndActifTrue(packId));
         return pack;
     }
 
@@ -83,8 +91,7 @@ public class HierarchicalService {
         List<Pack> packs = packRepository.findAll();
         return packs.stream()
                 .map(pack -> {
-                    List<Garantie> garanties = garantieRepository.findByPackId(pack.getIdPack());
-                    pack.setGaranties(garanties);
+                    pack.setGaranties(packGarantieRepository.findByPackIdAndActifTrue(pack.getIdPack()));
                     return pack;
                 })
                 .toList();
@@ -97,8 +104,7 @@ public class HierarchicalService {
         List<Pack> packs = packRepository.findByProduitId(produitId);
         return packs.stream()
                 .map(pack -> {
-                    List<Garantie> garanties = garantieRepository.findByPackId(pack.getIdPack());
-                    pack.setGaranties(garanties);
+                    pack.setGaranties(packGarantieRepository.findByPackIdAndActifTrue(pack.getIdPack()));
                     return pack;
                 })
                 .toList();
@@ -113,35 +119,50 @@ public class HierarchicalService {
     public Produit getProduitWithFullHierarchy(String produitId) {
         Produit produit = getProduitWithPacks(produitId);
         if (produit.getPacks() != null) {
-            produit.getPacks().forEach(pack -> {
-                List<Garantie> garanties = garantieRepository.findByPackId(pack.getIdPack());
-                pack.setGaranties(garanties);
-            });
+            produit.getPacks().forEach(pack ->
+                    pack.setGaranties(packGarantieRepository.findByPackIdAndActifTrue(pack.getIdPack())));
         }
         return produit;
     }
 
-    /**
-     * Met à jour la référence packId dans une garantie lors de l'association
-     */
-    public Garantie updateGarantiePackReference(String garantieId, String packId) {
-        Garantie garantie = garantieRepository.findById(garantieId)
-                .orElseThrow(() -> new ResourceNotFoundException("Garantie", garantieId,
-                    "Garantie non trouvée avec l'ID: " + garantieId));
+    // ==================== DONNÉES DÉRIVÉES (calculées à la demande) ====================
 
-        garantie.setPackId(packId);
-        return garantieRepository.save(garantie);
+    /**
+     * Détail d'un produit avec {@code idPacks} calculé à la demande
+     * (jamais stocké/dénormalisé sur l'entité Produit).
+     */
+    public ProduitDetailDTO getProduitDetail(String produitId) {
+        Produit produit = produitRepository.findById(produitId)
+                .orElseThrow(() -> new ResourceNotFoundException("Produit", produitId,
+                        "Produit non trouvé avec l'ID: " + produitId));
+
+        List<String> idPacks = packRepository.findByProduitId(produitId).stream()
+                .map(Pack::getIdPack)
+                .toList();
+
+        return new ProduitDetailDTO(produit, idPacks);
     }
 
     /**
-     * Supprime la référence packId d'une garantie lors de la dissociation
+     * Détail d'un pack avec {@code idGaranties} et {@code domainesMedicaux} calculés
+     * à la demande via PackGarantie → Garantie.domaine (jamais stockés sur l'entité Pack).
      */
-    public Garantie removeGarantiePackReference(String garantieId) {
-        Garantie garantie = garantieRepository.findById(garantieId)
-                .orElseThrow(() -> new ResourceNotFoundException("Garantie", garantieId,
-                    "Garantie non trouvée avec l'ID: " + garantieId));
+    public PackDetailDTO getPackDetail(String packId) {
+        Pack pack = packRepository.findById(packId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pack", packId,
+                        "Pack non trouvé avec l'ID: " + packId));
 
-        garantie.setPackId(null);
-        return garantieRepository.save(garantie);
+        List<PackGarantie> associations = packGarantieRepository.findByPackIdAndActifTrue(packId);
+        List<String> idGaranties = associations.stream()
+                .map(PackGarantie::getGarantieId)
+                .toList();
+
+        List<DomaineMedical> domainesMedicaux = garantieRepository.findAllById(idGaranties).stream()
+                .map(Garantie::getDomaine)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        return new PackDetailDTO(pack, idGaranties, domainesMedicaux);
     }
 }

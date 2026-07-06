@@ -53,6 +53,45 @@
           </div>
         </div>
 
+        <!-- Code -->
+        <div class="form-group">
+          <label class="form-label" for="codeGarantie">
+            <i class="bi bi-upc"></i> Code *
+          </label>
+          <div class="form-control-wrap" [class.has-error]="isFieldInvalid('codeGarantie')">
+            <input
+              pInputText
+              id="codeGarantie"
+              formControlName="codeGarantie"
+              placeholder="Ex. GAR-HOSP-001"
+              class="form-control" />
+          </div>
+          <div class="form-help">Identifiant métier unique</div>
+          <div class="form-error" *ngIf="isFieldInvalid('codeGarantie')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('codeGarantie') }}
+          </div>
+        </div>
+
+        <!-- Nom court -->
+        <div class="form-group">
+          <label class="form-label" for="nomCourt">
+            <i class="bi bi-tag"></i> Nom court
+          </label>
+          <div class="form-control-wrap" [class.has-error]="isFieldInvalid('nomCourt')">
+            <input
+              pInputText
+              id="nomCourt"
+              formControlName="nomCourt"
+              maxlength="30"
+              placeholder="Ex. Hospitalisation"
+              class="form-control" />
+          </div>
+          <div class="form-help">{{ garantieForm.get('nomCourt')?.value?.length || 0 }}/30 caractères — pour les tableaux comparatifs</div>
+          <div class="form-error" *ngIf="isFieldInvalid('nomCourt')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('nomCourt') }}
+          </div>
+        </div>
+
         <!-- Domaine médical -->
         <div class="form-group">
           <label class="form-label" for="domaine">
@@ -71,6 +110,34 @@
           </div>
           <div class="form-error" *ngIf="isFieldInvalid('domaine')">
             <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('domaine') }}
+          </div>
+        </div>
+
+        <!-- Statut de workflow -->
+        <div class="form-group">
+          <label class="form-label" for="statutWorkflow">
+            <i class="bi bi-signpost-split"></i> Statut
+          </label>
+          <div class="form-control-wrap">
+            <p-dropdown
+              id="statutWorkflow"
+              formControlName="statutWorkflow"
+              [options]="statutWorkflowOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez un statut"
+              styleClass="form-control">
+            </p-dropdown>
+          </div>
+        </div>
+
+        <!-- Obligatoire par défaut -->
+        <div class="form-group">
+          <label class="form-label" for="garantieObligatoireParDefaut">
+            <i class="bi bi-exclamation-diamond"></i> Obligatoire par défaut
+          </label>
+          <div class="form-control-wrap switch-wrap">
+            <p-inputSwitch id="garantieObligatoireParDefaut" formControlName="garantieObligatoireParDefaut"></p-inputSwitch>
           </div>
         </div>
 
@@ -94,6 +161,38 @@
           </div>
         </div>
 
+        <!-- Description technique -->
+        <div class="form-group full-width">
+          <label class="form-label" for="descriptionTechnique">
+            <i class="bi bi-file-text"></i> Description technique
+          </label>
+          <div class="form-control-wrap">
+            <textarea
+              pTextarea
+              id="descriptionTechnique"
+              formControlName="descriptionTechnique"
+              placeholder="Destinée aux actuaires et juristes"
+              rows="3"
+              class="form-control">
+            </textarea>
+          </div>
+        </div>
+
+        <!-- Événements couverts par défaut -->
+        <div class="form-group full-width">
+          <label class="form-label" for="evenementsCouvertsParDefaut">
+            <i class="bi bi-list-check"></i> Événements couverts par défaut
+          </label>
+          <div class="form-control-wrap">
+            <p-chips
+              id="evenementsCouvertsParDefaut"
+              formControlName="evenementsCouvertsParDefaut"
+              placeholder="Tapez un événement puis Entrée"
+              styleClass="form-control">
+            </p-chips>
+          </div>
+        </div>
+
         <!-- Taux de remboursement -->
         <div class="form-group">
           <label class="form-label" for="tauxRemboursement">
@@ -104,15 +203,15 @@
               id="tauxRemboursement"
               formControlName="tauxRemboursement"
               [min]="0"
-              [max]="1"
-              [step]="0.01"
+              [max]="100"
+              [step]="1"
               mode="decimal"
               showButtons="false"
-              placeholder="0.00"
+              placeholder="0"
               styleClass="auth-input">
             </p-inputNumber>
           </div>
-          <div class="form-help">Ex: 0.80 pour 80%</div>
+          <div class="form-help">Ex: 80 pour 80%</div>
           <div class="form-error" *ngIf="isFieldInvalid('tauxRemboursement')">
             <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('tauxRemboursement') }}
           </div>
@@ -223,25 +322,169 @@
           </div>
         </div>
 
-        <!-- Statut -->
+        <!-- Prime pure de base -->
         <div class="form-group">
-          <label class="form-label" for="statut">
-            <i class="bi bi-toggle-on"></i> Statut *
+          <label class="form-label" for="primePureBase">
+            <i class="bi bi-graph-up"></i> Prime pure de base
           </label>
-          <div class="form-control-wrap" [class.has-error]="isFieldInvalid('statut')">
-            <p-dropdown
-              id="statut"
-              formControlName="statut"
-              [options]="statutOptions"
+          <div class="form-control-wrap" [class.has-error]="isFieldInvalid('primePureBase')">
+            <p-inputNumber
+              id="primePureBase"
+              formControlName="primePureBase"
+              [min]="0"
+              mode="decimal"
+              showButtons="false"
+              placeholder="0.00"
+              styleClass="auth-input">
+            </p-inputNumber>
+          </div>
+          <div class="form-help">TND/mois — contribution actuarielle à la prime totale</div>
+          <div class="form-error" *ngIf="isFieldInvalid('primePureBase')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('primePureBase') }}
+          </div>
+        </div>
+
+        <!-- Garanties prérequises -->
+        <div class="form-group full-width">
+          <label class="form-label" for="prerequisGarantieIds">
+            <i class="bi bi-link-45deg"></i> Garanties prérequises
+          </label>
+          <div class="form-control-wrap">
+            <p-multiSelect
+              id="prerequisGarantieIds"
+              formControlName="prerequisGarantieIds"
+              [options]="allGaranties"
               optionLabel="label"
               optionValue="value"
-              placeholder="Sélectionnez un statut"
+              placeholder="Sélectionnez des garanties"
+              display="chip"
+              [filter]="true"
               styleClass="form-control">
-            </p-dropdown>
+            </p-multiSelect>
           </div>
-          <div class="form-error" *ngIf="isFieldInvalid('statut')">
-            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('statut') }}
+          <div class="form-help">Garanties devant être activées avant celle-ci</div>
+        </div>
+
+        <!-- Paramètres dynamiques -->
+        <div class="form-group full-width">
+          <label class="form-label">
+            <i class="bi bi-sliders"></i> Paramètres dynamiques
+          </label>
+          <div class="form-control-wrap">
+            <app-key-value-editor
+              formControlName="parametresDynamiques"
+              keyPlaceholder="Paramètre"
+              valuePlaceholder="Valeur">
+            </app-key-value-editor>
           </div>
+          <div class="form-help">Variables utilisées dans la formule de calcul, ex. tauxSpecialiste</div>
+        </div>
+
+        <!-- Règle de calcul avancée -->
+        <div class="form-group full-width">
+          <p-fieldset legend="Règle de calcul avancée" [toggleable]="true" [collapsed]="true">
+            <div class="form-grid" formGroupName="regleCalcul">
+              <div class="form-group full-width">
+                <label class="form-label" for="rcFormule">
+                  <i class="bi bi-calculator"></i> Formule
+                </label>
+                <div class="form-control-wrap">
+                  <input
+                    pInputText
+                    id="rcFormule"
+                    formControlName="formule"
+                    placeholder="Ex. montant * taux / 100 - franchise"
+                    class="form-control" />
+                </div>
+              </div>
+
+              <div class="form-group full-width">
+                <label class="form-label" for="rcDescriptionFormule">
+                  <i class="bi bi-text-paragraph"></i> Explication de la formule
+                </label>
+                <div class="form-control-wrap">
+                  <textarea
+                    pTextarea
+                    id="rcDescriptionFormule"
+                    formControlName="descriptionFormule"
+                    placeholder="Explication humaine pour le juriste / l'assureur"
+                    rows="2"
+                    class="form-control">
+                  </textarea>
+                </div>
+              </div>
+
+              <div class="form-group full-width">
+                <label class="form-label" for="rcParametresFormule">
+                  <i class="bi bi-braces"></i> Paramètres de la formule
+                </label>
+                <div class="form-control-wrap">
+                  <p-chips
+                    id="rcParametresFormule"
+                    formControlName="parametresFormule"
+                    placeholder="Nom d'un paramètre puis Entrée"
+                    styleClass="form-control">
+                  </p-chips>
+                </div>
+              </div>
+
+              <div class="form-group full-width">
+                <label class="form-label">
+                  <i class="bi bi-sliders"></i> Valeurs par défaut des paramètres
+                </label>
+                <div class="form-control-wrap">
+                  <app-key-value-editor
+                    formControlName="valeursDefaut"
+                    keyPlaceholder="Paramètre"
+                    valuePlaceholder="Valeur par défaut">
+                  </app-key-value-editor>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="rcPrioriteCalcul">
+                  <i class="bi bi-sort-numeric-down"></i> Priorité de calcul
+                </label>
+                <div class="form-control-wrap">
+                  <p-inputNumber
+                    id="rcPrioriteCalcul"
+                    formControlName="prioriteCalcul"
+                    [min]="1"
+                    [step]="1"
+                    showButtons="false"
+                    styleClass="auth-input">
+                  </p-inputNumber>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="rcAppliquerPlafondApresCalcul">
+                  Plafond appliqué après calcul
+                </label>
+                <div class="form-control-wrap switch-wrap">
+                  <p-inputSwitch id="rcAppliquerPlafondApresCalcul" formControlName="appliquerPlafondApresCalcul"></p-inputSwitch>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="rcDeduireFranchiseAvantPlafond">
+                  Franchise déduite avant plafond
+                </label>
+                <div class="form-control-wrap switch-wrap">
+                  <p-inputSwitch id="rcDeduireFranchiseAvantPlafond" formControlName="deduireFranchiseAvantPlafond"></p-inputSwitch>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="rcBaseConventionnee">
+                  Base tarif conventionné
+                </label>
+                <div class="form-control-wrap switch-wrap">
+                  <p-inputSwitch id="rcBaseConventionnee" formControlName="baseConventionnee"></p-inputSwitch>
+                </div>
+              </div>
+            </div>
+          </p-fieldset>
         </div>
       </div>
   </div>

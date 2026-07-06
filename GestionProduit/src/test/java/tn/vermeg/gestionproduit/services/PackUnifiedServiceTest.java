@@ -38,6 +38,9 @@ class PackUnifiedServiceTest {
     @Mock
     private ProduitRepository produitRepository;
 
+    @Mock
+    private AssociationValidationService associationValidationService;
+
     @InjectMocks
     private PackUnifiedService packUnifiedService;
 
@@ -54,11 +57,7 @@ class PackUnifiedServiceTest {
         packTest.setNomPack("Pack Santé Premium");
         packTest.setDescription("Pack santé complet avec garanties étendues");
         packTest.setPrixMensuel(150.0);
-        packTest.setAgeMinimum(18);
-        packTest.setAgeMaximum(70);
-        packTest.setStatut(Statut.ACTIF);
         packTest.setNiveauCouverture(NiveauCouverture.PREMIUM);
-        packTest.setCouvertureGeographique(CouvertureGeographique.NATIONAL);
         packTest.setDateCreation(Instant.now());
         packTest.setDateModification(Instant.now());
 
@@ -128,9 +127,6 @@ class PackUnifiedServiceTest {
         newPack.setNomPack("Nouveau Pack");
         newPack.setDescription("Description du nouveau pack");
         newPack.setPrixMensuel(100.0);
-        newPack.setAgeMinimum(18);
-        newPack.setAgeMaximum(65);
-        newPack.setCouvertureGeographique(CouvertureGeographique.NATIONAL);
         newPack.setNiveauCouverture(NiveauCouverture.BASIC);
 
         when(packRepository.existsByNomPackIgnoreCase("Nouveau Pack")).thenReturn(false);
@@ -141,7 +137,6 @@ class PackUnifiedServiceTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(Statut.ACTIF, result.getStatut());
         verify(packRepository, times(1)).save(any(Pack.class));
     }
 
@@ -164,11 +159,7 @@ class PackUnifiedServiceTest {
         updatedDetails.setNomPack("Pack Santé Mis à Jour");
         updatedDetails.setDescription("Description mise à jour");
         updatedDetails.setPrixMensuel(200.0);
-        updatedDetails.setAgeMinimum(20);
-        updatedDetails.setAgeMaximum(75);
-        updatedDetails.setStatut(Statut.ACTIF);
         updatedDetails.setNiveauCouverture(NiveauCouverture.PREMIUM);
-        updatedDetails.setCouvertureGeographique(CouvertureGeographique.NATIONAL);
 
         when(packRepository.findById("1")).thenReturn(Optional.of(packTest));
         when(packRepository.save(any(Pack.class))).thenReturn(packTest);
@@ -192,7 +183,7 @@ class PackUnifiedServiceTest {
         assertDoesNotThrow(() -> packUnifiedService.deletePack("1"));
 
         // Then
-        verify(packRepository, times(1)).deleteById("1");
+        verify(packRepository, times(1)).delete(packTest);
     }
 
     @Test
@@ -224,21 +215,6 @@ class PackUnifiedServiceTest {
     }
 
     @Test
-    void testGetPacksByStatut() {
-        // Given
-        List<Pack> packs = Arrays.asList(packTest);
-        when(packRepository.findByStatut(Statut.ACTIF)).thenReturn(packs);
-
-        // When
-        List<Pack> result = packUnifiedService.getPacksByStatut(Statut.ACTIF);
-
-        // Then
-        assertEquals(1, result.size());
-        assertEquals(Statut.ACTIF, result.get(0).getStatut());
-        verify(packRepository, times(1)).findByStatut(Statut.ACTIF);
-    }
-
-    @Test
     void testGetPacksByNiveau() {
         // Given
         List<Pack> packs = Arrays.asList(packTest);
@@ -251,20 +227,6 @@ class PackUnifiedServiceTest {
         assertEquals(1, result.size());
         assertEquals(NiveauCouverture.PREMIUM, result.get(0).getNiveauCouverture());
         verify(packRepository, times(1)).findByNiveauCouverture(NiveauCouverture.PREMIUM);
-    }
-
-    @Test
-    void testGetPacksByTypeClient() {
-        // Given
-        List<Pack> packs = Arrays.asList(packTest);
-        when(packRepository.findByTypeClientsContaining(TypeClient.INDIVIDUEL)).thenReturn(packs);
-
-        // When
-        List<Pack> result = packUnifiedService.getPacksByTypeClient(TypeClient.INDIVIDUEL);
-
-        // Then
-        assertEquals(1, result.size());
-        verify(packRepository, times(1)).findByTypeClientsContaining(TypeClient.INDIVIDUEL);
     }
 
     @Test
@@ -313,7 +275,7 @@ class PackUnifiedServiceTest {
     void testAssociatePackToProduit_Success() {
         // Given
         when(packRepository.findById("1")).thenReturn(Optional.of(packTest));
-        when(produitRepository.findById("p1")).thenReturn(Optional.of(produitTest));
+        when(produitRepository.existsById("p1")).thenReturn(true);
         when(packRepository.save(any(Pack.class))).thenReturn(packTest);
 
         // When
@@ -337,21 +299,6 @@ class PackUnifiedServiceTest {
         // Then
         assertNotNull(result);
         assertNull(result.getProduitId());
-        verify(packRepository, times(1)).save(any(Pack.class));
-    }
-
-    @Test
-    void testDesactiverPack_Success() {
-        // Given
-        when(packRepository.findById("1")).thenReturn(Optional.of(packTest));
-        when(packRepository.save(any(Pack.class))).thenReturn(packTest);
-
-        // When
-        Pack result = packUnifiedService.desactiverPack("1");
-
-        // Then
-        assertNotNull(result);
-        assertEquals(Statut.INACTIF, result.getStatut());
         verify(packRepository, times(1)).save(any(Pack.class));
     }
 

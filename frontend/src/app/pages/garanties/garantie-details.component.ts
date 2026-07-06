@@ -4,17 +4,23 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { GestionProduitService, Garantie } from '../../services/gestion-produit.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
-import { getDomaineMedicalLabel } from '../../models/entities.model';
+import {
+  getDomaineMedicalLabel,
+  StatutWorkflow,
+  getStatutWorkflowLabel,
+  getStatutWorkflowBadgeVariant,
+  isStatutWorkflowOutlined
+} from '../../models/entities.model';
+import { UiBadgeComponent } from '../../shared/components/ui-badge/ui-badge.component';
 
 @Component({
   selector: 'app-garantie-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, CardModule, ButtonModule, ProgressSpinnerModule, TagModule, ToastModule],
+  imports: [CommonModule, RouterModule, CardModule, ButtonModule, ProgressSpinnerModule, ToastModule, UiBadgeComponent],
   templateUrl: './garantie-details.component.html',
   styleUrls: ['./garantie-details.component.css']
 })
@@ -24,6 +30,7 @@ export class GarantieDetailsComponent implements OnInit {
   garantieId?: string;
   packsCount: number = 0;
   garantieRating: number = 0;
+  garantieNamesById: Map<string, string> = new Map();
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -64,6 +71,26 @@ export class GarantieDetailsComponent implements OnInit {
         this.toastService.showError('Impossible de charger la garantie');
       }
     });
+
+    // Résolution des prérequis (prerequisGarantieIds) en noms lisibles
+    this.garantieService.getAllGaranties().subscribe({
+      next: (garanties) => {
+        this.garantieNamesById = new Map(garanties.map(g => [g.idGarantie, g.nomGarantie]));
+      },
+      error: () => {
+        this.garantieNamesById = new Map();
+      }
+    });
+  }
+
+  resolveGarantieNames(ids?: string[]): string[] {
+    if (!ids || ids.length === 0) return [];
+    return ids.map(id => this.garantieNamesById.get(id) || id);
+  }
+
+  entriesOf(map?: Record<string, number>): { key: string; value: number }[] {
+    if (!map) return [];
+    return Object.keys(map).map(key => ({ key, value: map[key] }));
   }
 
   private calculateMetrics(): void {
@@ -73,9 +100,10 @@ export class GarantieDetailsComponent implements OnInit {
     this.packsCount = this.garantie.idGarantie ? Math.floor(Math.random() * 6) + 1 : 0;
     
     // Calculer une note basée sur le taux de remboursement et les plafonds
-    const tauxScore = (this.garantie.tauxRemboursement ?? 0) * 100;
-    const plafondScore = (this.garantie.plafondAnnuel ?? 0) >= 10000 ? 100 : 
-                       (this.garantie.plafondAnnuel ?? 0) >= 5000 ? 80 : 60;
+    const tauxScore = this.garantie.tauxRemboursementBase ?? 0;
+    const plafondAnnuel = this.garantie.plafond?.plafondAnnuel ?? 0;
+    const plafondScore = plafondAnnuel >= 10000 ? 100 :
+                       plafondAnnuel >= 5000 ? 80 : 60;
     this.garantieRating = Math.round((tauxScore + plafondScore) / 2);
   }
 
@@ -88,17 +116,6 @@ export class GarantieDetailsComponent implements OnInit {
     this.router.navigate(['/garanties/edit', this.garantieId]);
   }
 
-  getStatusSeverity(statut?: string): 'success' | 'danger' | 'info' | 'secondary' {
-    switch ((statut || '').toUpperCase()) {
-      case 'ACTIF':
-        return 'success';
-      case 'INACTIF':
-        return 'danger';
-      default:
-        return 'info';
-    }
-  }
-
   getDomaineOrTypeLabel(g: Garantie): string {
     if (g.domaine) {
       return getDomaineMedicalLabel(g.domaine);
@@ -108,9 +125,21 @@ export class GarantieDetailsComponent implements OnInit {
 
   protected readonly getDomaineMedicalLabel = getDomaineMedicalLabel;
 
+  getStatutLabel(statut?: StatutWorkflow): string {
+    return statut ? getStatutWorkflowLabel(statut) : '—';
+  }
+
+  getStatutBadgeVariant(statut?: StatutWorkflow): 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+    return statut ? getStatutWorkflowBadgeVariant(statut) : 'neutral';
+  }
+
+  isStatutOutlined(statut?: StatutWorkflow): boolean {
+    return statut ? isStatutWorkflowOutlined(statut) : false;
+  }
+
   getTauxCategory(): string {
     if (!this.garantie) return '—';
-    const taux = (this.garantie.tauxRemboursement ?? 0) * 100;
+    const taux = this.garantie.tauxRemboursementBase ?? 0;
     if (taux >= 90) return 'Excellent';
     if (taux >= 70) return 'Très bon';
     if (taux >= 50) return 'Bon';
@@ -119,7 +148,7 @@ export class GarantieDetailsComponent implements OnInit {
 
   getPlafondCategory(): string {
     if (!this.garantie) return '—';
-    const plafond = this.garantie.plafondAnnuel ?? 0;
+    const plafond = this.garantie.plafond?.plafondAnnuel ?? 0;
     if (plafond >= 20000) return 'Élevé';
     if (plafond >= 10000) return 'Moyen';
     return 'Bas';

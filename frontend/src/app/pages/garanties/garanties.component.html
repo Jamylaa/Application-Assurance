@@ -49,14 +49,6 @@
             styleClass="filter-dropdown"
             [showClear]="true">
           </p-dropdown>
-          <p-dropdown
-            [options]="statusOptions"
-            placeholder="Statut"
-            [(ngModel)]="selectedStatus"
-            (onChange)="applyFilters()"
-            styleClass="filter-dropdown"
-            [showClear]="true">
-          </p-dropdown>
         </div>
         <div class="search-box">
           <i class="bi bi-search"></i>
@@ -79,10 +71,6 @@
         Domaine: {{ selectedDomaine }}
         <i class="bi bi-x-circle" (click)="clearDomaineFilter()"></i>
       </div>
-      <div class="filter-tag" *ngIf="selectedStatus">
-        Statut: {{ selectedStatus }}
-        <i class="bi bi-x-circle" (click)="clearStatusFilter()"></i>
-      </div>
       <div class="filter-tag" *ngIf="globalFilterValue">
         Recherche: {{ globalFilterValue }}
         <i class="bi bi-x-circle" (click)="clearSearchFilter()"></i>
@@ -91,7 +79,7 @@
 
     <div class="responsive-table">
       <p-table
-        [value]="garanties"
+        [value]="filteredGaranties"
         [loading]="loading"
         [paginator]="true"
         [rows]="10"
@@ -105,10 +93,10 @@
       <ng-template pTemplate="header">
         <tr>
           <th pSortableColumn="nomGarantie">Garantie <p-sortIcon field="nomGarantie"></p-sortIcon></th>
+          <th pSortableColumn="statutWorkflow">Statut <p-sortIcon field="statutWorkflow"></p-sortIcon></th>
           <th pSortableColumn="domaine">Domaine <p-sortIcon field="domaine"></p-sortIcon></th>
-          <th pSortableColumn="tauxRemboursement">Taux <p-sortIcon field="tauxRemboursement"></p-sortIcon></th>
-          <th pSortableColumn="plafondAnnuel">Plafonds <p-sortIcon field="plafondAnnuel"></p-sortIcon></th>
-          <th pSortableColumn="statut">Statut <p-sortIcon field="statut"></p-sortIcon></th>
+          <th pSortableColumn="tauxRemboursementBase">Taux <p-sortIcon field="tauxRemboursementBase"></p-sortIcon></th>
+          <th>Plafonds</th>
           <th style="width:100px;text-align:center;">Actions</th>
         </tr>
       </ng-template>
@@ -125,37 +113,40 @@
             </div>
           </td>
           <td>
+            <app-ui-badge [variant]="getStatutBadgeVariant(garantie.statutWorkflow)" [outlined]="isStatutOutlined(garantie.statutWorkflow)" size="sm">
+              {{ getStatutLabel(garantie.statutWorkflow) }}
+            </app-ui-badge>
+          </td>
+          <td>
             <app-ui-badge variant="info" size="sm">{{ getDomaineOrTypeLabel(garantie) }}</app-ui-badge>
           </td>
           <td>
             <div class="taux-cell">
               <div class="taux-bar">
-                <div class="taux-fill taux-fill--success" [style.width.%]="(garantie.tauxRemboursement ?? 0) * 100"></div>
+                <div class="taux-fill taux-fill--success" [style.width.%]="garantie.tauxRemboursementBase ?? 0"></div>
               </div>
-              <span class="taux-text">{{ (garantie.tauxRemboursement ?? 0) * 100 | number:'1.0-0' }}%</span>
-              <span class="type-montant-badge">{{ getTypeMontantLabel(garantie.typeMontant) }}</span>
+              <span class="taux-text">{{ garantie.tauxRemboursementBase ?? 0 | number:'1.0-0' }}%</span>
+              <span class="type-montant-badge">{{ getTypeMontantLabel(garantie.typeRemboursement) }}</span>
             </div>
           </td>
           <td>
             <div class="plafond-cell">
-              <div class="plafond-item">
+              <div class="plafond-item" *ngIf="garantie.plafond?.plafondAnnuel">
                 <i class="bi bi-calendar-year"></i>
-                <span>{{ garantie.plafondAnnuel | number:'1.0-0' }} €</span>
+                <span>{{ garantie.plafond?.plafondAnnuel | number:'1.0-0' }} TND/an</span>
               </div>
-              <div class="plafond-item">
+              <div class="plafond-item" *ngIf="garantie.plafond?.plafondMensuel">
+                <i class="bi bi-calendar-month"></i>
+                <span>{{ garantie.plafond?.plafondMensuel | number:'1.0-0' }} TND/mois</span>
+              </div>
+              <div class="plafond-item" *ngIf="garantie.franchise?.montantFixe">
                 <i class="bi bi-shield"></i>
-                <span>Franchise: {{ garantie.franchise | number:'1.0-0' }} €</span>
+                <span>Franchise: {{ garantie.franchise?.montantFixe | number:'1.0-0' }} TND</span>
               </div>
-              <div class="plafond-item" *ngIf="garantie.dureeMinContrat || garantie.dureeMaxContrat">
-                <i class="bi bi-clock"></i>
-                <span>Durée: {{ garantie.dureeMinContrat || 0 }} – {{ garantie.dureeMaxContrat || 0 }} mois</span>
+              <div class="plafond-item" *ngIf="!garantie.plafond?.plafondAnnuel && !garantie.plafond?.plafondMensuel && !garantie.franchise?.montantFixe">
+                <span class="text-muted">—</span>
               </div>
             </div>
-          </td>
-          <td>
-            <app-ui-badge [variant]="getStatusBadgeVariant(garantie.statut)" size="sm">
-              {{ garantie.statut || 'INCONNU' }}
-            </app-ui-badge>
           </td>
           <td>
             <div class="table-actions">

@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["ng", "serve", "--port", "4200", "--host", "0.0.0.0", "--configuration", "development"],
+      "port": 4200,
+      "cwd": "frontend"
+    }
+  ]
+}

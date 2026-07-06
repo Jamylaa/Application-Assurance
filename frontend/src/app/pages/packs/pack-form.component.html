@@ -53,6 +53,40 @@
           </div>
         </div>
 
+        <!-- Code -->
+        <div class="form-field">
+          <label class="field-label" for="codePack">
+            <i class="bi bi-upc"></i> Code *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('codePack')">
+            <input
+              pInputText
+              id="codePack"
+              formControlName="codePack"
+              placeholder="Ex. SANTE-COMP-BASIC-001"
+              class="auth-input" />
+          </div>
+          <div class="field-help">Identifiant métier unique</div>
+          <div class="field-error" *ngIf="isFieldInvalid('codePack')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('codePack') }}
+          </div>
+        </div>
+
+        <!-- Nom commercial -->
+        <div class="form-field">
+          <label class="field-label" for="nomCommercial">
+            <i class="bi bi-megaphone"></i> Nom commercial
+          </label>
+          <div class="input-wrap">
+            <input
+              pInputText
+              id="nomCommercial"
+              formControlName="nomCommercial"
+              placeholder="Ex. Formule Essentielle"
+              class="auth-input" />
+          </div>
+        </div>
+
         <!-- Produit associé -->
         <div class="form-field">
           <label class="field-label" for="produitId">
@@ -71,6 +105,24 @@
           </div>
           <div class="field-error" *ngIf="isFieldInvalid('produitId')">
             <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('produitId') }}
+          </div>
+        </div>
+
+        <!-- Statut de workflow -->
+        <div class="form-field">
+          <label class="field-label" for="statutWorkflow">
+            <i class="bi bi-signpost-split"></i> Statut
+          </label>
+          <div class="input-wrap">
+            <p-dropdown
+              id="statutWorkflow"
+              formControlName="statutWorkflow"
+              [options]="statutWorkflowOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez un statut"
+              styleClass="auth-dropdown">
+            </p-dropdown>
           </div>
         </div>
 
@@ -94,107 +146,25 @@
           </div>
         </div>
 
-        <!-- Âge minimum -->
-        <div class="form-field">
-          <label class="field-label" for="ageMinimum">
-            <i class="bi bi-person"></i> Âge minimum
+        <!-- Description courte -->
+        <div class="form-field full-width">
+          <label class="field-label" for="descriptionCourte">
+            <i class="bi bi-card-text"></i> Résumé (listes)
           </label>
-          <div class="input-wrap" [class.has-error]="isFieldInvalid('ageMinimum')">
-            <p-inputNumber
-              id="ageMinimum"
-              formControlName="ageMinimum"
-              [min]="0"
-              [max]="120"
-              showButtons="false"
-              placeholder="0"
-              styleClass="auth-input">
-            </p-inputNumber>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('descriptionCourte')">
+            <textarea
+              pTextarea
+              id="descriptionCourte"
+              formControlName="descriptionCourte"
+              placeholder="Résumé court affiché dans les listes"
+              rows="2"
+              maxlength="280"
+              class="auth-textarea">
+            </textarea>
           </div>
-          <div class="field-error" *ngIf="isFieldInvalid('ageMinimum')">
-            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('ageMinimum') }}
-          </div>
-        </div>
-
-        <!-- Âge maximum -->
-        <div class="form-field">
-          <label class="field-label" for="ageMaximum">
-            <i class="bi bi-person-check"></i> Âge maximum
-          </label>
-          <div class="input-wrap" [class.has-error]="isFieldInvalid('ageMaximum')">
-            <p-inputNumber
-              id="ageMaximum"
-              formControlName="ageMaximum"
-              [min]="0"
-              [max]="120"
-              showButtons="false"
-              placeholder="0"
-              styleClass="auth-input">
-            </p-inputNumber>
-          </div>
-          <div class="field-error" *ngIf="isFieldInvalid('ageMaximum')">
-            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('ageMaximum') }}
-          </div>
-        </div>
-
-        <!-- Types de clients -->
-        <div class="form-field">
-          <label class="field-label" for="typeClients">
-            <i class="bi bi-people"></i> Types de clients *
-          </label>
-          <div class="input-wrap" [class.has-error]="isFieldInvalid('typeClients')">
-            <p-multiSelect
-              id="typeClients"
-              formControlName="typeClients"
-              [options]="typeClientOptions"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Sélectionnez les types"
-              styleClass="auth-dropdown">
-            </p-multiSelect>
-          </div>
-          <div class="field-error" *ngIf="isFieldInvalid('typeClients')">
-            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('typeClients') }}
-          </div>
-        </div>
-
-        <!-- Ancienneté contrat -->
-        <div class="form-field">
-          <label class="field-label" for="ancienneteContratMois">
-            <i class="bi bi-calendar"></i> Ancienneté contrat (mois)
-          </label>
-          <div class="input-wrap" [class.has-error]="isFieldInvalid('ancienneteContratMois')">
-            <p-inputNumber
-              id="ancienneteContratMois"
-              formControlName="ancienneteContratMois"
-              [min]="0"
-              showButtons="false"
-              placeholder="0"
-              styleClass="auth-input">
-            </p-inputNumber>
-          </div>
-          <div class="field-error" *ngIf="isFieldInvalid('ancienneteContratMois')">
-            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('ancienneteContratMois') }}
-          </div>
-        </div>
-
-        <!-- Couverture géographique -->
-        <div class="form-field">
-          <label class="field-label" for="couvertureGeographique">
-            <i class="bi bi-globe"></i> Couverture géographique *
-          </label>
-          <div class="input-wrap" [class.has-error]="isFieldInvalid('couvertureGeographique')">
-            <p-dropdown
-              id="couvertureGeographique"
-              formControlName="couvertureGeographique"
-              [options]="couvertureGeoOptions"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Sélectionnez une couverture"
-              styleClass="auth-dropdown">
-            </p-dropdown>
-          </div>
-          <div class="field-error" *ngIf="isFieldInvalid('couvertureGeographique')">
-            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('couvertureGeographique') }}
+          <div class="field-help">{{ packForm.get('descriptionCourte')?.value?.length || 0 }}/280 caractères</div>
+          <div class="field-error" *ngIf="isFieldInvalid('descriptionCourte')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('descriptionCourte') }}
           </div>
         </div>
 
@@ -214,49 +184,61 @@
               styleClass="auth-input">
             </p-inputNumber>
           </div>
-          <div class="field-help">En TND</div>
+          <div class="field-help">En {{ packForm.get('devisePrix')?.value || 'TND' }}</div>
           <div class="field-error" *ngIf="isFieldInvalid('prixMensuel')">
             <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('prixMensuel') }}
           </div>
         </div>
 
-        <!-- Durée min contrat -->
+        <!-- Prix annuel -->
         <div class="form-field">
-          <label class="field-label" for="dureeMinContrat">
-            <i class="bi bi-calendar-minus"></i> Durée min contrat (mois)
+          <label class="field-label" for="prixAnnuel">
+            <i class="bi bi-cash-stack"></i> Prix annuel
           </label>
-          <div class="input-wrap" [class.has-error]="isFieldInvalid('dureeMinContrat')">
+          <div class="input-wrap">
             <p-inputNumber
-              id="dureeMinContrat"
-              formControlName="dureeMinContrat"
-              [min]="1"
+              id="prixAnnuel"
+              formControlName="prixAnnuel"
+              [min]="0"
+              mode="decimal"
               showButtons="false"
-              placeholder="1"
+              placeholder="Laisser à 0 pour calcul automatique"
               styleClass="auth-input">
             </p-inputNumber>
-          </div>
-          <div class="field-error" *ngIf="isFieldInvalid('dureeMinContrat')">
-            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('dureeMinContrat') }}
           </div>
         </div>
 
-        <!-- Durée max contrat -->
+        <!-- Taux de remise annuelle -->
         <div class="form-field">
-          <label class="field-label" for="dureeMaxContrat">
-            <i class="bi bi-calendar-plus"></i> Durée max contrat (mois)
+          <label class="field-label" for="tauxRemiseAnnuelle">
+            <i class="bi bi-percent"></i> Remise annuelle
           </label>
-          <div class="input-wrap" [class.has-error]="isFieldInvalid('dureeMaxContrat')">
+          <div class="input-wrap">
             <p-inputNumber
-              id="dureeMaxContrat"
-              formControlName="dureeMaxContrat"
-              [min]="1"
+              id="tauxRemiseAnnuelle"
+              formControlName="tauxRemiseAnnuelle"
+              [min]="0"
+              [max]="100"
+              mode="decimal"
               showButtons="false"
-              placeholder="12"
+              placeholder="0"
               styleClass="auth-input">
             </p-inputNumber>
           </div>
-          <div class="field-error" *ngIf="isFieldInvalid('dureeMaxContrat')">
-            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('dureeMaxContrat') }}
+        </div>
+
+        <!-- Devise -->
+        <div class="form-field">
+          <label class="field-label" for="devisePrix">
+            <i class="bi bi-currency-exchange"></i> Devise
+          </label>
+          <div class="input-wrap">
+            <input
+              pInputText
+              id="devisePrix"
+              formControlName="devisePrix"
+              placeholder="TND"
+              class="auth-input" />
           </div>
         </div>
 
@@ -281,24 +263,139 @@
           </div>
         </div>
 
-        <!-- Statut -->
+        <!-- Couleur du badge -->
         <div class="form-field">
-          <label class="field-label" for="statut">
-            <i class="bi bi-toggle-on"></i> Statut *
+          <label class="field-label" for="colorTheme">
+            <i class="bi bi-palette"></i> Couleur du badge
           </label>
-          <div class="input-wrap" [class.has-error]="isFieldInvalid('statut')">
-            <p-dropdown
-              id="statut"
-              formControlName="statut"
-              [options]="statutOptions"
+          <div class="input-wrap color-field">
+            <input
+              pInputText
+              id="colorTheme"
+              formControlName="colorTheme"
+              placeholder="#0f4c81"
+              pattern="^#[0-9A-Fa-f]{6}$"
+              class="auth-input" />
+            <p-colorPicker
+              [ngModel]="(packForm.get('colorTheme')?.value || '#0f4c81').substring(1)"
+              [ngModelOptions]="{standalone: true}"
+              (onChange)="packForm.get('colorTheme')?.setValue('#' + $event.value)"
+              appendTo="body">
+            </p-colorPicker>
+          </div>
+        </div>
+
+        <!-- Pack recommandé / Options disponibles -->
+        <div class="form-field">
+          <label class="field-label" for="packRecommande">
+            <i class="bi bi-star"></i> Pack recommandé
+          </label>
+          <div class="input-wrap switch-wrap">
+            <p-inputSwitch id="packRecommande" formControlName="packRecommande"></p-inputSwitch>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label" for="optionsDisponibles">
+            <i class="bi bi-plus-square"></i> Options disponibles
+          </label>
+          <div class="input-wrap switch-wrap">
+            <p-inputSwitch id="optionsDisponibles" formControlName="optionsDisponibles"></p-inputSwitch>
+          </div>
+        </div>
+
+        <!-- Date d'effet / expiration -->
+        <div class="form-field">
+          <label class="field-label" for="dateEffet">
+            <i class="bi bi-calendar-check"></i> Date d'effet
+          </label>
+          <div class="input-wrap">
+            <p-calendar
+              id="dateEffet"
+              formControlName="dateEffet"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              appendTo="body"
+              placeholder="Sélectionnez une date"
+              styleClass="auth-input">
+            </p-calendar>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label" for="dateExpiration">
+            <i class="bi bi-calendar-x"></i> Date d'expiration
+          </label>
+          <div class="input-wrap">
+            <p-calendar
+              id="dateExpiration"
+              formControlName="dateExpiration"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              appendTo="body"
+              placeholder="Vide = toujours actif"
+              styleClass="auth-input">
+            </p-calendar>
+          </div>
+        </div>
+
+        <!-- Extensions optionnelles -->
+        <div class="form-field full-width">
+          <label class="field-label" for="optionsPackIds">
+            <i class="bi bi-puzzle"></i> Extensions optionnelles
+          </label>
+          <div class="input-wrap">
+            <p-multiSelect
+              id="optionsPackIds"
+              formControlName="optionsPackIds"
+              [options]="allPacks"
               optionLabel="label"
               optionValue="value"
-              placeholder="Sélectionnez un statut"
+              placeholder="Sélectionnez des packs"
+              display="chip"
+              [filter]="true"
               styleClass="auth-dropdown">
-            </p-dropdown>
+            </p-multiSelect>
           </div>
-          <div class="field-error" *ngIf="isFieldInvalid('statut')">
-            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('statut') }}
+        </div>
+
+        <!-- Packs compatibles -->
+        <div class="form-field full-width">
+          <label class="field-label" for="packsCompatibles">
+            <i class="bi bi-check2-square"></i> Packs compatibles
+          </label>
+          <div class="input-wrap">
+            <p-multiSelect
+              id="packsCompatibles"
+              formControlName="packsCompatibles"
+              [options]="allPacks"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez des packs"
+              display="chip"
+              [filter]="true"
+              styleClass="auth-dropdown">
+            </p-multiSelect>
+          </div>
+        </div>
+
+        <!-- Packs incompatibles -->
+        <div class="form-field full-width">
+          <label class="field-label" for="packsIncompatibles">
+            <i class="bi bi-x-square"></i> Packs incompatibles
+          </label>
+          <div class="input-wrap">
+            <p-multiSelect
+              id="packsIncompatibles"
+              formControlName="packsIncompatibles"
+              [options]="allPacks"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez des packs"
+              display="chip"
+              [filter]="true"
+              styleClass="auth-dropdown">
+            </p-multiSelect>
           </div>
         </div>
       </div>

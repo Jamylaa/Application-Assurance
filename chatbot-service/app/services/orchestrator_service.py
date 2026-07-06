@@ -1,14 +1,19 @@
 import logging
 import re
+import time
 import traceback
 import uuid
 from typing import Dict, Any, Optional, List
 from app.models.schemas import (
     ChatbotRequestDTO, ChatbotResponseDTO, GarantieDTO, PackDTO, ProduitDTO,
     BusinessValidationResult, PackCreationResponseDTO, RecommendationRequestDTO,
-    RecommendationResponseDTO, PackGarantieDTO
+    RecommendationResponseDTO, PackGarantieDTO,
+    PlafondGarantieDTO, FranchiseGarantieDTO
 )
-from app.models.enums import ChatbotAction, Statut, TypeMontant, DomaineMedical, TypeProduit, NiveauCouverture, CouvertureGeographique, TypeClient
+from app.models.enums import (
+    ChatbotAction, TypeMontant, DomaineMedical, TypeProduit, NiveauCouverture,
+    TypeRemboursement, TypeFranchise
+)
 from app.services.ai_extraction_service import AIExtractionService
 from app.services.business_validation_service import BusinessValidationService
 from app.services.recommendation_service import RecommendationService
@@ -25,13 +30,32 @@ _ENUM_ALIASES: Dict[str, str] = {
     "STANDARD": "BASIC",
     "ESSENTIEL": "BASIC",
     "ESSENTIAL": "BASIC",
-    # CouvertureGeographique — formes féminines/alternatives
-    "NATIONALE": "NATIONAL",
-    "LOCALE": "LOCAL",
-    "INTERNATIONALE": "INTERNATIONAL",
-    "NATIONAL": "NATIONAL",
-    "LOCAL": "LOCAL",
-    "INTERNATIONAL": "INTERNATIONAL",
+}
+
+# Question posée à l'utilisateur pour chaque champ manquant possible.
+_FIELD_QUESTIONS: Dict[str, str] = {
+    "nom": "Quel nom souhaitez-vous lui donner ?",
+    "domaine": "Quel est le domaine médical concerné (ex: HOSPITALISATION, DENTAIRE, OPTIQUE, CARDIOLOGIE) ?",
+    "taux de remboursement": "Quel taux de remboursement souhaitez-vous, en % (ex: 80) ?",
+    "prix mensuel": "Quel est le prix mensuel, en TND ?",
+    "type de produit": "Quel type de produit (SANTE, AUTO, HABITATION, VIE, EPARGNE) ?",
+    "produit associé": "À quel produit doit-il être associé ?",
+    "âge": "Quel âge avez-vous ?",
+    "sexe": "Êtes-vous un homme ou une femme ?",
+    "situation familiale": "Quelle est votre situation familiale (célibataire, marié(e), divorcé(e), veuf/veuve) ?",
+}
+
+# Champ manquant (libellé humain) → clé du dict extracted_data correspondante.
+_FIELD_TO_EXTRACTED_KEY: Dict[str, str] = {
+    "nom": "nom",
+    "domaine": "domaine",
+    "taux de remboursement": "tauxRemboursement",
+    "prix mensuel": "prixMensuel",
+    "type de produit": "typeProduit",
+    "produit associé": "nomProduit",
+    "âge": "age",
+    "sexe": "gender",
+    "situation familiale": "maritalStatus",
 }
 
 
@@ -45,6 +69,9 @@ class ChatbotOrchestratorService:
         self.prompt_analyzer_service = PromptAnalyzerService()
         self.prompt_parser_service = PromptParserService()
         self.recommendation_service = RecommendationService(self.spring_boot_client)
+        # Sessions en attente de complétion (slot-filling) : session_id -> état de la demande.
+        # Stockage en mémoire — acceptable pour un PFE, à externaliser (Redis) si multi-instance.
+        self.pending_sessions: Dict[str, Dict[str, Any]] = {}
 
         logger.info("🚀 ChatbotOrchestratorService initialized")
         logger.info(f"🤖 AI Service Available: {self.ai_extraction_service.is_ai_available()}")
@@ -64,9 +91,14 @@ class ChatbotOrchestratorService:
         analytics_store["prompts_processed"] = analytics_store.get("prompts_processed", 0) + 1
 
         jwt_token = getattr(request, 'jwt_token', None)
+        session_id = getattr(request, 'session_id', None)
         logger.info(f"[{correlation_id}] 🔑 JWT token present: {bool(jwt_token)}")
 
         try:
+            if session_id and session_id in self.pending_sessions:
+                logger.info(f"[{correlation_id}] ↩️ Session {session_id} en attente d'un champ — traitement comme réponse")
+                return self._resume_pending_session(session_id, request.prompt, jwt_token)
+
             logger.info(f"[{correlation_id}] 🔍 Step 1: Analyzing action...")
             action = self.prompt_analyzer_service.analyze_action(request.prompt)
 
@@ -102,11 +134,11 @@ class ChatbotOrchestratorService:
     def _execute_action(self, action: ChatbotAction, prompt: str, session_id: Optional[str], jwt_token: Optional[str] = None) -> Dict[str, Any]:
         logger.info(f"Executing action: {action}")
         if action == ChatbotAction.CREATE_GARANTIE:
-            return self._execute_create_garantie(prompt, jwt_token)
+            return self._execute_create_garantie(prompt, jwt_token, session_id=session_id)
         elif action == ChatbotAction.CREATE_PRODUIT:
-            return self._execute_create_produit(prompt, jwt_token)
+            return self._execute_create_produit(prompt, jwt_token, session_id=session_id)
         elif action == ChatbotAction.CREATE_PACK:
-            return self._execute_create_pack(prompt, jwt_token)
+            return self._execute_create_pack(prompt, jwt_token, session_id=session_id)
         elif action == ChatbotAction.UPDATE_GARANTIE:
             return self._execute_update_garantie(prompt, jwt_token)
         elif action == ChatbotAction.UPDATE_PRODUIT:
@@ -129,43 +161,178 @@ class ChatbotOrchestratorService:
             return {"success": False, "error": f"Action non implémentée: {action}"}
 
     # ------------------------------------------------------------------
+    # Slot-filling — complétion conversationnelle des champs manquants
+    # ------------------------------------------------------------------
+
+    def _demander_champ_manquant(self, session_id: Optional[str], action: ChatbotAction,
+                                  extracted_data: Dict[str, Any], missing_fields: List[str],
+                                  original_prompt: str, entity_label: str, fallback_used: bool,
+                                  correlation_id: str, contexte: Optional[str] = None) -> Dict[str, Any]:
+        """Si une session est fournie, mémorise l'état et pose une question ciblée sur le
+        premier champ manquant au lieu de rejeter la demande. Sans session (appel direct/tests),
+        conserve l'ancien comportement de rejet sec."""
+        champ = missing_fields[0]
+
+        if not session_id:
+            return {
+                "success": False,
+                "error": "Champs manquants",
+                "missing_fields": missing_fields,
+                "message": f"Pour créer {entity_label}, il me manque : {', '.join(missing_fields)}.",
+                "fallback_used": fallback_used,
+                "confidence": 0.0,
+                "correlation_id": correlation_id
+            }
+
+        self.pending_sessions[session_id] = {
+            "action": action,
+            "extracted_data": extracted_data,
+            "missing_field": champ,
+            "original_prompt": original_prompt,
+            "entity_label": entity_label,
+        }
+
+        question = _FIELD_QUESTIONS.get(champ, f"Pouvez-vous préciser : {champ} ?")
+        message = f"{contexte} {question}" if contexte else (
+            f"Pour créer {entity_label}, il me manque {champ}. {question}"
+        )
+
+        return {
+            "success": False,
+            "needs_input": True,
+            "missing_fields": missing_fields,
+            "message": message,
+            "fallback_used": fallback_used,
+            "confidence": 0.0,
+            "correlation_id": correlation_id
+        }
+
+    def _extract_answer_for_field(self, field_label: str, answer_text: str) -> Any:
+        """Extrait une valeur exploitable depuis la réponse en langage naturel de l'utilisateur,
+        selon le type de champ attendu."""
+        text = answer_text.strip()
+
+        if field_label in ("nom", "produit associé"):
+            return text.strip(' ."\'')
+
+        if field_label == "domaine":
+            resolved = self._parse_enum(DomaineMedical, text)
+            if resolved:
+                return resolved.value
+            fallback = self.prompt_parser_service._extract_domaine_medical(text)
+            return fallback.value if fallback else text
+
+        if field_label == "type de produit":
+            resolved = self._parse_enum(TypeProduit, text)
+            if resolved:
+                return resolved.value
+            fallback = self.prompt_parser_service._extract_type_produit(text)
+            return fallback.value if fallback else text
+
+        if field_label in ("taux de remboursement", "prix mensuel"):
+            match = re.search(r'(\d+(?:[.,]\d+)?)', text)
+            return float(match.group(1).replace(',', '.')) if match else None
+
+        if field_label == "âge":
+            match = re.search(r'(\d+)', text)
+            return int(match.group(1)) if match else None
+
+        if field_label == "sexe":
+            t = text.lower()
+            if 'femme' in t or 'féminin' in t or 'feminin' in t or t.strip(' ."\'') == 'f':
+                return "femme"
+            if 'homme' in t or 'masculin' in t or t.strip(' ."\'') == 'm':
+                return "homme"
+            return text
+
+        if field_label == "situation familiale":
+            return text.strip(' ."\'')
+
+        return text
+
+    def _resume_pending_session(self, session_id: str, answer_text: str,
+                                 jwt_token: Optional[str] = None) -> ChatbotResponseDTO:
+        """Traite la réponse de l'utilisateur à une question de complétion posée précédemment,
+        complète les données extraites, puis relance l'action d'origine."""
+        pending = self.pending_sessions.pop(session_id)
+        champ = pending["missing_field"]
+        extracted_key = _FIELD_TO_EXTRACTED_KEY.get(champ, champ)
+
+        valeur = self._extract_answer_for_field(champ, answer_text)
+        extracted_data = dict(pending["extracted_data"])
+        extracted_data[extracted_key] = valeur
+
+        action = pending["action"]
+        original_prompt = pending["original_prompt"]
+
+        if action == ChatbotAction.CREATE_GARANTIE:
+            result = self._execute_create_garantie(original_prompt, jwt_token, session_id=session_id,
+                                                     preset_extracted_data=extracted_data)
+        elif action == ChatbotAction.CREATE_PRODUIT:
+            result = self._execute_create_produit(original_prompt, jwt_token, session_id=session_id,
+                                                    preset_extracted_data=extracted_data)
+        elif action == ChatbotAction.CREATE_PACK:
+            result = self._execute_create_pack(original_prompt, jwt_token, session_id=session_id,
+                                                preset_extracted_data=extracted_data)
+        elif action == ChatbotAction.RECOMMANDATION:
+            result = self._execute_recommendation(original_prompt, session_id, jwt_token,
+                                                   preset_extracted_data=extracted_data)
+        else:
+            result = {"success": False, "error": "Session de complétion invalide ou expirée."}
+
+        return self._create_standardized_response(action, result, original_prompt)
+
+    # ------------------------------------------------------------------
     # CREATE GARANTIE
     # ------------------------------------------------------------------
 
-    def _execute_create_garantie(self, prompt: str, jwt_token: Optional[str] = None) -> Dict[str, Any]:
+    def _execute_create_garantie(self, prompt: str, jwt_token: Optional[str] = None,
+                                  session_id: Optional[str] = None,
+                                  preset_extracted_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         correlation_id = str(uuid.uuid4())
         fallback_used = False
         logger.info(f"[{correlation_id}] 🔵 START Creating guarantee from prompt: {prompt[:100]}...")
 
         try:
-            ai_available = self.ai_extraction_service.is_ai_available()
-            logger.info(f"[{correlation_id}] 🤖 AI Available: {ai_available}")
-
-            extracted_data = None
-            if ai_available:
-                extracted_data = self.ai_extraction_service.extract_garantie_data(prompt)
-                analytics_store["ai_calls"] = analytics_store.get("ai_calls", 0) + 1
-                logger.info(f"[{correlation_id}] 🤖 AI extraction result: {extracted_data}")
+            if preset_extracted_data is not None:
+                extracted_data = preset_extracted_data
             else:
-                fallback_used = True
+                ai_available = self.ai_extraction_service.is_ai_available()
+                logger.info(f"[{correlation_id}] 🤖 AI Available: {ai_available}")
 
-            if not extracted_data or not extracted_data.get("nom"):
-                garantie_dto = self.prompt_parser_service.parse_garantie_prompt(prompt)
-                if garantie_dto:
-                    fallback_used = True
-                    logger.info(f"[{correlation_id}] ✅ Fallback parser extracted: {garantie_dto.nom_garantie}")
+                extracted_data = None
+                if ai_available:
+                    extracted_data = self.ai_extraction_service.extract_garantie_data(prompt)
+                    analytics_store["ai_calls"] = analytics_store.get("ai_calls", 0) + 1
+                    logger.info(f"[{correlation_id}] 🤖 AI extraction result: {extracted_data}")
                 else:
-                    analytics_store["ai_fallbacks"] = analytics_store.get("ai_fallbacks", 0) + 1
-                    return {
-                        "success": False,
-                        "error": "Extraction échouée",
-                        "message": "Impossible d'extraire les données de garantie. Veuillez reformuler.",
-                        "missing_fields": ["nom", "domaine", "taux de remboursement"],
-                        "fallback_used": fallback_used,
-                        "correlation_id": correlation_id
-                    }
-            else:
-                garantie_dto = self._create_garantie_dto(extracted_data, prompt)
+                    fallback_used = True
+
+                if not extracted_data or not extracted_data.get("nom"):
+                    fallback_dto = self.prompt_parser_service.parse_garantie_prompt(prompt)
+                    if fallback_dto:
+                        fallback_used = True
+                        logger.info(f"[{correlation_id}] ✅ Fallback parser extracted: {fallback_dto.nom_garantie}")
+                        extracted_data = {
+                            "nom": fallback_dto.nom_garantie,
+                            "domaine": fallback_dto.domaine.value if fallback_dto.domaine else None,
+                            "tauxRemboursement": fallback_dto.taux_remboursement_base,
+                            "plafondAnnuel": fallback_dto.plafond.plafond_annuel if fallback_dto.plafond else None,
+                            "plafondMensuel": fallback_dto.plafond.plafond_mensuel if fallback_dto.plafond else None,
+                            "plafondParActe": fallback_dto.plafond.plafond_par_acte if fallback_dto.plafond else None,
+                            "franchise": fallback_dto.franchise.montant_fixe if fallback_dto.franchise else None,
+                        }
+                    else:
+                        analytics_store["ai_fallbacks"] = analytics_store.get("ai_fallbacks", 0) + 1
+                        extracted_data = {}
+
+            garantie_dto = self._create_garantie_dto(extracted_data, prompt)
+            missing_fields = self._check_missing_garantie_fields(garantie_dto)
+            if missing_fields:
+                return self._demander_champ_manquant(
+                    session_id, ChatbotAction.CREATE_GARANTIE, extracted_data, missing_fields,
+                    prompt, "cette garantie", fallback_used, correlation_id
+                )
 
             validation_result = self.business_validation_service.validate_garantie_for_scoring(garantie_dto, 1.0)
             if not validation_result.is_valid:
@@ -214,37 +381,46 @@ class ChatbotOrchestratorService:
     # CREATE PRODUIT
     # ------------------------------------------------------------------
 
-    def _execute_create_produit(self, prompt: str, jwt_token: Optional[str] = None) -> Dict[str, Any]:
+    def _execute_create_produit(self, prompt: str, jwt_token: Optional[str] = None,
+                                 session_id: Optional[str] = None,
+                                 preset_extracted_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         correlation_id = str(uuid.uuid4())
         fallback_used = False
         logger.info(f"[{correlation_id}] 🔵 START Creating product: {prompt[:100]}...")
 
         try:
-            ai_available = self.ai_extraction_service.is_ai_available()
-            extracted_data = None
-            if ai_available:
-                extracted_data = self.ai_extraction_service.extract_produit_data(prompt)
-                analytics_store["ai_calls"] = analytics_store.get("ai_calls", 0) + 1
-                logger.info(f"[{correlation_id}] 🤖 AI extraction: {extracted_data}")
+            if preset_extracted_data is not None:
+                extracted_data = preset_extracted_data
             else:
-                fallback_used = True
-
-            if not extracted_data or not extracted_data.get("nom"):
-                produit_dto = self.prompt_parser_service.parse_produit_prompt(prompt)
-                if produit_dto:
-                    fallback_used = True
+                ai_available = self.ai_extraction_service.is_ai_available()
+                extracted_data = None
+                if ai_available:
+                    extracted_data = self.ai_extraction_service.extract_produit_data(prompt)
+                    analytics_store["ai_calls"] = analytics_store.get("ai_calls", 0) + 1
+                    logger.info(f"[{correlation_id}] 🤖 AI extraction: {extracted_data}")
                 else:
-                    analytics_store["ai_fallbacks"] = analytics_store.get("ai_fallbacks", 0) + 1
-                    return {
-                        "success": False,
-                        "error": "Extraction échouée",
-                        "message": "Impossible d'extraire les données de produit. Veuillez reformuler.",
-                        "missing_fields": ["nom", "type de produit"],
-                        "fallback_used": fallback_used,
-                        "correlation_id": correlation_id
-                    }
-            else:
-                produit_dto = self._create_produit_dto(extracted_data, prompt)
+                    fallback_used = True
+
+                if not extracted_data or not extracted_data.get("nom"):
+                    fallback_dto = self.prompt_parser_service.parse_produit_prompt(prompt)
+                    if fallback_dto:
+                        fallback_used = True
+                        extracted_data = {
+                            "nom": fallback_dto.nom_produit,
+                            "description": fallback_dto.description,
+                            "typeProduit": fallback_dto.type_produit.value if fallback_dto.type_produit else None,
+                        }
+                    else:
+                        analytics_store["ai_fallbacks"] = analytics_store.get("ai_fallbacks", 0) + 1
+                        extracted_data = {}
+
+            produit_dto = self._create_produit_dto(extracted_data, prompt)
+            missing_fields = self._check_missing_produit_fields(produit_dto)
+            if missing_fields:
+                return self._demander_champ_manquant(
+                    session_id, ChatbotAction.CREATE_PRODUIT, extracted_data, missing_fields,
+                    prompt, "ce produit", fallback_used, correlation_id
+                )
 
             validation_result = self.business_validation_service.validate_produit_for_scoring(produit_dto, 1.0)
             if not validation_result.is_valid:
@@ -306,39 +482,42 @@ class ChatbotOrchestratorService:
     # CREATE PACK
     # ------------------------------------------------------------------
 
-    def _execute_create_pack(self, prompt: str, jwt_token: Optional[str] = None) -> Dict[str, Any]:
+    def _execute_create_pack(self, prompt: str, jwt_token: Optional[str] = None,
+                              session_id: Optional[str] = None,
+                              preset_extracted_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         correlation_id = str(uuid.uuid4())
         fallback_used = False
         logger.info(f"[{correlation_id}] 🔵 START Creating pack: {prompt[:100]}...")
 
         try:
-            ai_available = self.ai_extraction_service.is_ai_available()
-            extracted_data = None
-            if ai_available:
-                extracted_data = self.ai_extraction_service.extract_pack_data(prompt)
-                analytics_store["ai_calls"] = analytics_store.get("ai_calls", 0) + 1
-                logger.info(f"[{correlation_id}] 🤖 AI extraction: {extracted_data}")
+            if preset_extracted_data is not None:
+                extracted_data = preset_extracted_data
             else:
-                fallback_used = True
-
-            if not extracted_data or not extracted_data.get("nom"):
-                pack_dto = self.prompt_parser_service.parse_pack_prompt(prompt)
-                if pack_dto:
-                    fallback_used = True
-                    extracted_data = {}  # pas de garanties extractées en fallback
+                ai_available = self.ai_extraction_service.is_ai_available()
+                extracted_data = None
+                if ai_available:
+                    extracted_data = self.ai_extraction_service.extract_pack_data(prompt)
+                    analytics_store["ai_calls"] = analytics_store.get("ai_calls", 0) + 1
+                    logger.info(f"[{correlation_id}] 🤖 AI extraction: {extracted_data}")
                 else:
-                    analytics_store["ai_fallbacks"] = analytics_store.get("ai_fallbacks", 0) + 1
-                    return {
-                        "success": False,
-                        "error": "Extraction échouée",
-                        "message": "Impossible d'extraire les données de pack. Veuillez reformuler.",
-                        "missing_fields": ["nom", "prix mensuel", "produit associé"],
-                        "fallback_used": fallback_used,
-                        "confidence": 0.0,
-                        "correlation_id": correlation_id
-                    }
-            else:
-                pack_dto = self._create_pack_dto(extracted_data, prompt)
+                    fallback_used = True
+
+                if not extracted_data or not extracted_data.get("nom"):
+                    fallback_dto = self.prompt_parser_service.parse_pack_prompt(prompt)
+                    if fallback_dto:
+                        fallback_used = True
+                        extracted_data = {
+                            "nom": fallback_dto.nom_pack,
+                            "description": fallback_dto.description,
+                            "nomProduit": fallback_dto.nom_produit,
+                            "prixMensuel": fallback_dto.prix_mensuel,
+                            "niveauCouverture": fallback_dto.niveau_couverture.value if fallback_dto.niveau_couverture else None,
+                        }  # pas de garanties extraites en fallback
+                    else:
+                        analytics_store["ai_fallbacks"] = analytics_store.get("ai_fallbacks", 0) + 1
+                        extracted_data = {}
+
+            pack_dto = self._create_pack_dto(extracted_data, prompt)
 
             # Résoudre le nom produit → ID
             if pack_dto.nom_produit and not pack_dto.produit_id:
@@ -348,27 +527,19 @@ class ChatbotOrchestratorService:
                     pack_dto.produit_id = produit.id_produit
                     logger.info(f"[{correlation_id}] ✅ Product resolved: {produit.id_produit}")
                 else:
-                    return {
-                        "success": False,
-                        "error": "Produit non trouvé",
-                        "message": f"Le produit '{pack_dto.nom_produit}' n'existe pas. Créez-le d'abord.",
-                        "missing_fields": ["produit_id"],
-                        "fallback_used": fallback_used,
-                        "confidence": 0.0,
-                        "correlation_id": correlation_id
-                    }
+                    return self._demander_champ_manquant(
+                        session_id, ChatbotAction.CREATE_PACK, extracted_data, ["produit associé"],
+                        prompt, "ce pack", fallback_used, correlation_id,
+                        contexte=f"Le produit '{pack_dto.nom_produit}' n'existe pas. "
+                                 f"Précisez le nom d'un produit existant, ou créez-le d'abord."
+                    )
 
             missing_fields = self._check_missing_pack_fields(pack_dto)
             if missing_fields:
-                return {
-                    "success": False,
-                    "error": "Champs manquants",
-                    "missing_fields": missing_fields,
-                    "message": f"Pour créer ce pack, il me manque: {', '.join(missing_fields)}. Pouvez-vous les préciser ?",
-                    "fallback_used": fallback_used,
-                    "confidence": 0.0,
-                    "correlation_id": correlation_id
-                }
+                return self._demander_champ_manquant(
+                    session_id, ChatbotAction.CREATE_PACK, extracted_data, missing_fields,
+                    prompt, "ce pack", fallback_used, correlation_id
+                )
 
             validation_result = self.business_validation_service.validate_pack_for_scoring(pack_dto, 1.0)
             if not validation_result.is_valid:
@@ -424,14 +595,12 @@ class ChatbotOrchestratorService:
                             logger.info(f"[{correlation_id}] 🆕 Auto-création garantie '{nom_garantie}'...")
                             auto_g = GarantieDTO(
                                 nom_garantie=nom_garantie,
-                                taux_remboursement=g_data.get("tauxRemboursement", 0.8),
-                                type_montant=self._parse_enum(TypeMontant, g_data.get("typeMontant")),
-                                plafond_annuel=g_data.get("plafond"),
-                                franchise=g_data.get("franchise", 0),
-                                statut=Statut.ACTIF,
-                                duree_min_contrat=12,
-                                duree_max_contrat=36,
-                                resiliable_annuellement=True
+                                domaine=self._parse_enum(DomaineMedical, g_data.get("domaine")) or DomaineMedical.AUTRE,
+                                type_remboursement=self._parse_enum(TypeRemboursement, g_data.get("typeMontant")) or TypeRemboursement.FRAIS_REELS,
+                                taux_remboursement_base=self._normaliser_taux(g_data.get("tauxRemboursement", 0.8)),
+                                plafond=PlafondGarantieDTO(plafond_annuel=g_data.get("plafond")) if g_data.get("plafond") else None,
+                                franchise=FranchiseGarantieDTO(type=TypeFranchise.FIXE, montant_fixe=g_data.get("franchise"))
+                                    if g_data.get("franchise") else None,
                             )
                             self._apply_garantie_defaults(auto_g)
                             try:
@@ -445,11 +614,12 @@ class ChatbotOrchestratorService:
                         pg = PackGarantieDTO(
                             pack_id=created_pack.id_pack,
                             garantie_id=garantie.id_garantie,
-                            taux_remboursement=g_data.get("tauxRemboursement", 0.8),
-                            plafond=g_data.get("plafond"),
-                            franchise=g_data.get("franchise", 0),
-                            delai_carence=g_data.get("delaiCarence", 0),
-                            priorite=g_data.get("priorite", 1),
+                            nom_garantie=garantie.nom_garantie,
+                            code_garantie=garantie.code_garantie,
+                            taux_remboursement_specifique=self._normaliser_taux(g_data.get("tauxRemboursement")),
+                            plafond_specifique=PlafondGarantieDTO(plafond_annuel=g_data.get("plafond")) if g_data.get("plafond") else None,
+                            franchise_specifique=FranchiseGarantieDTO(type=TypeFranchise.FIXE, montant_fixe=g_data.get("franchise"))
+                                if g_data.get("franchise") else None,
                             optionnelle=g_data.get("optionnelle", False),
                             supplement_prix=g_data.get("supplementPrix", 0),
                             type_montant=self._parse_enum(TypeMontant, g_data.get("typeMontant"))
@@ -499,18 +669,82 @@ class ChatbotOrchestratorService:
     # ------------------------------------------------------------------
 
     def _execute_configure_pack(self, prompt: str, jwt_token: Optional[str] = None) -> Dict[str, Any]:
+        """Reconfigure une association pack-garantie déjà existante (taux/plafond/franchise
+        spécifiques au pack) — distinct de AJOUT_GARANTIE_PACK qui crée une nouvelle association."""
         fallback_used = False
         try:
+            extracted_data = None
             if self.ai_extraction_service.is_ai_available():
-                self.ai_extraction_service.extract_pack_configuration_data(prompt)
+                extracted_data = self.ai_extraction_service.extract_pack_configuration_data(prompt)
             else:
                 fallback_used = True
+
+            if not extracted_data or not extracted_data.get("nomPack"):
+                association_data = self.prompt_parser_service.parse_pack_garantie_association(prompt)
+                nom_pack = self._extract_entity_name(prompt, "pack")
+                if association_data and nom_pack:
+                    extracted_data = {
+                        "nomPack": nom_pack,
+                        "nomGarantie": association_data.get("nom_garantie"),
+                        "tauxRemboursement": association_data.get("taux_remboursement"),
+                        "plafond": association_data.get("plafond"),
+                        "franchise": association_data.get("franchise"),
+                        "optionnelle": association_data.get("optionnelle"),
+                        "supplementPrix": association_data.get("supplement_prix"),
+                    }
+                    fallback_used = True
+                else:
+                    return {
+                        "success": False,
+                        "error": "Extraction échouée",
+                        "message": "Impossible d'extraire les données de configuration. Précisez le pack et la garantie concernés.",
+                        "fallback_used": fallback_used
+                    }
+
+            pack = self.spring_boot_client.get_pack_by_name_sync(extracted_data.get("nomPack", ""), jwt_token)
+            garantie = self.spring_boot_client.get_garantie_by_name_sync(extracted_data.get("nomGarantie", ""), jwt_token)
+            if not pack or not garantie:
+                return {
+                    "success": False,
+                    "error": "Pack ou garantie non trouvé",
+                    "details": {"pack_found": pack is not None, "garantie_found": garantie is not None},
+                    "fallback_used": fallback_used
+                }
+
+            associations = self.spring_boot_client.get_pack_garanties_sync(pack.id_pack, jwt_token)
+            association = next((a for a in associations if a.garantie_id == garantie.id_garantie), None)
+            if not association:
+                return {
+                    "success": False,
+                    "error": "Association introuvable",
+                    "message": f"La garantie '{garantie.nom_garantie}' n'est pas encore associée au pack '{pack.nom_pack}'. "
+                               f"Utilisez plutôt une demande d'ajout.",
+                    "fallback_used": fallback_used
+                }
+
+            if extracted_data.get("tauxRemboursement") is not None:
+                association.taux_remboursement_specifique = self._normaliser_taux(extracted_data.get("tauxRemboursement"))
+            if extracted_data.get("plafond") is not None:
+                association.plafond_specifique = PlafondGarantieDTO(plafond_annuel=extracted_data.get("plafond"))
+            if extracted_data.get("franchise") is not None:
+                association.franchise_specifique = FranchiseGarantieDTO(type=TypeFranchise.FIXE, montant_fixe=extracted_data.get("franchise"))
+            if extracted_data.get("optionnelle") is not None:
+                association.optionnelle = extracted_data.get("optionnelle")
+            if extracted_data.get("supplementPrix") is not None:
+                association.supplement_prix = extracted_data.get("supplementPrix")
+
+            updated = self.spring_boot_client.update_pack_garantie_sync(association.id_pack_garantie, association, jwt_token)
+
             return {
-                "success": False,
-                "error": "Configuration de pack non encore implémentée",
+                "success": True,
+                "action": "CONFIGURATION_PACK",
+                "entity": updated.model_dump(by_alias=True, mode='json'),
+                "message": f"Configuration de '{garantie.nom_garantie}' dans le pack '{pack.nom_pack}' mise à jour",
+                "id": updated.id_pack_garantie,
                 "fallback_used": fallback_used
             }
         except Exception as e:
+            logger.error(f"Error configuring pack: {e}", exc_info=True)
             return {"success": False, "error": f"Erreur configuration pack: {str(e)}", "fallback_used": fallback_used}
 
     # ------------------------------------------------------------------
@@ -536,8 +770,6 @@ class ChatbotOrchestratorService:
                         "plafond": association_data.get("plafond"),
                         "franchise": association_data.get("franchise"),
                         "optionnelle": association_data.get("optionnelle"),
-                        "priorite": association_data.get("priorite"),
-                        "delaiCarence": association_data.get("delai_carence"),
                         "typeMontant": association_data.get("type_montant"),
                         "supplementPrix": association_data.get("supplement_prix")
                     }
@@ -564,11 +796,12 @@ class ChatbotOrchestratorService:
             pack_garantie_dto = PackGarantieDTO(
                 pack_id=pack.id_pack,
                 garantie_id=garantie.id_garantie,
-                taux_remboursement=extracted_data.get("tauxRemboursement", 0.8),
-                plafond=extracted_data.get("plafond", 0),
-                franchise=extracted_data.get("franchise", 0),
-                delai_carence=extracted_data.get("delaiCarence", 0),
-                priorite=extracted_data.get("priorite", 1),
+                nom_garantie=garantie.nom_garantie,
+                code_garantie=garantie.code_garantie,
+                taux_remboursement_specifique=self._normaliser_taux(extracted_data.get("tauxRemboursement")),
+                plafond_specifique=PlafondGarantieDTO(plafond_annuel=extracted_data.get("plafond")) if extracted_data.get("plafond") else None,
+                franchise_specifique=FranchiseGarantieDTO(type=TypeFranchise.FIXE, montant_fixe=extracted_data.get("franchise"))
+                    if extracted_data.get("franchise") else None,
                 optionnelle=extracted_data.get("optionnelle", False),
                 type_montant=self._parse_enum(TypeMontant, extracted_data.get("typeMontant")),
                 supplement_prix=extracted_data.get("supplementPrix", 0)
@@ -767,168 +1000,120 @@ class ChatbotOrchestratorService:
     # RECOMMENDATION
     # ------------------------------------------------------------------
 
-    def _execute_recommendation(self, prompt: str, session_id: Optional[str], jwt_token: Optional[str] = None) -> Dict[str, Any]:
-        logger.info("=== EXECUTE RECOMMENDATION ===")
+    def _execute_recommendation(self, prompt: str, session_id: Optional[str], jwt_token: Optional[str] = None,
+                                 preset_extracted_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Délègue au moteur de recommandation pondéré (RecommendationService — éligibilité,
+        besoins médicaux, budget, type de client, profil), le même que celui utilisé par
+        l'endpoint structuré /api/chatbot/recommendations. Complète le profil par dialogue
+        (slot-filling) si l'âge, le sexe ou la situation familiale ne sont pas dans le prompt."""
+        correlation_id = str(uuid.uuid4())
+        fallback_used = not self.ai_extraction_service.is_ai_available()
+        logger.info(f"[{correlation_id}] 🔵 START Recommendation from prompt: {prompt[:100]}...")
+
         try:
-            all_packs = self.spring_boot_client.get_all_packs_sync(jwt_token)
-            try:
-                all_produits = self.spring_boot_client.get_all_produits_sync(jwt_token)
-            except Exception:
-                all_produits = []
+            if preset_extracted_data is not None:
+                extracted_data = preset_extracted_data
+            else:
+                extracted_data = self.ai_extraction_service.extract_recommendation_profile_data(prompt)
+                analytics_store["ai_calls"] = analytics_store.get("ai_calls", 0) + 1
 
-            logger.info(f"Retrieved {len(all_packs)} packs and {len(all_produits)} produits")
+            missing_fields = self._check_missing_recommendation_fields(extracted_data)
+            if missing_fields:
+                return self._demander_champ_manquant(
+                    session_id, ChatbotAction.RECOMMANDATION, extracted_data, missing_fields,
+                    prompt, "votre profil de recommandation", fallback_used, correlation_id
+                )
 
-            prompt_lower = prompt.lower()
-            recommendations = []
+            request = RecommendationRequestDTO(
+                session_id=session_id or correlation_id,
+                age=int(extracted_data["age"]),
+                gender=extracted_data["gender"],
+                marital_status=extracted_data["maritalStatus"],
+                number_of_children=extracted_data.get("numberOfChildren"),
+                monthly_budget=extracted_data.get("monthlyBudget"),
+                smoker=extracted_data.get("smoker"),
+                medical_needs=extracted_data.get("medicalNeeds"),
+                geographical_zone=extracted_data.get("geographicalZone"),
+                profession=extracted_data.get("profession"),
+            )
 
-            for pack in all_packs:
-                if pack.statut != Statut.ACTIF:
-                    continue
+            recommendation_response = self.recommendation_service.generate_recommendations(request, jwt_token)
 
-                score = 0
-                reasons = []
+            formatted_recs = [{
+                "id": rec.id,
+                "nom": rec.nom,
+                "description": rec.description or "",
+                "compatibilityScore": min(100.0, round(rec.compatibility_score * 100, 1)),
+                "monthlyPrice": rec.monthly_price,
+                "coverageLevel": rec.coverage_level,
+                "whyRecommended": rec.why_recommended,
+                "explanation": rec.detailed_explanation or rec.why_recommended,
+            } for rec in recommendation_response.recommended_packs]
 
-                # --- Age ---
-                age_match = re.search(r'(\d+)\s*ans?', prompt_lower)
-                if age_match and pack.age_minimum is not None and pack.age_maximum is not None:
-                    age = int(age_match.group(1))
-                    if pack.age_minimum <= age <= pack.age_maximum:
-                        score += 3
-                        reasons.append(f"Adapté à votre âge ({age} ans)")
-                elif pack.age_minimum is None or pack.age_maximum is None:
-                    score += 1
-
-                # --- Type client ---
-                if 'famille' in prompt_lower or 'enfants' in prompt_lower:
-                    if TypeClient.FAMILLE in (pack.type_clients or []):
-                        score += 2
-                        reasons.append("Convient aux familles")
-                elif 'senior' in prompt_lower or 'retraité' in prompt_lower or 'retraitée' in prompt_lower:
-                    if TypeClient.SENIOR in (pack.type_clients or []):
-                        score += 2
-                        reasons.append("Convient aux seniors")
-                elif 'étudiant' in prompt_lower or 'etudiant' in prompt_lower:
-                    if TypeClient.ETUDIANT in (pack.type_clients or []):
-                        score += 2
-                        reasons.append("Convient aux étudiants")
-                elif 'entreprise' in prompt_lower or 'salarié' in prompt_lower:
-                    if TypeClient.ENTREPRISE in (pack.type_clients or []):
-                        score += 2
-                        reasons.append("Convient aux entreprises")
-
-                # --- Couverture médicale ---
-                if 'cardiolog' in prompt_lower or 'cardio' in prompt_lower:
-                    if pack.domaines_medicaux and any('cardiolog' in d.lower() or 'cardio' in d.lower() for d in pack.domaines_medicaux):
-                        score += 2
-                        reasons.append("Couvre la cardiologie")
-                if 'hospitalisation' in prompt_lower:
-                    if pack.domaines_medicaux and any('hospital' in d.lower() for d in pack.domaines_medicaux):
-                        score += 2
-                        reasons.append("Couvre l'hospitalisation")
-                if 'rhumatolog' in prompt_lower or 'rhumatisme' in prompt_lower:
-                    if pack.domaines_medicaux and any('rhumato' in d.lower() for d in pack.domaines_medicaux):
-                        score += 2
-                        reasons.append("Couvre la rhumatologie")
-                if 'kinésithérapie' in prompt_lower or 'kiné' in prompt_lower:
-                    if pack.domaines_medicaux and any('kiné' in d.lower() or 'kinesith' in d.lower() for d in pack.domaines_medicaux):
-                        score += 2
-                        reasons.append("Couvre la kinésithérapie")
-                if 'santé' in prompt_lower or 'médical' in prompt_lower:
-                    score += 1
-
-                # --- Budget : chercher le contexte "budget de X" avant de chercher un nombre isolé ---
-                budget = None
-                budget_match = re.search(r'budget\s+(?:mensuel\s+)?(?:de\s+)?(\d+)', prompt_lower)
-                if not budget_match:
-                    budget_match = re.search(r'(\d+)\s*(?:tnd|dt|dinars?)\s*(?:par\s+mois|mensuel|/mois)?', prompt_lower)
-                if budget_match:
-                    budget = float(budget_match.group(1))
-                    if pack.prix_mensuel and pack.prix_mensuel <= budget:
-                        score += 2
-                        reasons.append(f"Dans votre budget ({budget} TND/mois)")
-
-                # --- Niveau de couverture ---
-                if 'premium' in prompt_lower or 'gold' in prompt_lower:
-                    if pack.niveau_couverture in [NiveauCouverture.PREMIUM, NiveauCouverture.GOLD]:
-                        score += 2
-                        reasons.append("Couverture premium")
-                elif 'essentiel' in prompt_lower or 'basic' in prompt_lower or 'économique' in prompt_lower:
-                    if pack.niveau_couverture == NiveauCouverture.BASIC:
-                        score += 2
-                        reasons.append("Couverture essentielle")
-
-                if score >= 2:
-                    recommendations.append({"pack": pack, "score": score, "reasons": reasons})
-
-            recommendations.sort(key=lambda x: x["score"], reverse=True)
-            top_recommendations = recommendations[:3]
-
-            logger.info(f"Generated {len(top_recommendations)} recommendations from {len(all_packs)} packs")
-
-            if not top_recommendations:
-                return {
-                    "success": True,
-                    "action": "RECOMMANDATION",
-                    "message": "Aucune recommandation correspondant à vos critères. Essayez de reformuler.",
-                    "recommendations": [],
-                    "total_available": len(all_packs),
-                    "confidence": 0.5
-                }
-
-            formatted_recs = []
-            for rec in top_recommendations:
-                pack = rec["pack"]
-                pack_dict = pack.model_dump(by_alias=True, mode='json')
-                formatted_recs.append({
-                    "id": pack.id_pack or "",
-                    "nom": pack.nom_pack or "",
-                    "description": pack.description or "",
-                    "compatibilityScore": min(100.0, float(rec["score"]) * 15),
-                    "monthlyPrice": pack.prix_mensuel,
-                    "coverageLevel": pack.niveau_couverture.value if pack.niveau_couverture else "",
-                    "whyRecommended": " | ".join(rec["reasons"]) or "Correspond à votre profil",
-                    "explanation": " | ".join(rec["reasons"])
-                })
+            logger.info(f"[{correlation_id}] Generated {len(formatted_recs)} recommendations")
 
             return {
-                "success": True,
+                "success": recommendation_response.success,
                 "action": "RECOMMANDATION",
-                "message": f"Voici {len(formatted_recs)} recommandation(s) parmi {len(all_packs)} packs disponibles",
+                "message": recommendation_response.message,
                 "recommendations": formatted_recs,
-                "total_available": len(all_packs),
+                "explanation": recommendation_response.explanation,
                 "missing_fields": [],
-                "confidence": 0.8
+                "confidence": 0.9 if formatted_recs else 0.5,
+                "fallback_used": fallback_used,
+                "correlation_id": correlation_id
             }
 
         except Exception as e:
-            logger.error(f"Error generating recommendation: {e}", exc_info=True)
+            logger.error(f"[{correlation_id}] Error generating recommendation: {e}", exc_info=True)
             return {
                 "success": False,
                 "error": f"Erreur génération recommandation: {str(e)}",
                 "message": "Impossible de générer des recommandations pour le moment",
-                "confidence": 0.0
+                "confidence": 0.0,
+                "correlation_id": correlation_id
             }
 
     # ------------------------------------------------------------------
     # DTO builders
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _normaliser_taux(valeur: Optional[float]) -> Optional[float]:
+        """Le pipeline d'extraction produit historiquement une fraction (0-1).
+        Le backend attend un pourcentage (0-100). On convertit uniquement
+        les valeurs déjà exprimées en fraction pour rester tolérant aux deux formats."""
+        if valeur is None:
+            return None
+        return valeur * 100 if 0 < valeur <= 1 else valeur
+
+    @staticmethod
+    def _generate_code(prefix: str, nom: Optional[str]) -> str:
+        """Génère un code métier unique (ex: GAR-HOSPITALISATION-482913) à partir du nom saisi."""
+        slug = re.sub(r'[^A-Z0-9]+', '-', (nom or "ENTITE").upper()).strip('-')[:24] or "ENTITE"
+        suffix = str(int(time.time() * 1000))[-6:]
+        return f"{prefix}-{slug}-{suffix}"
+
     def _create_garantie_dto(self, extracted_data: Dict[str, Any], prompt: str) -> GarantieDTO:
+        plafond = PlafondGarantieDTO(
+            plafond_annuel=extracted_data.get("plafondAnnuel"),
+            plafond_mensuel=extracted_data.get("plafondMensuel"),
+            plafond_par_acte=extracted_data.get("plafondParActe"),
+        )
+        franchise_montant = extracted_data.get("franchise")
+        franchise = FranchiseGarantieDTO(
+            type=TypeFranchise.FIXE if franchise_montant else TypeFranchise.AUCUNE,
+            montant_fixe=franchise_montant,
+        ) if franchise_montant is not None else None
+
         return GarantieDTO(
             nom_garantie=extracted_data.get("nom"),
             description=extracted_data.get("description"),
             domaine=self._parse_enum(DomaineMedical, extracted_data.get("domaine")),
-            statut=self._parse_enum(Statut, extracted_data.get("statut", "ACTIF")),
-            taux_remboursement=extracted_data.get("tauxRemboursement"),
-            type_montant=self._parse_enum(TypeMontant, extracted_data.get("typeMontant")),
-            plafond_annuel=extracted_data.get("plafondAnnuel"),
-            plafond_mensuel=extracted_data.get("plafondMensuel"),
-            plafond_par_acte=extracted_data.get("plafondParActe"),
-            franchise=extracted_data.get("franchise"),
-            cout_moyen_par_sinistre=extracted_data.get("coutMoyenParSinistre"),
-            duree_min_contrat=extracted_data.get("dureeMinContrat"),
-            duree_max_contrat=extracted_data.get("dureeMaxContrat"),
-            resiliable_annuellement=extracted_data.get("resiliableAnnuellement", True)
+            type_remboursement=self._parse_enum(TypeRemboursement, extracted_data.get("typeMontant")) or TypeRemboursement.FRAIS_REELS,
+            taux_remboursement_base=self._normaliser_taux(extracted_data.get("tauxRemboursement")),
+            plafond=plafond if any([plafond.plafond_annuel, plafond.plafond_mensuel, plafond.plafond_par_acte]) else None,
+            franchise=franchise,
         )
 
     def _create_produit_dto(self, extracted_data: Dict[str, Any], prompt: str) -> ProduitDTO:
@@ -936,30 +1121,15 @@ class ChatbotOrchestratorService:
             nom_produit=extracted_data.get("nom"),
             description=extracted_data.get("description"),
             type_produit=self._parse_enum(TypeProduit, extracted_data.get("typeProduit")),
-            statut=self._parse_enum(Statut, extracted_data.get("statut", "ACTIF"))
         )
 
     def _create_pack_dto(self, extracted_data: Dict[str, Any], prompt: str) -> PackDTO:
-        type_clients = extracted_data.get("typeClients")
-        if isinstance(type_clients, str):
-            type_clients = [self._parse_enum(TypeClient, type_clients)]
-        elif isinstance(type_clients, list):
-            type_clients = [self._parse_enum(TypeClient, tc) for tc in type_clients if tc]
-            type_clients = [tc for tc in type_clients if tc is not None]
         return PackDTO(
             nom_pack=extracted_data.get("nom"),
             description=extracted_data.get("description"),
             nom_produit=extracted_data.get("nomProduit"),
-            age_minimum=extracted_data.get("ageMin"),
-            age_maximum=extracted_data.get("ageMax"),
-            type_clients=type_clients,
-            anciennete_contrat_mois=extracted_data.get("ancienneteContratMois"),
-            couverture_geographique=self._parse_enum(CouvertureGeographique, extracted_data.get("couvertureGeographique")),
             prix_mensuel=extracted_data.get("prixMensuel"),
-            duree_min_contrat=extracted_data.get("dureeMinContrat"),
-            duree_max_contrat=extracted_data.get("dureeMaxContrat"),
             niveau_couverture=self._parse_enum(NiveauCouverture, extracted_data.get("niveauCouverture")),
-            statut=self._parse_enum(Statut, extracted_data.get("statut", "ACTIF"))
         )
 
     # ------------------------------------------------------------------
@@ -989,7 +1159,7 @@ class ChatbotOrchestratorService:
             missing.append("nom")
         if not garantie.domaine:
             missing.append("domaine")
-        if garantie.taux_remboursement is None:
+        if garantie.taux_remboursement_base is None:
             missing.append("taux de remboursement")
         return missing
 
@@ -1009,41 +1179,38 @@ class ChatbotOrchestratorService:
             missing.append("prix mensuel")
         return missing
 
+    def _check_missing_recommendation_fields(self, extracted_data: Dict[str, Any]) -> List[str]:
+        """Champs requis par RecommendationRequestDTO (age, gender, marital_status) —
+        les autres (budget, besoins, sexe étant optionnels côté DTO mais nécessaires au
+        scoring pondéré) restent optionnels et sont traités comme neutres si absents."""
+        missing = []
+        if extracted_data.get("age") is None:
+            missing.append("âge")
+        if not extracted_data.get("gender"):
+            missing.append("sexe")
+        if not extracted_data.get("maritalStatus"):
+            missing.append("situation familiale")
+        return missing
+
     # ------------------------------------------------------------------
     # Default values
     # ------------------------------------------------------------------
 
     def _apply_garantie_defaults(self, garantie: GarantieDTO):
-        if not garantie.statut:
-            garantie.statut = Statut.ACTIF
-        if garantie.taux_remboursement is None:
-            garantie.taux_remboursement = 0.8
-        if garantie.duree_min_contrat is None:
-            garantie.duree_min_contrat = 12
-        if garantie.duree_max_contrat is None:
-            garantie.duree_max_contrat = 36
-        if garantie.resiliable_annuellement is None:
-            garantie.resiliable_annuellement = True
+        if garantie.taux_remboursement_base is None:
+            garantie.taux_remboursement_base = 80.0
+        if not garantie.code_garantie:
+            garantie.code_garantie = self._generate_code("GAR", garantie.nom_garantie)
 
     def _apply_produit_defaults(self, produit: ProduitDTO):
-        if not produit.statut:
-            produit.statut = Statut.ACTIF
+        if not produit.code_produit:
+            produit.code_produit = self._generate_code("PRD", produit.nom_produit)
 
     def _apply_pack_defaults(self, pack: PackDTO):
-        if not pack.statut:
-            pack.statut = Statut.ACTIF
-        if pack.age_minimum is None:
-            pack.age_minimum = 18
-        if pack.age_maximum is None:
-            pack.age_maximum = 65
-        if not pack.type_clients:
-            pack.type_clients = [TypeClient.INDIVIDUEL]
-        if pack.duree_min_contrat is None:
-            pack.duree_min_contrat = 12
-        if pack.duree_max_contrat is None:
-            pack.duree_max_contrat = 36
         if pack.niveau_couverture is None:
             pack.niveau_couverture = NiveauCouverture.BASIC
+        if not pack.code_pack:
+            pack.code_pack = self._generate_code("PACK", pack.nom_pack)
 
     # ------------------------------------------------------------------
     # Response builders

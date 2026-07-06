@@ -9,14 +9,13 @@ import java.util.logging.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tn.vermeg.gestionproduit.dto.PackDetailDTO;
 import tn.vermeg.gestionproduit.entities.Garantie;
 import tn.vermeg.gestionproduit.entities.Pack;
 import tn.vermeg.gestionproduit.entities.PackGarantie;
 import tn.vermeg.gestionproduit.entities.Produit;
-import tn.vermeg.gestionproduit.enums.CouvertureGeographique;
+import tn.vermeg.gestionproduit.exceptions.ResourceNotFoundException;
 import tn.vermeg.gestionproduit.enums.NiveauCouverture;
-import tn.vermeg.gestionproduit.enums.Statut;
-import tn.vermeg.gestionproduit.enums.TypeClient;
 import tn.vermeg.gestionproduit.enums.TypeMontant;
 import tn.vermeg.gestionproduit.enums.TypePlafond;
 import tn.vermeg.gestionproduit.enums.TypeProduit;
@@ -56,31 +55,12 @@ public class PackUnifiedController {
         return ResponseEntity.ok(packUnifiedService.searchPacksByNom(nomPack));
     }
 
-    @GetMapping("/statut/{statut}")
-    @Operation(summary = "Filtrer les packs par statut", description = "Récupère tous les packs ayant le statut spécifié (ACTIF, INACTIF)")
-    public ResponseEntity<List<Pack>> getPacksByStatut(
-            @Parameter(description = "Statut des packs (ACTIF, INACTIF)", required = true)
-            @PathVariable Statut statut) {
-        return ResponseEntity.ok(packUnifiedService.getPacksByStatut(statut));
-    }
-
     @GetMapping("/niveau/{niveauCouverture}")
     @Operation(summary = "Filtrer les packs par niveau de couverture", description = "Récupère tous les packs ayant le niveau de couverture spécifié")
     public ResponseEntity<List<Pack>> getPacksByNiveau(
             @Parameter(description = "Niveau de couverture (BASIC, PREMIUM, GOLD)", required = true)
             @PathVariable NiveauCouverture niveauCouverture) {
         return ResponseEntity.ok(packUnifiedService.getPacksByNiveau(niveauCouverture));
-    }
-
-    @GetMapping("/type-client/{typeClient}")
-    @Operation(summary = "Filtrer les packs par type de client", description = "Récupère tous les packs destinés au type de client spécifié")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Packs filtrés récupérés avec succès")
-    })
-    public ResponseEntity<List<Pack>> getPacksByTypeClient(
-            @Parameter(description = "Type de client (INDIVIDUEL, FAMILIAL, SENIOR, ETUDIANT, PROFESSIONNEL)", required = true)
-            @PathVariable TypeClient typeClient) {
-        return ResponseEntity.ok(packUnifiedService.getPacksByTypeClient(typeClient));
     }
 
     @GetMapping("/prix-range")
@@ -329,18 +309,6 @@ public class PackUnifiedController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{idPack}/desactiver")
-    @Operation(summary = "Désactiver un pack", description = "Désactive un pack sans le supprimer")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Pack désactivé avec succès"),
-        @ApiResponse(responseCode = "404", description = "Pack non trouvé")
-    })
-    public ResponseEntity<Pack> desactiverPack(
-            @Parameter(description = "ID du pack à désactiver", required = true)
-            @PathVariable String idPack) {
-        return ResponseEntity.ok(packUnifiedService.desactiverPack(idPack));
-    }
-
     @PutMapping("/associations/{id}")
     @Operation(summary = "Mettre à jour une association pack-garantie", description = "Met à jour les paramètres d'une association pack-garantie")
     @ApiResponses(value = {
@@ -422,5 +390,21 @@ public class PackUnifiedController {
     public ResponseEntity<List<Pack>> getAllPacksWithGaranties() {
         List<Pack> packs = hierarchicalService.getAllPacksWithGaranties();
         return ResponseEntity.ok(packs);
+    }
+
+    /**
+     * Détail d'un pack avec idGaranties et domainesMedicaux calculés à la demande.
+     * GET /api/packs/{id}/detail
+     */
+    @GetMapping("/{id}/detail")
+    @Operation(summary = "Détail enrichi d'un pack", description = "Retourne le pack avec idGaranties et domainesMedicaux calculés à la demande")
+    public ResponseEntity<PackDetailDTO> getPackDetail(
+            @Parameter(description = "ID du pack", required = true)
+            @PathVariable String id) {
+        try {
+            return ResponseEntity.ok(hierarchicalService.getPackDetail(id));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

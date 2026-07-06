@@ -53,6 +53,40 @@
           </div>
         </div>
 
+        <!-- Code -->
+        <div class="form-field">
+          <label class="field-label" for="codeProduit">
+            <i class="bi bi-upc"></i> Code *
+          </label>
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('codeProduit')">
+            <input
+              pInputText
+              id="codeProduit"
+              formControlName="codeProduit"
+              placeholder="Ex. SANTE-COMP-001"
+              class="auth-input" />
+          </div>
+          <div class="field-help">Identifiant métier unique</div>
+          <div class="field-error" *ngIf="isFieldInvalid('codeProduit')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('codeProduit') }}
+          </div>
+        </div>
+
+        <!-- Nom commercial -->
+        <div class="form-field">
+          <label class="field-label" for="nomCommercial">
+            <i class="bi bi-megaphone"></i> Nom commercial
+          </label>
+          <div class="input-wrap">
+            <input
+              pInputText
+              id="nomCommercial"
+              formControlName="nomCommercial"
+              placeholder="Nom affiché aux clients"
+              class="auth-input" />
+          </div>
+        </div>
+
         <!-- Type de produit -->
         <div class="form-field">
           <label class="field-label" for="typeProduit">
@@ -71,6 +105,24 @@
           </div>
           <div class="field-error" *ngIf="isFieldInvalid('typeProduit')">
             <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('typeProduit') }}
+          </div>
+        </div>
+
+        <!-- Statut de workflow -->
+        <div class="form-field">
+          <label class="field-label" for="statutWorkflow">
+            <i class="bi bi-signpost-split"></i> Statut
+          </label>
+          <div class="input-wrap">
+            <p-dropdown
+              id="statutWorkflow"
+              formControlName="statutWorkflow"
+              [options]="statutWorkflowOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez un statut"
+              styleClass="auth-dropdown">
+            </p-dropdown>
           </div>
         </div>
 
@@ -94,25 +146,126 @@
           </div>
         </div>
 
-        <!-- Statut -->
+        <!-- Prix de base -->
         <div class="form-field">
-          <label class="field-label" for="statut">
-            <i class="bi bi-toggle-on"></i> Statut *
+          <label class="field-label" for="prixBase">
+            <i class="bi bi-cash"></i> Prix de base
           </label>
-          <div class="input-wrap" [class.has-error]="isFieldInvalid('statut')">
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('prixBase')">
+            <p-inputNumber
+              id="prixBase"
+              formControlName="prixBase"
+              [min]="0"
+              mode="decimal"
+              showButtons="false"
+              placeholder="0.00"
+              styleClass="auth-input">
+            </p-inputNumber>
+          </div>
+          <div class="field-help">Prime de référence, utilisée par les simulateurs</div>
+          <div class="field-error" *ngIf="isFieldInvalid('prixBase')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('prixBase') }}
+          </div>
+        </div>
+
+        <!-- Devise -->
+        <div class="form-field">
+          <label class="field-label" for="devisePrix">
+            <i class="bi bi-currency-exchange"></i> Devise
+          </label>
+          <div class="input-wrap">
+            <input
+              pInputText
+              id="devisePrix"
+              formControlName="devisePrix"
+              placeholder="TND"
+              class="auth-input" />
+          </div>
+        </div>
+
+        <!-- Couverture géographique -->
+        <div class="form-field">
+          <label class="field-label" for="couvertureGeographique">
+            <i class="bi bi-globe"></i> Couverture géographique
+          </label>
+          <div class="input-wrap">
             <p-dropdown
-              id="statut"
-              formControlName="statut"
-              [options]="statutOptions"
+              id="couvertureGeographique"
+              formControlName="couvertureGeographique"
+              [options]="couvertureGeographiqueOptions"
               optionLabel="label"
               optionValue="value"
-              placeholder="Sélectionnez un statut"
+              placeholder="Sélectionnez une zone"
               styleClass="auth-dropdown">
             </p-dropdown>
           </div>
-          <div class="field-error" *ngIf="isFieldInvalid('statut')">
-            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('statut') }}
+        </div>
+
+        <!-- Version -->
+        <div class="form-field">
+          <label class="field-label" for="version">
+            <i class="bi bi-tag"></i> Version
+          </label>
+          <div class="input-wrap">
+            <input
+              pInputText
+              id="version"
+              formControlName="version"
+              placeholder="1.0"
+              class="auth-input" />
           </div>
+        </div>
+
+        <!-- Territoires exclus -->
+        <div class="form-field full-width">
+          <label class="field-label" for="territoiresExclus">
+            <i class="bi bi-slash-circle"></i> Territoires exclus
+          </label>
+          <div class="input-wrap">
+            <p-chips
+              id="territoiresExclus"
+              formControlName="territoiresExclus"
+              placeholder="Tapez un territoire puis Entrée"
+              styleClass="auth-input">
+            </p-chips>
+          </div>
+        </div>
+
+        <!-- Date d'effet -->
+        <div class="form-field">
+          <label class="field-label" for="dateEffet">
+            <i class="bi bi-calendar-check"></i> Date d'effet
+          </label>
+          <div class="input-wrap">
+            <p-calendar
+              id="dateEffet"
+              formControlName="dateEffet"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              appendTo="body"
+              placeholder="Sélectionnez une date"
+              styleClass="auth-input">
+            </p-calendar>
+          </div>
+        </div>
+
+        <!-- Date d'expiration -->
+        <div class="form-field">
+          <label class="field-label" for="dateExpiration">
+            <i class="bi bi-calendar-x"></i> Date d'expiration
+          </label>
+          <div class="input-wrap">
+            <p-calendar
+              id="dateExpiration"
+              formControlName="dateExpiration"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              appendTo="body"
+              placeholder="Vide = toujours commercialisé"
+              styleClass="auth-input">
+            </p-calendar>
+          </div>
+          <div class="field-help">Laisser vide si le produit reste commercialisé indéfiniment</div>
         </div>
       </div>
   </div>

@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
-import { GestionProduitService, Produit } from '../../services/gestion-produit.service';
+import { GestionProduitService, Produit, Pack } from '../../services/gestion-produit.service';
+import { TypeProduit, getTypeProduitLabel, StatutWorkflow, getStatutWorkflowLabel, getStatutWorkflowBadgeVariant, isStatutWorkflowOutlined } from '../../models/entities.model';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -34,20 +35,24 @@ import { UiBadgeComponent } from '../../shared/components/ui-badge/ui-badge.comp
     DropdownModule,
     CommonModule,
     FormsModule,
-    RouterModule
+    RouterModule,
+    UiBadgeComponent
   ],
   providers: [ConfirmationService]
 })
 export class ProduitsComponent implements OnInit {
   produits: Produit[] = [];
+  filteredProduits: Produit[] = [];
   loading = false;
   globalFilterValue = '';
+  packsByProduit: Map<string, { packs: Pack[]; loading: boolean; show: boolean }> = new Map();
 
   // Filter properties
-  typeOptions: any[] = [];
-  selectedType: any = null;
-  statusOptions: any[] = [];
-  selectedStatus: any = null;
+  typeOptions: { label: string; value: TypeProduit }[] = Object.values(TypeProduit).map(t => ({
+    label: getTypeProduitLabel(t),
+    value: t
+  }));
+  selectedType: TypeProduit | null = null;
 
   constructor(
     private produitService: GestionProduitService,
@@ -67,6 +72,7 @@ export class ProduitsComponent implements OnInit {
     this.produitService.getAllProduits().subscribe({
       next: (data) => {
         this.produits = data;
+        this.applyFilters();
         this.loading = false;
       },
       error: (error) => {
@@ -85,31 +91,80 @@ export class ProduitsComponent implements OnInit {
 
   // Filter methods
   applyFilters(): void {
-    console.log('Applying filters:', {
-      type: this.selectedType,
-      status: this.selectedStatus,
-      search: this.globalFilterValue
+    const searchLower = this.globalFilterValue.trim().toLowerCase();
+    this.filteredProduits = this.produits.filter(p => {
+      if (this.selectedType && p.typeProduit !== this.selectedType) {
+        return false;
+      }
+      if (searchLower && !(p.nomProduit || '').toLowerCase().includes(searchLower)
+          && !(p.description || '').toLowerCase().includes(searchLower)) {
+        return false;
+      }
+      return true;
     });
+  }
+
+  // Relation Produit -> Packs (pattern identique à PacksComponent.loadGarantiesForPack)
+  loadPacksForProduit(produitId: string): void {
+    if (!produitId || this.packsByProduit.has(produitId)) {
+      return;
+    }
+
+    this.packsByProduit.set(produitId, { packs: [], loading: true, show: false });
+
+    this.produitService.getPacksByProduit(produitId).subscribe({
+      next: (packs) => {
+        this.packsByProduit.set(produitId, { packs, loading: false, show: false });
+      },
+      error: () => {
+        this.packsByProduit.set(produitId, { packs: [], loading: false, show: false });
+      }
+    });
+  }
+
+  togglePacks(produit: Produit): void {
+    const produitId = produit.idProduit;
+    if (!produitId) return;
+
+    if (!this.packsByProduit.has(produitId)) {
+      this.loadPacksForProduit(produitId);
+    }
+
+    const current = this.packsByProduit.get(produitId);
+    if (current) {
+      current.show = !current.show;
+      this.packsByProduit.set(produitId, current);
+    }
+  }
+
+  getProduitPacks(produitId: string): { packs: Pack[]; loading: boolean; show: boolean } {
+    return this.packsByProduit.get(produitId) || { packs: [], loading: false, show: false };
+  }
+
+  getStatutLabel(statut?: StatutWorkflow): string {
+    return statut ? getStatutWorkflowLabel(statut) : '—';
+  }
+
+  getStatutBadgeVariant(statut?: StatutWorkflow): 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+    return statut ? getStatutWorkflowBadgeVariant(statut) : 'neutral';
+  }
+
+  isStatutOutlined(statut?: StatutWorkflow): boolean {
+    return statut ? isStatutWorkflowOutlined(statut) : false;
   }
 
   resetFilters(): void {
     this.selectedType = null;
-    this.selectedStatus = null;
     this.globalFilterValue = '';
     this.applyFilters();
   }
 
   hasActiveFilters(): boolean {
-    return !!this.selectedType || !!this.selectedStatus || !!this.globalFilterValue;
+    return !!this.selectedType || !!this.globalFilterValue;
   }
 
   clearTypeFilter(): void {
     this.selectedType = null;
-    this.applyFilters();
-  }
-
-  clearStatusFilter(): void {
-    this.selectedStatus = null;
     this.applyFilters();
   }
 
@@ -127,14 +182,6 @@ export class ProduitsComponent implements OnInit {
       this.router.navigate(['/produits/add']);
     } catch (error) {
       this.toastService.showError('Erreur lors de l\'ajout du produit', 'Veuillez réessayer plus tard');
-    }
-  }
-
-  getStatusClass(statut: string): string {
-    switch (statut?.toUpperCase()) {
-      case 'ACTIF': return 'active';
-      case 'INACTIF': return 'inactive';
-      default: return 'unknown';
     }
   }
 

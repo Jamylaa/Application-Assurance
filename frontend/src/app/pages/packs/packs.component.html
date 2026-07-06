@@ -56,13 +56,11 @@
       <ng-template pTemplate="header">
         <tr>
           <th pSortableColumn="nomPack">Nom du pack <p-sortIcon field="nomPack"></p-sortIcon></th>
+          <th pSortableColumn="statutWorkflow">Statut <p-sortIcon field="statutWorkflow"></p-sortIcon></th>
           <th pSortableColumn="description">Description <p-sortIcon field="description"></p-sortIcon></th>
           <th pSortableColumn="prixMensuel">Prix <p-sortIcon field="prixMensuel"></p-sortIcon></th>
-          <th pSortableColumn="ageMinimum">Âge <p-sortIcon field="ageMinimum"></p-sortIcon></th>
-          <th pSortableColumn="couvertureGeographique">Couverture <p-sortIcon field="couvertureGeographique"></p-sortIcon></th>
           <th pSortableColumn="niveauCouverture">Niveau <p-sortIcon field="niveauCouverture"></p-sortIcon></th>
           <th>Garanties</th>
-          <th pSortableColumn="statut">Statut <p-sortIcon field="statut"></p-sortIcon></th>
           <th style="width:100px;text-align:center;">Actions</th>
         </tr>
       </ng-template>
@@ -75,21 +73,17 @@
               <span class="cell-primary">{{ pack.nomPack }}</span>
             </div>
           </td>
+          <td>
+            <app-ui-badge [variant]="getStatutBadgeVariant(pack.statutWorkflow)" [outlined]="isStatutOutlined(pack.statutWorkflow)" size="sm">
+              {{ getStatutLabel(pack.statutWorkflow) }}
+            </app-ui-badge>
+          </td>
           <td><span class="cell-text">{{ pack.description || '—' }}</span></td>
           <td>
             <div class="price-cell">
               <span class="price-value">{{ pack.prixMensuel }}</span>
               <span class="price-currency">TND</span>
             </div>
-          </td>
-          <td>
-            <div class="age-cell">
-              <i class="bi bi-person"></i>
-              <span>{{ pack.ageMinimum || 0 }} - {{ pack.ageMaximum || 120 }} ans</span>
-            </div>
-          </td>
-          <td>
-            <app-ui-badge variant="info" size="sm">{{ pack.couvertureGeographique || 'N/A' }}</app-ui-badge>
           </td>
           <td>
             <app-ui-badge [variant]="getNiveauBadgeVariant(pack.niveauCouverture)" size="sm">
@@ -126,16 +120,17 @@
                 @for (pg of getPackGaranties(pack.idPack || '').garanties; track pg.idPackGarantie) {
                   <div class="garantie-item">
                     <span class="garantie-name">{{ pg.nomGarantie }}</span>
-                    <span class="garantie-taux">{{ (pg.tauxRemboursement * 100) | number:'1.0-1' }}%</span>
+                    <span class="garantie-taux" *ngIf="pg.tauxRemboursementSpecifique != null">{{ pg.tauxRemboursementSpecifique | number:'1.0-1' }}%</span>
                   </div>
                 }
               </div>
+              <div class="domaines-medicaux-list" *ngIf="getDomainesMedicauxLabels(pack.idPack || '').length > 0">
+                <span class="domaines-label">Domaines couverts :</span>
+                @for (label of getDomainesMedicauxLabels(pack.idPack || ''); track label) {
+                  <app-ui-badge variant="secondary" size="sm">{{ label }}</app-ui-badge>
+                }
+              </div>
             }
-          </td>
-          <td>
-            <app-ui-badge [variant]="getStatusBadgeVariant(pack.statut)" size="sm">
-              {{ pack.statut || 'INCONNU' }}
-            </app-ui-badge>
           </td>
           <td>
             <div class="table-actions">
@@ -155,7 +150,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="9">
+          <td colspan="7">
             <div class="table-empty">
               <div class="empty-icon"><i class="bi bi-collection"></i></div>
               <h3 class="empty-title">Aucun pack trouvé</h3>

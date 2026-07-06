@@ -49,14 +49,6 @@
             styleClass="filter-dropdown"
             [showClear]="true">
           </p-dropdown>
-          <p-dropdown
-            [options]="statusOptions"
-            placeholder="Statut"
-            [(ngModel)]="selectedStatus"
-            (onChange)="applyFilters()"
-            styleClass="filter-dropdown"
-            [showClear]="true">
-          </p-dropdown>
         </div>
         <div class="search-box">
           <i class="bi bi-search"></i>
@@ -79,10 +71,6 @@
         Type: {{ selectedType }}
         <i class="bi bi-x-circle" (click)="clearTypeFilter()"></i>
       </div>
-      <div class="filter-tag" *ngIf="selectedStatus">
-        Statut: {{ selectedStatus }}
-        <i class="bi bi-x-circle" (click)="clearStatusFilter()"></i>
-      </div>
       <div class="filter-tag" *ngIf="globalFilterValue">
         Recherche: {{ globalFilterValue }}
         <i class="bi bi-x-circle" (click)="clearSearchFilter()"></i>
@@ -90,7 +78,7 @@
     </div>
 
     <p-table
-      [value]="produits"
+      [value]="filteredProduits"
       [loading]="loading"
       [paginator]="true"
       [rows]="10"
@@ -104,9 +92,10 @@
       <ng-template pTemplate="header">
         <tr>
           <th pSortableColumn="nomProduit">Nom <p-sortIcon field="nomProduit"></p-sortIcon></th>
+          <th pSortableColumn="statutWorkflow">Statut <p-sortIcon field="statutWorkflow"></p-sortIcon></th>
           <th pSortableColumn="description">Description <p-sortIcon field="description"></p-sortIcon></th>
           <th pSortableColumn="typeProduit">Type <p-sortIcon field="typeProduit"></p-sortIcon></th>
-          <th pSortableColumn="statut">Statut <p-sortIcon field="statut"></p-sortIcon></th>
+          <th>Packs</th>
           <th style="width:100px;text-align:center;">Actions</th>
         </tr>
       </ng-template>
@@ -119,15 +108,48 @@
               <span class="cell-primary">{{ produit.nomProduit }}</span>
             </div>
           </td>
+          <td>
+            <app-ui-badge [variant]="getStatutBadgeVariant(produit.statutWorkflow)" [outlined]="isStatutOutlined(produit.statutWorkflow)" size="sm">
+              {{ getStatutLabel(produit.statutWorkflow) }}
+            </app-ui-badge>
+          </td>
           <td><span class="cell-text">{{ produit.description || '—' }}</span></td>
           <td>
             <span class="type-badge">{{ produit.typeProduit || 'N/A' }}</span>
           </td>
           <td>
-            <span class="status-badge" [ngClass]="getStatusClass(produit.statut)">
-              <span class="status-dot"></span>
-              {{ produit.statut || 'INCONNU' }}
-            </span>
+            <div class="garanties-cell">
+              @if (!getProduitPacks(produit.idProduit || '').loading && getProduitPacks(produit.idProduit || '').packs.length > 0) {
+                <span class="garanties-count">
+                  <i class="bi bi-collection"></i>
+                  {{ getProduitPacks(produit.idProduit || '').packs.length }} pack(s)
+                </span>
+              } @if (!getProduitPacks(produit.idProduit || '').loading && getProduitPacks(produit.idProduit || '').packs.length === 0 && packsByProduit.has(produit.idProduit || '')) {
+                <span class="text-muted">
+                  <i class="bi bi-dash-circle"></i>
+                  Aucun
+                </span>
+              } @if (getProduitPacks(produit.idProduit || '').loading) {
+                <span class="text-muted small">Chargement...</span>
+              }
+              <p-button
+                icon="pi pi-eye"
+                pTooltip="Voir les packs"
+                tooltipPosition="top"
+                styleClass="p-button-rounded p-button-text p-button-sm"
+                (click)="togglePacks(produit)">
+              </p-button>
+            </div>
+            @if (getProduitPacks(produit.idProduit || '').show && getProduitPacks(produit.idProduit || '').packs.length > 0) {
+              <div class="garanties-list">
+                @for (p of getProduitPacks(produit.idProduit || '').packs; track p.idPack) {
+                  <div class="garantie-item">
+                    <span class="garantie-name">{{ p.nomPack }}</span>
+                    <span class="garantie-taux">{{ p.prixMensuel | number:'1.0-0' }} TND/mois</span>
+                  </div>
+                }
+              </div>
+            }
           </td>
           <td>
             <div class="action-btns">

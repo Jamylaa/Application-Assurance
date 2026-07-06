@@ -51,7 +51,7 @@ async def log_requests(request, call_next):
             logger.warning(f"Could not log request body: {e}")
 
     response = await call_next(request)
-    logger.info(f"📤 Response status: {response.status_code}")
+    logger.info(f" Response status: {response.status_code}")
     return response
 
 # Include routers

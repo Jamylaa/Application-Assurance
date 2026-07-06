@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
 import { GestionProduitService, Pack } from '../../services/gestion-produit.service';
-import { PackGarantie } from '../../models/entities.model';
+import { PackGarantie, DomaineMedical, getDomaineMedicalLabel, StatutWorkflow, getStatutWorkflowLabel, getStatutWorkflowBadgeVariant, isStatutWorkflowOutlined } from '../../models/entities.model';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -38,6 +38,7 @@ export class PacksComponent implements OnInit {
   packs: Pack[] = [];
   loading = true;
   packsWithGaranties: Map<string, { garanties: PackGarantie[]; loading: boolean; show: boolean }> = new Map();
+  domainesMedicauxByPack: Map<string, DomaineMedical[]> = new Map();
 
   constructor(
     private readonly packService: GestionProduitService,
@@ -95,28 +96,12 @@ export class PacksComponent implements OnInit {
     });
   }
 
-  getSeverity(statut: string): 'success' | 'info' | 'secondary' | 'contrast' | 'warning' | 'danger' {
-    switch (statut) {
-      case 'ACTIF': return 'success';
-      case 'INACTIF': return 'danger';
-      default: return 'info';
-    }
-  }
-
   getNiveauSeverity(niveau: string): 'success' | 'info' | 'secondary' | 'contrast' | 'warning' | 'danger' {
     switch (niveau?.toLowerCase()) {
       case 'premium': case 'gold': case 'platinum': return 'success';
       case 'standard': case 'silver': return 'info';
       case 'basic': case 'bronze': return 'warning';
       default: return 'secondary';
-    }
-  }
-
-  getStatusClass(statut: string): string {
-    switch (statut?.toUpperCase()) {
-      case 'ACTIF': return 'active';
-      case 'INACTIF': return 'inactive';
-      default: return 'unknown';
     }
   }
 
@@ -129,14 +114,6 @@ export class PacksComponent implements OnInit {
     }
   }
 
-  getStatusBadgeVariant(statut: string): 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
-    switch (statut?.toUpperCase()) {
-      case 'ACTIF': return 'success';
-      case 'INACTIF': return 'error';
-      default: return 'neutral';
-    }
-  }
-
   getNiveauBadgeVariant(niveau: string): 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
     switch (niveau?.toLowerCase()) {
       case 'premium': case 'gold': case 'platinum': return 'success';
@@ -144,6 +121,18 @@ export class PacksComponent implements OnInit {
       case 'basic': case 'bronze': return 'warning';
       default: return 'neutral';
     }
+  }
+
+  getStatutLabel(statut?: StatutWorkflow): string {
+    return statut ? getStatutWorkflowLabel(statut) : '—';
+  }
+
+  getStatutBadgeVariant(statut?: StatutWorkflow): 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+    return statut ? getStatutWorkflowBadgeVariant(statut) : 'neutral';
+  }
+
+  isStatutOutlined(statut?: StatutWorkflow): boolean {
+    return statut ? isStatutWorkflowOutlined(statut) : false;
   }
 
   addPack(): void {
@@ -190,6 +179,16 @@ export class PacksComponent implements OnInit {
         }
       }
     });
+
+    // Domaines médicaux couverts, dérivés côté serveur (Phase 3 : GET /packs/{id}/detail)
+    this.packService.getPackDetail(packId).subscribe({
+      next: (detail) => this.domainesMedicauxByPack.set(packId, detail.domainesMedicaux || []),
+      error: () => this.domainesMedicauxByPack.set(packId, [])
+    });
+  }
+
+  getDomainesMedicauxLabels(packId: string): string[] {
+    return (this.domainesMedicauxByPack.get(packId) || []).map(d => getDomaineMedicalLabel(d));
   }
 
   toggleGaranties(pack: Pack): void {

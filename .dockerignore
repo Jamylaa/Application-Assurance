@@ -5,3 +5,6 @@ frontend
 **/target
 **/*.md
 .idea
+.env
+**/.env
+**/.env.*

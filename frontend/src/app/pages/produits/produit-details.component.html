@@ -38,13 +38,6 @@
         <span class="metric-value">{{ getProductCategory() }}</span>
       </div>
     </div>
-    <div class="metric-card status">
-      <div class="metric-icon"><i class="bi bi-activity"></i></div>
-      <div class="metric-content">
-        <span class="metric-label">Statut</span>
-        <span class="metric-value">{{ produit.statut || '—' }}</span>
-      </div>
-    </div>
   </div>
 
   <div class="details-card">
@@ -66,6 +59,10 @@
                 <span class="info-value primary">{{ p.nomProduit || '—' }}</span>
               </div>
               <div class="info-item">
+                <span class="info-label">Nom commercial</span>
+                <span class="info-value">{{ p.nomCommercial || '—' }}</span>
+              </div>
+              <div class="info-item">
                 <span class="info-label">Description</span>
                 <span class="info-value">{{ p.description || '—' }}</span>
               </div>
@@ -73,9 +70,58 @@
                 <span class="info-label">Type</span>
                 <span class="info-value type" [ngClass]="getTypeClass(p.typeProduit)">{{ p.typeProduit || '—' }}</span>
               </div>
+            </div>
+          </div>
+
+          <!-- Workflow -->
+          <div class="details-section">
+            <h3><i class="bi bi-signpost-split"></i> Workflow</h3>
+            <div class="section-grid">
               <div class="info-item">
                 <span class="info-label">Statut</span>
-                <p-tag [severity]="getStatusSeverity(p.statut)" [value]="p.statut || 'INCONNU'"></p-tag>
+                <app-ui-badge [variant]="getStatutBadgeVariant(p.statutWorkflow)" [outlined]="isStatutOutlined(p.statutWorkflow)" size="sm">
+                  {{ getStatutLabel(p.statutWorkflow) }}
+                </app-ui-badge>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Version</span>
+                <span class="info-value">{{ p.version || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Date d'effet</span>
+                <span class="info-value small">{{ formatDateValue(p.dateEffet) }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Date d'expiration</span>
+                <span class="info-value small">{{ formatDateValue(p.dateExpiration) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tarification -->
+          <div class="details-section">
+            <h3><i class="bi bi-cash-coin"></i> Tarification</h3>
+            <div class="section-grid">
+              <div class="info-item">
+                <span class="info-label">Prix de base</span>
+                <span class="info-value primary">{{ p.prixBase != null ? (p.prixBase + ' ' + (p.devisePrix || 'TND')) : '—' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Couverture géographique -->
+          <div class="details-section">
+            <h3><i class="bi bi-globe"></i> Couverture géographique</h3>
+            <div class="section-grid">
+              <div class="info-item">
+                <span class="info-label">Zone de couverture</span>
+                <span class="info-value">{{ getCouvertureLabel(p.couvertureGeographique) }}</span>
+              </div>
+              <div class="info-item" *ngIf="p.territoiresExclus && p.territoiresExclus.length > 0">
+                <span class="info-label">Territoires exclus</span>
+                <div class="tags-wrap">
+                  <app-ui-badge *ngFor="let territoire of p.territoiresExclus" variant="neutral" size="sm">{{ territoire }}</app-ui-badge>
+                </div>
               </div>
             </div>
           </div>

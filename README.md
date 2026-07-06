@@ -87,14 +87,14 @@ La gestion des produits d'assurance implique de nombreuses entités métier fort
 └────────┬──────────────────┬─────────────────────┬───────────────────┘
          │                  │                     │
          ▼                  ▼                     ▼
-┌────────────────┐ ┌────────────────┐  ┌────────────────────────────┐
-│ GestionProduit │ │  GestionUser   │  │     Chatbot IA             │
-│ Spring Boot    │ │  Spring Boot   │  │   FastAPI — Port 9001      │
-│ Port 9093      │ │  Port 9092     │  │   GPT-4o-mini              │
-│ MongoDB        │ │  Keycloak API  │  │   (GitHub Models API)      │
-└────────┬───────┘ └────────┬───────┘  └────────────┬───────────────┘
-         │                  │                        │
-         └──────────────────┼────────────────────────┘
+┌────────────────┐  ┌────────────────────────────┐
+│ GestionProduit │  │     Chatbot IA             │
+│ Spring Boot    │  │   FastAPI — Port 9001      │
+│ Port 9093      │  │   GPT-4o-mini              │
+│ MongoDB        │  │   (GitHub Models API)      │
+└────────┬───────┘  └────────────┬───────────────┘
+         │                       │
+         └───────────────────────┘
                             ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        INFRASTRUCTURE                               │
@@ -129,7 +129,7 @@ API Gateway (9091)
     │  3. Route la requête vers le bon service (via Eureka)
     │
     ▼
-GestionProduit / GestionUser / Chatbot
+GestionProduit / Chatbot
     │
     │  4. Exécute la logique métier
     │  5. Retourne la réponse
@@ -170,7 +170,6 @@ Routes configurées :
 /api/produits/**    → gestionproduit
 /api/packs/**       → gestionproduit
 /api/garanties/**   → gestionproduit
-/api/users/**       → gestionuser
 /api/chatbot/**     → chatbot-service
 ```
 
@@ -211,22 +210,22 @@ GET    /api/garanties             Liste toutes les garanties
 POST   /api/garanties             Crée une garantie
 ```
 
+> **Référence complète du modèle de données** : la liste exhaustive des champs, la hiérarchie des entités (Produit → Pack → PackGarantie ↔ Garantie), les Value Objects embarqués et les conventions de code du module sont détaillés dans [`GestionProduit/ENTITES.md`](GestionProduit/ENTITES.md).
+
+**Développement local (sans Docker) :**
+
+```bash
+cd GestionProduit
+.\mvnw.cmd clean compile      # Compiler
+.\mvnw.cmd test                # Lancer les tests
+.\mvnw.cmd spring-boot:run      # Démarrer (port 9093)
+```
+
+> **Note** : les fonctionnalités d'embeddings/RAG (Spring AI) sont temporairement désactivées, les dépendances correspondantes n'étant pas encore ajoutées au `pom.xml`. Le build Maven émet aussi un avertissement sur des dépendances dupliquées (`spring-boot-starter-oauth2-resource-server` / `spring-boot-starter-security`) — sans impact sur la compilation, à nettoyer avant une mise en production.
+
 ---
 
-### 5.4 GestionUser
-
-| Attribut | Valeur |
-|----------|--------|
-| **Rôle** | Gestion des utilisateurs via l'API Keycloak |
-| **Port** | 9092 |
-| **Framework** | Spring Boot 3.x |
-| **Sécurité** | Keycloak JWT (rôle ADMIN) |
-
-Ce service fait le pont entre l'application et l'API d'administration Keycloak pour la gestion des utilisateurs (création, listing, attribution de rôles).
-
----
-
-### 5.5 Chatbot IA (FastAPI)
+### 5.4 Chatbot IA (FastAPI)
 
 | Attribut | Valeur |
 |----------|--------|
@@ -267,6 +266,34 @@ OrchestratorService      → Appel API GestionProduit pour persistance
     ▼
 Réponse structurée au frontend (intent, confidence, data, actions)
 ```
+
+**Répartition des responsabilités :**
+
+| | GestionProduit (Java) | chatbot-service (Python) |
+|---|---|---|
+| Fait | CRUD Produits/Packs/Garanties, validation métier finale, persistance MongoDB, recherche/filtrage | Interprétation du langage naturel, extraction IA, analyse d'intention, orchestration des appels vers GestionProduit, recommandations |
+| Ne fait pas | Interprétation NLP, extraction IA, recommandations | **Aucun accès direct à MongoDB** — toute persistance passe par l'API REST de GestionProduit |
+
+**Développement local (sans Docker) :**
+
+```bash
+cd chatbot-service
+python -m venv venv
+venv\Scripts\activate          # Windows — sur Linux/macOS : source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env           # puis renseigner GITHUB_API_KEY au minimum
+uvicorn main:app --reload --host 0.0.0.0 --port 9001
+```
+
+> **Important** : la commande doit être lancée depuis le dossier `chatbot-service/` (le `.env` y est chargé par chemin résolu automatiquement depuis l'emplacement de `app/config.py`, donc indépendant du répertoire d'où `uvicorn`/`python` est invoqué — mais `.env` doit physiquement se trouver dans `chatbot-service/`).
+
+**Dépannage rapide :**
+
+| Symptôme | Cause probable | Solution |
+|----------|-----------------|----------|
+| Le service ne démarre pas / erreur de configuration | `GITHUB_API_KEY` absente ou `.env` introuvable | Vérifier que `chatbot-service/.env` existe et contient une clé valide |
+| Recommandations vides ou erreurs IA | Clé GitHub Models expirée/invalide | Le service bascule automatiquement en mode fallback (extraction regex) si `FALLBACK_ON_AI_ERROR=true` |
+| Erreur de communication avec GestionProduit | `SPRING_BOOT_BASE_URL` incorrect ou service indisponible | Vérifier l'URL (`http://gestionproduit:9093/api` en Docker, `http://localhost:9093/api` en local) et les logs de GestionProduit |
 
 ---
 
@@ -487,7 +514,7 @@ sleep 30
 docker compose up -d eureka
 
 # 4. Gateway + services métier
-docker compose up -d gateway gestionproduit gestionuser
+docker compose up -d gateway gestionproduit
 
 # 5. Chatbot IA
 docker compose up -d chatbot-service
@@ -505,8 +532,8 @@ docker compose up -d frontend
 | Eureka Dashboard | http://localhost:8761 | — |
 | Keycloak Admin | http://localhost:9090 | admin / admin |
 | GestionProduit Swagger | http://localhost:9093/swagger-ui.html | — |
-| GestionUser Swagger | http://localhost:9092/swagger-ui.html | — |
 | Chatbot API Docs | http://localhost:9001/docs | — |
+| MongoDB | mongodb://localhost:27017 | admin / password (dev uniquement) |
 | Grafana | http://localhost:3000 | admin / admin |
 | Prometheus | http://localhost:9080 | — |
 
@@ -538,7 +565,7 @@ docker compose exec gestionproduit bash
 | Variable | Service | Description |
 |----------|---------|-------------|
 | `SPRING_PROFILES_ACTIVE` | Tous | `docker` en production |
-| `SPRING_DATA_MONGODB_URI` | GestionProduit, GestionUser | URI MongoDB |
+| `SPRING_DATA_MONGODB_URI` | GestionProduit | URI MongoDB |
 | `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI` | Gateway, services | JWKS Keycloak |
 | `EUREKA_CLIENT_SERVICEURL_DEFAULTZONE` | Tous (sauf Eureka) | URL Eureka |
 
@@ -588,15 +615,6 @@ ProjtVermeg-ye5dem/
 │   ├── Dockerfile
 │   └── pom.xml
 │
-├── GestionUser/                      Microservice Utilisateurs
-│   ├── src/main/java/.../
-│   │   ├── controllers/
-│   │   ├── services/
-│   │   ├── repositories/
-│   │   └── config/                   SecurityConfig, SwaggerConfig, WebConfig
-│   ├── Dockerfile
-│   └── pom.xml
-│
 ├── chatbot-service/                  Assistant IA (Python FastAPI)
 │   ├── app/
 │   │   ├── main.py                   Entrée FastAPI + CORS + lifespan
@@ -639,7 +657,6 @@ ProjtVermeg-ye5dem/
 ### Backend ✅
 
 - [x] **GestionProduit** : CRUD complet Produits, Packs, Garanties (MongoDB)
-- [x] **GestionUser** : gestion des utilisateurs via Keycloak Admin API
 - [x] **API Gateway** : routage par préfixe, validation JWT, protection des routes
 - [x] **Eureka Server** : enregistrement et découverte dynamique des services
 - [x] **Sécurité** : OAuth2/JWT via Keycloak, rôle ADMIN sur toutes les routes
@@ -675,7 +692,7 @@ ProjtVermeg-ye5dem/
 
 ### Infrastructure ✅
 
-- [x] Docker Compose complet (7 services : MongoDB, Keycloak, Eureka, Gateway, GestionProduit, GestionUser, Chatbot)
+- [x] Docker Compose complet (6 services : MongoDB, Keycloak, Eureka, Gateway, GestionProduit, Chatbot)
 - [x] Prometheus (métriques Spring Boot Actuator)
 - [x] Grafana (dashboards de monitoring)
 - [x] Manifests Kubernetes (`k8s/`)
@@ -768,7 +785,7 @@ API Gateway (http://localhost:9091)
     │  9. Vérifie claims (realm_access.roles contient ADMIN)
     │  10. Route vers le microservice cible
     ▼
-GestionProduit / GestionUser
+GestionProduit
     │  11. Vérifie le JWT localement (même JWKS)
     │  12. Exécute la requête
 ```

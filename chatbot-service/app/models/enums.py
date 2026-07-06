@@ -1,10 +1,4 @@
 from enum import Enum
-class CouvertureGeographique(str, Enum):
-    LOCAL = "LOCAL"
-    NATIONAL = "NATIONAL"
-    INTERNATIONAL = "INTERNATIONAL"
-    UE = "UE"
-    MAGHREB = "MAGHREB"
 class DomaineMedical(str, Enum):
     CONSULTATION_GENERALE = "CONSULTATION_GENERALE"
     MEDECINE_FAMILIALE = "MEDECINE_FAMILIALE"
@@ -91,6 +85,13 @@ class TypeMontant(str, Enum):
     FORFAIT = "FORFAIT"
     FRAIS_REELS = "FRAIS_REELS"
     TARIF_CONVENTIONNE = "TARIF_CONVENTIONNE"
+
+class CouvertureGeographique(str, Enum):
+    LOCAL = "LOCAL"
+    NATIONAL = "NATIONAL"
+    INTERNATIONAL = "INTERNATIONAL"
+    UE = "UE"
+    MAGHREB = "MAGHREB"
 class TypeProduit(str, Enum):
     SANTE = "SANTE"
     HABITATION = "HABITATION"
@@ -103,21 +104,15 @@ class NiveauCouverture(str, Enum):
     PREMIUM = "PREMIUM"
     GOLD = "GOLD"
 
-class TypeClient(str, Enum):
-    INDIVIDUEL = "INDIVIDUEL"
-    FAMILLE = "FAMILLE"
-    ENFANT = "ENFANT"
-    SENIOR = "SENIOR"
-    ENTREPRISE = "ENTREPRISE"
-    ETUDIANT = "ETUDIANT"
-
-class Statut(str, Enum):
-    ACTIF = "ACTIF"
-    INACTIF = "INACTIF"
-    EN_ATTENTE = "EN_ATTENTE"
+class StatutWorkflow(str, Enum):
+    BROUILLON = "BROUILLON"
+    SOUMIS_VALIDATION = "SOUMIS_VALIDATION"
+    EN_COURS_VALIDATION = "EN_COURS_VALIDATION"
+    APPROUVE = "APPROUVE"
+    REJETE = "REJETE"
+    PUBLIE = "PUBLIE"
+    ARCHIVE = "ARCHIVE"
     SUSPENDU = "SUSPENDU"
-    EXPIRE = "EXPIRE"
-    RESILIE = "RESILIE"
 
 class TypePlafond(str, Enum):
     PAR_ACTE = "PAR_ACTE"
@@ -125,6 +120,24 @@ class TypePlafond(str, Enum):
     MENSUEL = "MENSUEL"
     GLOBAL = "GLOBAL"
     PAR_SOINS = "PAR_SOINS"
+
+class TypeFranchise(str, Enum):
+    AUCUNE = "AUCUNE"
+    FIXE = "FIXE"
+    POURCENTAGE = "POURCENTAGE"
+    RELATIVE = "RELATIVE"
+    ABSOLUE = "ABSOLUE"
+
+class TypeRemboursement(str, Enum):
+    FRAIS_REELS = "FRAIS_REELS"
+    FORFAIT = "FORFAIT"
+    TARIF_CONVENTIONNE = "TARIF_CONVENTIONNE"
+    CAPITAL_DECES = "CAPITAL_DECES"
+    INDEMNITE_JOURNALIERE = "INDEMNITE_JOURNALIERE"
+    RENTE_VIAGERE = "RENTE_VIAGERE"
+    RENTE_EDUCATION = "RENTE_EDUCATION"
+    VALEUR_A_NEUF = "VALEUR_A_NEUF"
+    VALEUR_VENALE = "VALEUR_VENALE"
 
 class ChatbotAction(str, Enum):
     CREATE_GARANTIE = "CREATE_GARANTIE"

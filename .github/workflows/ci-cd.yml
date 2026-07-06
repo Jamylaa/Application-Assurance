@@ -66,10 +66,6 @@ jobs:
         working-directory: ./GestionProduit
         run: mvn clean install -DskipTests || echo "GestionProduit build skipped"
 
-      - name: Build GestionUser
-        working-directory: ./GestionUser
-        run: mvn clean install -DskipTests || echo "GestionUser build skipped"
-
       - name: Build Gateway
         working-directory: ./Gateway
         run: mvn clean install -DskipTests || echo "Gateway build skipped"

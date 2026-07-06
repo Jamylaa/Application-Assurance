@@ -103,7 +103,7 @@
   </nav>
 
   <!-- ── Profil utilisateur ── -->
-  <div class="user-section" *ngIf="!isCollapsed">
+  <!--<div class="user-section" *ngIf="!isCollapsed">
     <div class="user-card">
       <div class="user-avatar">{{ getUserInitials() }}</div>
       <div class="user-info">
@@ -111,7 +111,7 @@
         <div class="user-role">{{ getUserRole() }}</div>
       </div>
     </div>
-  </div>
+  </div> -->
 
   <!-- ── Pied de page ── -->
   <div class="sidebar-footer">
@@ -123,10 +123,10 @@
       <span *ngIf="!isCollapsed">{{ isDarkMode ? 'Mode clair' : 'Mode sombre' }}</span>
     </button>
 
-    <button class="logout-btn" (click)="logout()" title="Déconnexion">
+   <!-- <button class="logout-btn" (click)="logout()" title="Déconnexion">
       <i class="bi bi-box-arrow-right"></i>
       <span *ngIf="!isCollapsed">Déconnexion</span>
-    </button>
+    </button>  -->
   </div>
 
 </div>

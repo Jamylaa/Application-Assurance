@@ -1,8 +1,14 @@
 import re
 import logging
 from typing import Dict, Any, Optional, List
-from app.models.enums import Statut, TypeProduit, TypeMontant, DomaineMedical, NiveauCouverture, CouvertureGeographique, TypeClient, TypePlafond
-from app.models.schemas import GarantieDTO, PackDTO, ProduitDTO, PackGarantieDTO
+from app.models.enums import (
+    TypeProduit, TypeMontant, DomaineMedical, NiveauCouverture,
+    TypePlafond, TypeRemboursement, TypeFranchise
+)
+from app.models.schemas import (
+    GarantieDTO, PackDTO, ProduitDTO, PackGarantieDTO,
+    PlafondGarantieDTO, FranchiseGarantieDTO
+)
 
 logger = logging.getLogger(__name__)
 
@@ -31,18 +37,14 @@ class PromptParserService:
             
             # Extract type
             type_produit = self._extract_type_produit(prompt)
-            
-            # Extract status
-            statut = self._extract_statut(prompt)
-            
+
             produit_dto = ProduitDTO(
                 nom_produit=nom_produit,
                 description=description,
                 type_produit=type_produit,
-                statut=statut
             )
-            
-            logger.info(f"✅ Parsed product: {nom_produit}, type: {type_produit}, status: {statut}")
+
+            logger.info(f"✅ Parsed product: {nom_produit}, type: {type_produit}")
             return produit_dto
             
         except Exception as e:
@@ -71,48 +73,20 @@ class PromptParserService:
             desc_match = re.search(desc_pattern, prompt, re.IGNORECASE)
             description = desc_match.group(1) or desc_match.group(2) if desc_match else None
             
-            # Extract age range
-            age_min = self._extract_number(prompt, r'âge minimum de\s+(\d+)\s+ans?|age minimum de\s+(\d+)\s+ans?')
-            age_max = self._extract_number(prompt, r'âge maximum de\s+(\d+)\s+ans?|age maximum de\s+(\d+)\s+ans?')
-            
-            # Extract client type
-            type_client = self._extract_type_client(prompt)
-            
-            # Extract anciennete
-            anciennete = self._extract_number(prompt, r'ancienneté minimale de\s+(\d+)\s+mois|anciennete minimale de\s+(\d+)\s+mois')
-            
-            # Extract geographical coverage
-            couverture_geo = self._extract_couverture_geographique(prompt)
-            
             # Extract price
             prix = self._extract_number(prompt, r'prix mensuel de\s+(\d+(?:\.\d+)?)|prix de\s+(\d+(?:\.\d+)?)')
-            
-            # Extract contract duration
-            duree_min = self._extract_number(prompt, r'durée de contrat comprise entre\s+(\d+)\s+et|duree de contrat de\s+(\d+)\s+à')
-            duree_max = self._extract_number(prompt, r'et\s+(\d+)\s+mois|à\s+(\d+)\s+mois')
-            
+
             # Extract coverage level
             niveau = self._extract_niveau_couverture(prompt)
-            
-            # Extract status
-            statut = self._extract_statut(prompt)
-            
+
             pack_dto = PackDTO(
                 nom_pack=nom_pack,
                 nom_produit=nom_produit,
                 description=description,
-                age_minimum=age_min,
-                age_maximum=age_max,
-                type_clients=[type_client] if type_client else None,
-                anciennete_contrat_mois=anciennete,
-                couverture_geographique=couverture_geo,
                 prix_mensuel=prix,
-                duree_min_contrat=duree_min,
-                duree_max_contrat=duree_max,
                 niveau_couverture=niveau,
-                statut=statut
             )
-            
+
             logger.info(f"✅ Parsed pack: {nom_pack}, product: {nom_produit}, price: {prix}")
             return pack_dto
             
@@ -138,48 +112,37 @@ class PromptParserService:
             # Extract amount type
             type_montant = self._extract_type_montant(prompt)
             
-            # Extract reimbursement rate (convert percentage to decimal)
+            # Extract reimbursement rate — conservé en pourcentage (0-100), échelle attendue par le backend
             taux_pattern = r'taux de remboursement de\s+(\d+(?:\.\d+)?)\s*%?|remboursement de\s+(\d+(?:\.\d+)?)\s*%?'
             taux_match = re.search(taux_pattern, prompt, re.IGNORECASE)
-            taux = (float(taux_match.group(1) or taux_match.group(2)) / 100) if taux_match else None
-            
+            taux = float(taux_match.group(1) or taux_match.group(2)) if taux_match else None
+
             # Extract ceilings
             plafond_annuel = self._extract_number(prompt, r'plafond annuel de\s+(\d+(?:\.\d+)?)')
             plafond_mensuel = self._extract_number(prompt, r'plafond mensuel de\s+(\d+(?:\.\d+)?)')
             plafond_par_acte = self._extract_number(prompt, r'plafond par acte de\s+(\d+(?:\.\d+)?)')
-            
+
             # Extract franchise
-            franchise = self._extract_number(prompt, r'franchise de\s+(\d+(?:\.\d+)?)')
-            
-            # Extract cost per claim
-            cout_moyen = self._extract_number(prompt, r'coût moyen par sinistre de\s+(\d+(?:\.\d+)?)|cout moyen par sinistre de\s+(\d+(?:\.\d+)?)')
-            
-            # Extract contract duration
-            duree_min = self._extract_number(prompt, r'durée de contrat de\s+(\d+)\s+à|durée de contrat de\s+(\d+)\s+à')
-            duree_max = self._extract_number(prompt, r'à\s+(\d+)\s+mois|\d+\s+à\s+(\d+)\s+mois')
-            
-            # Extract resiliation
-            resiliable_pattern = r'résiliable\s+(true|false|annuellement)'
-            resiliable_match = re.search(resiliable_pattern, prompt, re.IGNORECASE)
-            resiliable = resiliable_match.group(1).lower() == 'true' or 'annuellement' in prompt.lower() if resiliable_match else None
-            
-            # Extract status
-            statut = self._extract_statut(prompt)
-            
-            garantie_dto = GarantieDTO(
-                nom_garantie=nom_garantie,
-                domaine=domaine,
-                type_montant=type_montant,
-                taux_remboursement=taux,
+            franchise_montant = self._extract_number(prompt, r'franchise de\s+(\d+(?:\.\d+)?)')
+
+            plafond = PlafondGarantieDTO(
                 plafond_annuel=plafond_annuel,
                 plafond_mensuel=plafond_mensuel,
                 plafond_par_acte=plafond_par_acte,
+            ) if any([plafond_annuel, plafond_mensuel, plafond_par_acte]) else None
+
+            franchise = FranchiseGarantieDTO(
+                type=TypeFranchise.FIXE,
+                montant_fixe=franchise_montant,
+            ) if franchise_montant is not None else None
+
+            garantie_dto = GarantieDTO(
+                nom_garantie=nom_garantie,
+                domaine=domaine,
+                type_remboursement=self._map_type_montant_to_remboursement(type_montant),
+                taux_remboursement_base=taux,
+                plafond=plafond,
                 franchise=franchise,
-                cout_moyen_par_sinistre=cout_moyen,
-                duree_min_contrat=duree_min,
-                duree_max_contrat=duree_max,
-                resiliable_annuellement=resiliable,
-                statut=statut
             )
             
             logger.info(f"✅ Parsed guarantee: {nom_garantie}, domain: {domaine}, rate: {taux}")
@@ -244,6 +207,16 @@ class PromptParserService:
             logger.error(f"❌ Error parsing recommendation prompt: {e}")
             return None
     
+    def _map_type_montant_to_remboursement(self, type_montant: Optional[TypeMontant]) -> TypeRemboursement:
+        """TypeMontant (chatbot, historique) et TypeRemboursement (backend, v2.0) partagent
+        les 3 valeurs FORFAIT/FRAIS_REELS/TARIF_CONVENTIONNE — on les fait correspondre par nom."""
+        if type_montant is not None:
+            try:
+                return TypeRemboursement(type_montant.value)
+            except ValueError:
+                pass
+        return TypeRemboursement.FRAIS_REELS
+
     def _extract_number(self, text: str, pattern: str) -> Optional[float]:
         """Extract a number from text using a regex pattern."""
         match = re.search(pattern, text, re.IGNORECASE)
@@ -270,49 +243,6 @@ class PromptParserService:
         elif 'vie' in text_lower:
             return TypeProduit.VIE
         return None
-    
-    def _extract_statut(self, text: str) -> Optional[Statut]:
-        """Extract status from text."""
-        text_lower = text.lower()
-        if 'actif' in text_lower:
-            return Statut.ACTIF
-        elif 'inactif' in text_lower:
-            return Statut.INACTIF
-        elif 'en attente' in text_lower:
-            return Statut.EN_ATTENTE
-        return Statut.ACTIF  # Default to active
-    
-    def _extract_type_client(self, text: str) -> Optional[TypeClient]:
-        """Extract client type from text."""
-        text_lower = text.lower()
-        if 'individuel' in text_lower:
-            return TypeClient.INDIVIDUEL
-        elif 'famille' in text_lower:
-            return TypeClient.FAMILLE
-        elif 'enfant' in text_lower:
-            return TypeClient.ENFANT
-        elif 'senior' in text_lower:
-            return TypeClient.SENIOR
-        elif 'entreprise' in text_lower:
-            return TypeClient.ENTREPRISE
-        elif 'étudiant' in text_lower or 'etudiant' in text_lower:
-            return TypeClient.ETUDIANT
-        return TypeClient.INDIVIDUEL  # Default
-    
-    def _extract_couverture_geographique(self, text: str) -> Optional[CouvertureGeographique]:
-        """Extract geographical coverage from text."""
-        text_lower = text.lower()
-        if 'national' in text_lower or 'nationale' in text_lower:
-            return CouvertureGeographique.NATIONAL
-        elif 'international' in text_lower or 'internationale' in text_lower:
-            return CouvertureGeographique.INTERNATIONAL
-        elif 'local' in text_lower or 'locale' in text_lower:
-            return CouvertureGeographique.LOCAL
-        elif 'ue' in text_lower or 'europe' in text_lower or 'européen' in text_lower:
-            return CouvertureGeographique.UE
-        elif 'maghreb' in text_lower:
-            return CouvertureGeographique.MAGHREB
-        return CouvertureGeographique.NATIONAL  # Default
     
     def _extract_niveau_couverture(self, text: str) -> Optional[NiveauCouverture]:
         """Extract coverage level from text."""
@@ -393,11 +323,6 @@ class PromptParserService:
             franchise_match = re.search(franchise_pattern, prompt, re.IGNORECASE)
             result['franchise'] = float(franchise_match.group(1)) if franchise_match else 0.0
             
-            # Extract waiting period
-            carence_pattern = r'délai de carence de\s+(\d+)\s+jours?'
-            carence_match = re.search(carence_pattern, prompt, re.IGNORECASE)
-            result['delai_carence'] = int(carence_match.group(1)) if carence_match else 0
-            
             # Extract amount type
             result['type_montant'] = self._extract_type_montant(prompt)
             
@@ -406,11 +331,6 @@ class PromptParserService:
                 result['optionnelle'] = True
             elif 'obligatoire' in prompt.lower():
                 result['optionnelle'] = False
-            
-            # Extract priority
-            priorite_pattern = r'priorité\s+(\d+)'
-            priorite_match = re.search(priorite_pattern, prompt, re.IGNORECASE)
-            result['priorite'] = int(priorite_match.group(1)) if priorite_match else 1
             
             # Extract price supplement
             supplement_pattern = r'supplément de prix de\s+(\d+(?:\.\d+)?)'

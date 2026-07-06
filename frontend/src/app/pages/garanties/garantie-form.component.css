@@ -32,6 +32,12 @@
   margin-top: 0.25rem;
 }
 
+.switch-wrap {
+  display: flex;
+  align-items: center;
+  min-height: 2.5rem;
+}
+
 @media (max-width: 768px) {
   .form-grid {
     grid-template-columns: 1fr;

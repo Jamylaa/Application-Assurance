@@ -1,0 +1,35 @@
+.kv-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.kv-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.kv-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.kv-key-input {
+  flex: 1 1 40%;
+}
+
+.kv-value-input {
+  flex: 1 1 40%;
+}
+
+.kv-add-btn {
+  align-self: flex-start;
+}
+
+.kv-empty {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary, #6b7280);
+  margin: 0.25rem 0;
+}

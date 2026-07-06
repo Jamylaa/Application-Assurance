@@ -66,12 +66,47 @@
                 <span class="info-value primary">{{ p.nomPack || '—' }}</span>
               </div>
               <div class="info-item">
+                <span class="info-label">Nom commercial</span>
+                <span class="info-value">
+                  {{ p.nomCommercial || '—' }}
+                  <app-ui-badge *ngIf="p.packRecommande" variant="warning" size="sm">Recommandé</app-ui-badge>
+                </span>
+              </div>
+              <div class="info-item">
                 <span class="info-label">Description</span>
                 <span class="info-value">{{ p.description || '—' }}</span>
               </div>
+              <div class="info-item" *ngIf="p.descriptionCourte">
+                <span class="info-label">Résumé</span>
+                <span class="info-value">{{ p.descriptionCourte }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Workflow -->
+          <div class="details-section">
+            <h3><i class="bi bi-signpost-split"></i> Workflow</h3>
+            <div class="section-grid">
               <div class="info-item">
                 <span class="info-label">Statut</span>
-                <p-tag [severity]="getStatusSeverity(p.statut)" [value]="p.statut || 'INCONNU'"></p-tag>
+                <app-ui-badge [variant]="getStatutBadgeVariant(p.statutWorkflow)" [outlined]="isStatutOutlined(p.statutWorkflow)" size="sm">
+                  {{ getStatutLabel(p.statutWorkflow) }}
+                </app-ui-badge>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Date d'effet</span>
+                <span class="info-value small">{{ formatDateValue(p.dateEffet) }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Date d'expiration</span>
+                <span class="info-value small">{{ formatDateValue(p.dateExpiration) }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Couleur du badge</span>
+                <span class="info-value">
+                  <span class="color-swatch" [style.background-color]="p.colorTheme || '#0f4c81'"></span>
+                  {{ p.colorTheme || '—' }}
+                </span>
               </div>
             </div>
           </div>
@@ -82,14 +117,10 @@
             <div class="section-grid">
               <div class="info-item highlight">
                 <span class="info-label">Prix mensuel</span>
-                <span class="info-value price">{{ p.prixMensuel || '—' }} TND</span>
+                <span class="info-value price">{{ p.prixMensuel || '—' }} {{ p.devisePrix || 'TND' }}</span>
                 <div class="price-indicator">
                   <div class="price-bar" [style.width.%]="Math.min(((p.prixMensuel || 0) / 200) * 100, 100)"></div>
                 </div>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Durée contrat</span>
-                <span class="info-value">{{ p.dureeMinContrat || '—' }} – {{ p.dureeMaxContrat || '—' }} mois</span>
               </div>
               <div class="info-item">
                 <span class="info-label">Catégorie</span>
@@ -106,25 +137,35 @@
                 <span class="info-label">Niveau</span>
                 <span class="info-value niveau" [ngClass]="getNiveauClass(p.niveauCouverture)">{{ p.niveauCouverture || '—' }}</span>
               </div>
-              <div class="info-item">
-                <span class="info-label">Zone géographique</span>
-                <span class="info-value">{{ p.couvertureGeographique || '—' }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Âge éligible</span>
-                <span class="info-value">{{ getAgeRange() }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Type clients</span>
-                <span class="info-value">{{ (p.typeClients || []).join(', ') || '—' }}</span>
-              </div>
             </div>
-            <div class="coverage-score-bar">
-              <span class="score-label">Score de couverture géographique</span>
-              <div class="score-bar">
-                <div class="score-fill" [style.width.%]="getGeoScore()"></div>
+          </div>
+
+          <!-- Options et compatibilité -->
+          <div class="details-section">
+            <h3><i class="bi bi-puzzle"></i> Options et compatibilité</h3>
+            <div class="section-grid">
+              <div class="info-item">
+                <span class="info-label">Options disponibles</span>
+                <span class="info-value">{{ p.optionsDisponibles ? 'Oui' : 'Non' }}</span>
               </div>
-              <span class="score-value">{{ getGeoScore() }}%</span>
+              <div class="info-item" *ngIf="p.optionsPackIds && p.optionsPackIds.length > 0">
+                <span class="info-label">Extensions optionnelles</span>
+                <div class="tags-wrap">
+                  <app-ui-badge *ngFor="let nom of resolvePackNames(p.optionsPackIds)" variant="info" size="sm">{{ nom }}</app-ui-badge>
+                </div>
+              </div>
+              <div class="info-item" *ngIf="p.packsCompatibles && p.packsCompatibles.length > 0">
+                <span class="info-label">Packs compatibles</span>
+                <div class="tags-wrap">
+                  <app-ui-badge *ngFor="let nom of resolvePackNames(p.packsCompatibles)" variant="success" size="sm">{{ nom }}</app-ui-badge>
+                </div>
+              </div>
+              <div class="info-item" *ngIf="p.packsIncompatibles && p.packsIncompatibles.length > 0">
+                <span class="info-label">Packs incompatibles</span>
+                <div class="tags-wrap">
+                  <app-ui-badge *ngFor="let nom of resolvePackNames(p.packsIncompatibles)" variant="error" size="sm">{{ nom }}</app-ui-badge>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -152,21 +193,17 @@
                   </div>
                 </div>
                 <div class="garantie-details">
-                  <div class="garantie-detail">
+                  <div class="garantie-detail" *ngIf="pg.tauxRemboursementSpecifique != null">
                     <span class="detail-label">Taux:</span>
-                    <span class="detail-value">{{ (pg.tauxRemboursement * 100) | number:'1.0-0' }}%</span>
+                    <span class="detail-value">{{ pg.tauxRemboursementSpecifique | number:'1.0-0' }}%</span>
                   </div>
-                  <div class="garantie-detail">
+                  <div class="garantie-detail" *ngIf="pg.plafondSpecifique?.plafondAnnuel">
                     <span class="detail-label">Plafond:</span>
-                    <span class="detail-value">{{ pg.plafond }} TND</span>
+                    <span class="detail-value">{{ pg.plafondSpecifique?.plafondAnnuel }} TND</span>
                   </div>
-                  <div class="garantie-detail">
+                  <div class="garantie-detail" *ngIf="pg.franchiseSpecifique?.montantFixe">
                     <span class="detail-label">Franchise:</span>
-                    <span class="detail-value">{{ pg.franchise }} TND</span>
-                  </div>
-                  <div class="garantie-detail">
-                    <span class="detail-label">Délai carence:</span>
-                    <span class="detail-value">{{ pg.delaiCarence }} jours</span>
+                    <span class="detail-value">{{ pg.franchiseSpecifique?.montantFixe }} TND</span>
                   </div>
                   <div class="garantie-detail">
                     <span class="detail-label">Supplément:</span>
@@ -187,7 +224,7 @@
               </div>
               <div class="info-item">
                 <span class="info-label">Produit associé</span>
-                <span class="info-value small">{{ p.nomProduit || p.produitId || '—' }}</span>
+                <span class="info-value small">{{ p.produitId || '—' }}</span>
               </div>
             </div>
           </div>

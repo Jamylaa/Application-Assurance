@@ -2,20 +2,23 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { GestionProduitService, Pack } from '../../services/gestion-produit.service';
-import { TypeClient, NiveauCouverture, Statut, CouvertureGeographique } from '../../models/entities.model';
+import { NiveauCouverture, StatutWorkflow, getStatutWorkflowLabel } from '../../models/entities.model';
 import { ToastService } from '../../shared/services/toast.service';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
 import { NotificationService } from '../../services/notification.service';
-import { MultiSelectModule } from 'primeng/multiselect';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { CalendarModule } from 'primeng/calendar';
+import { ColorPickerModule } from 'primeng/colorpicker';
+import { InputSwitchModule } from 'primeng/inputswitch';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { ToastModule } from 'primeng/toast';
 import { CardModule } from 'primeng/card';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -25,15 +28,19 @@ import { RouterModule } from '@angular/router';
   standalone: true,
   imports: [
     CardModule,
-    MultiSelectModule,
     ButtonModule,
     InputTextModule,
     DropdownModule,
     InputTextareaModule,
     InputNumberModule,
+    CalendarModule,
+    ColorPickerModule,
+    InputSwitchModule,
+    MultiSelectModule,
     ToastModule,
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     RouterModule
   ]
 })
@@ -41,17 +48,9 @@ export class PackFormComponent implements OnInit {
   packForm: FormGroup;
   loading = false;
   produits: any[] = [];
+  allPacks: { label: string; value: string }[] = [];
   isEdit = false;
   packId?: string;
-
-  typeClientOptions = [
-    { label: 'Individuel', value: TypeClient.INDIVIDUEL },
-    { label: 'Famille', value: TypeClient.FAMILLE },
-    { label: 'Enfant', value: TypeClient.ENFANT },
-    { label: 'Senior', value: TypeClient.SENIOR },
-    { label: 'Entreprise', value: TypeClient.ENTREPRISE },
-    { label: 'Étudiant', value: TypeClient.ETUDIANT }
-  ];
 
   niveauCouvertureOptions = [
     { label: 'Basic', value: NiveauCouverture.BASIC },
@@ -59,18 +58,10 @@ export class PackFormComponent implements OnInit {
     { label: 'Gold', value: NiveauCouverture.GOLD }
   ];
 
-  statutOptions = [
-    { label: 'Actif', value: Statut.ACTIF },
-    { label: 'Inactif', value: Statut.INACTIF }
-  ];
-
-  couvertureGeoOptions = [
-    { label: 'Local', value: CouvertureGeographique.LOCAL },
-    { label: 'National', value: CouvertureGeographique.NATIONAL },
-    { label: 'International', value: CouvertureGeographique.INTERNATIONAL },
-    { label: 'UE', value: CouvertureGeographique.UE },
-    { label: 'Maghreb', value: CouvertureGeographique.MAGHREB }
-  ];
+  statutWorkflowOptions = Object.values(StatutWorkflow).map(s => ({
+    label: getStatutWorkflowLabel(s),
+    value: s
+  }));
 
   constructor(
     private fb: FormBuilder,
@@ -84,18 +75,25 @@ export class PackFormComponent implements OnInit {
   ) {
     this.packForm = this.fb.group({
       nomPack: ['', [Validators.required]],
+      codePack: ['', [Validators.required]],
+      nomCommercial: [''],
       description: ['', [Validators.required]],
+      descriptionCourte: ['', [Validators.maxLength(280)]],
       produitId: [null, [Validators.required]],
-      ageMinimum: [null],
-      ageMaximum: [null],
-      typeClients: [[], [Validators.required]],
-      ancienneteContratMois: [0, [Validators.min(0)]],
-      couvertureGeographique: [null, [Validators.required]],
       prixMensuel: [0, [Validators.required, Validators.min(0)]],
-      dureeMinContrat: [1, [Validators.min(1)]],
-      dureeMaxContrat: [12, [Validators.min(1)]],
+      prixAnnuel: [0, [Validators.min(0)]],
+      tauxRemiseAnnuelle: [0, [Validators.min(0)]],
+      devisePrix: ['TND'],
       niveauCouverture: [null, [Validators.required]],
-      statut: [Statut.ACTIF, [Validators.required]]
+      statutWorkflow: [StatutWorkflow.BROUILLON],
+      packRecommande: [false],
+      colorTheme: ['#0f4c81'],
+      optionsDisponibles: [false],
+      optionsPackIds: [[] as string[]],
+      packsCompatibles: [[] as string[]],
+      packsIncompatibles: [[] as string[]],
+      dateEffet: [null as Date | null],
+      dateExpiration: [null as Date | null]
     });
     
     // Prevent initial disabled state
@@ -112,6 +110,7 @@ export class PackFormComponent implements OnInit {
     ]);
 
     this.loadProduits();
+    this.loadPacks();
 
     if (this.isEdit && this.packId) {
       this.loadPack(this.packId);
@@ -124,24 +123,45 @@ export class PackFormComponent implements OnInit {
       next: (pack) => {
         this.packForm.patchValue({
           nomPack: pack.nomPack,
+          codePack: pack.codePack ?? '',
+          nomCommercial: pack.nomCommercial ?? '',
           description: pack.description,
+          descriptionCourte: pack.descriptionCourte ?? '',
           produitId: pack.produitId,
-          ageMinimum: pack.ageMinimum ?? null,
-          ageMaximum: pack.ageMaximum ?? null,
-          typeClients: pack.typeClients ?? [],
-          ancienneteContratMois: pack.ancienneteContratMois ?? 0,
-          couvertureGeographique: pack.couvertureGeographique ?? null,
           prixMensuel: pack.prixMensuel ?? 0,
-          dureeMinContrat: pack.dureeMinContrat ?? 1,
-          dureeMaxContrat: pack.dureeMaxContrat ?? 12,
+          prixAnnuel: pack.prixAnnuel ?? 0,
+          tauxRemiseAnnuelle: pack.tauxRemiseAnnuelle ?? 0,
+          devisePrix: pack.devisePrix ?? 'TND',
           niveauCouverture: pack.niveauCouverture ?? null,
-          statut: pack.statut ?? Statut.ACTIF
+          statutWorkflow: pack.statutWorkflow ?? StatutWorkflow.BROUILLON,
+          packRecommande: pack.packRecommande ?? false,
+          colorTheme: pack.colorTheme ?? '#0f4c81',
+          optionsDisponibles: pack.optionsDisponibles ?? false,
+          optionsPackIds: pack.optionsPackIds ?? [],
+          packsCompatibles: pack.packsCompatibles ?? [],
+          packsIncompatibles: pack.packsIncompatibles ?? [],
+          dateEffet: pack.dateEffet ? new Date(pack.dateEffet) : null,
+          dateExpiration: pack.dateExpiration ? new Date(pack.dateExpiration) : null
         });
         this.loading = false;
       },
       error: () => {
         this.loading = false;
         this.toastService.showError('Erreur', 'Impossible de charger le pack');
+      }
+    });
+  }
+
+  loadPacks(): void {
+    this.packService.getAllPacks().subscribe({
+      next: (data) => {
+        this.allPacks = data
+          .filter(p => p.idPack !== this.packId)
+          .map(p => ({ label: p.nomPack, value: p.idPack }));
+      },
+      error: (error) => {
+        console.error('Error loading packs:', error);
+        this.toastService.showError('Erreur', 'Impossible de charger les packs');
       }
     });
   }
@@ -170,13 +190,32 @@ export class PackFormComponent implements OnInit {
     }
 
     this.loading = true;
-    const packData = {
-      ...this.packForm.value,
-      nomProduit: this.produits.find(p => p.value === this.packForm.value.produitId)?.label
+    const formValue = this.packForm.value;
+    const packData: Partial<Pack> = {
+      nomPack: formValue.nomPack,
+      codePack: formValue.codePack,
+      nomCommercial: formValue.nomCommercial || undefined,
+      description: formValue.description,
+      descriptionCourte: formValue.descriptionCourte || undefined,
+      produitId: formValue.produitId,
+      prixMensuel: formValue.prixMensuel,
+      prixAnnuel: formValue.prixAnnuel || undefined,
+      tauxRemiseAnnuelle: formValue.tauxRemiseAnnuelle || undefined,
+      devisePrix: formValue.devisePrix || undefined,
+      niveauCouverture: formValue.niveauCouverture,
+      statutWorkflow: formValue.statutWorkflow || undefined,
+      packRecommande: formValue.packRecommande,
+      colorTheme: formValue.colorTheme || undefined,
+      optionsDisponibles: formValue.optionsDisponibles,
+      optionsPackIds: formValue.optionsPackIds?.length ? formValue.optionsPackIds : undefined,
+      packsCompatibles: formValue.packsCompatibles?.length ? formValue.packsCompatibles : undefined,
+      packsIncompatibles: formValue.packsIncompatibles?.length ? formValue.packsIncompatibles : undefined,
+      dateEffet: formValue.dateEffet ? (formValue.dateEffet as Date).toISOString() : undefined,
+      dateExpiration: formValue.dateExpiration ? (formValue.dateExpiration as Date).toISOString() : undefined
     };
     const request$ = this.isEdit && this.packId
-      ? this.packService.updatePack(this.packId, { ...packData, idPack: this.packId } as unknown as Pack)
-      : this.packService.createPack(packData);
+      ? this.packService.updatePack(this.packId, { ...packData, idPack: this.packId } as Pack)
+      : this.packService.createPack(packData as Pack);
 
     request$.subscribe({
       next: (response) => {
@@ -219,6 +258,7 @@ export class PackFormComponent implements OnInit {
     if (field?.errors) {
       if (field.errors['required']) return 'Ce champ est obligatoire';
       if (field.errors['min']) return `Valeur minimum: ${field.errors['min'].min}`;
+      if (field.errors['maxlength']) return `Maximum ${field.errors['maxlength'].requiredLength} caractères`;
     }
     return '';
   }

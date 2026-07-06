@@ -2,10 +2,11 @@ package tn.vermeg.gestionproduit.services;
 
 import org.springframework.stereotype.Service;
 import tn.vermeg.gestionproduit.entities.Produit;
-import tn.vermeg.gestionproduit.enums.Statut;
+import tn.vermeg.gestionproduit.enums.StatutWorkflow;
 import tn.vermeg.gestionproduit.enums.TypeProduit;
 import tn.vermeg.gestionproduit.repositories.ProduitRepository;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -32,10 +33,6 @@ public class ProduitService {
         return produitRepository.findByTypeProduit(typeProduit);
     }
 
-    public List<Produit> getProduitsByStatut(Statut statut) {
-        return produitRepository.findByStatut(statut);
-    }
-
     public List<Produit> searchProduits(String nomProduit) {
         return produitRepository.findByNomProduitContainingIgnoreCase(nomProduit);
     }
@@ -48,8 +45,6 @@ public class ProduitService {
         if (produitRepository.existsByNomProduitIgnoreCase(produit.getNomProduit())) {
             throw new IllegalArgumentException("Un produit avec ce nom existe déjà.");
         }
-
-        produit.setStatut(Statut.ACTIF);
 
         return produitRepository.save(produit);
     }
@@ -72,7 +67,6 @@ public class ProduitService {
         produit.setNomProduit(produitDetails.getNomProduit());
         produit.setDescription(produitDetails.getDescription());
         produit.setTypeProduit(produitDetails.getTypeProduit());
-        produit.setStatut(produitDetails.getStatut());
 
         return produitRepository.save(produit);
     }
@@ -87,16 +81,20 @@ public class ProduitService {
         produitRepository.deleteById(idProduit);
     }
 
-    // DÉSACTIVATION
-    public Produit desactiverProduit(String idProduit) {
+    // PUBLICATION
+    public Produit publierProduit(String idProduit, String utilisateur) {
 
         Produit produit = getProduitById(idProduit);
 
-        if (produit.getStatut() == Statut.INACTIF) {
-            throw new IllegalStateException("Le produit est déjà inactif.");
+        if (produit.getStatutWorkflow() != StatutWorkflow.APPROUVE) {
+            throw new IllegalStateException(
+                    "Le produit doit être au statut APPROUVE avant publication (statut actuel: "
+                            + produit.getStatutWorkflow() + ").");
         }
 
-        produit.setStatut(Statut.INACTIF);
+        produit.setStatutWorkflow(StatutWorkflow.PUBLIE);
+        produit.setValidePar(utilisateur);
+        produit.setDateValidation(Instant.now());
 
         return produitRepository.save(produit);
     }

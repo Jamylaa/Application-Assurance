@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.vermeg.gestionproduit.entities.Garantie;
-import tn.vermeg.gestionproduit.enums.Statut;
 import tn.vermeg.gestionproduit.enums.DomaineMedical;
 import tn.vermeg.gestionproduit.services.GarantieService;
 
@@ -33,10 +32,6 @@ public class GarantieController {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {return ResponseEntity.notFound().build();}
     }
-
-    @GetMapping("/statut/{statut}")
-    public ResponseEntity<List<Garantie>> getGarantiesByStatut(@PathVariable Statut statut) {
-        return ResponseEntity.ok(garantieService.getGarantiesByStatut(statut));}
 
     @GetMapping("/search")
     public ResponseEntity<List<Garantie>> searchGaranties(@RequestParam String nomGarantie) {
@@ -133,30 +128,3 @@ public class GarantieController {
         }
     }
 }
-
-//@GetMapping("/domaine/{domaine}/statut/{statut}")
-//public ResponseEntity<List<Garantie>> getGarantiesByDomaineAndStatut(
-//        @PathVariable String domaine,
-//        @PathVariable Statut statut) {
-//    try {
-//        DomaineMedical domaineEnum = DomaineMedical.fromString(domaine);
-//        if (domaineEnum == null) {
-//            return ResponseEntity.badRequest().build();
-//        }
-//        return ResponseEntity.ok(garantieService.getGarantiesByDomaineAndStatut(domaineEnum, statut));
-//    } catch (IllegalArgumentException e) {
-//        return ResponseEntity.badRequest().build();
- //   }
-//}
-//@GetMapping("/domaine/{domaine}/actives")
-//    public ResponseEntity<List<Garantie>> getActiveGarantiesByDomaine(
-//            @PathVariable DomaineMedical domain) {
-//        try {DomaineMedical domaine = DomaineMedical.fromString(domaine);
-//            if (domain == null) {
-//                return ResponseEntity.badRequest().build();
-//            }
-//            return ResponseEntity.ok(garantieService.getActiveGarantiesByDomaine(domain));
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest().build();
-//        }
-//    }

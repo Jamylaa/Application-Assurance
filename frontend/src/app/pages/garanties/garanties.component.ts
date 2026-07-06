@@ -16,7 +16,7 @@ import { ToastService } from '../../shared/services/toast.service';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
 import { UiBadgeComponent } from '../../shared/components/ui-badge/ui-badge.component';
 
-import { getDomaineMedicalLabel } from '../../models/entities.model';
+import { getDomaineMedicalLabel, DomaineMedical, StatutWorkflow, getStatutWorkflowLabel, getStatutWorkflowBadgeVariant, isStatutWorkflowOutlined } from '../../models/entities.model';
 @Component({
   selector: 'app-garanties',
   templateUrl: './garanties.component.html',
@@ -40,13 +40,15 @@ import { getDomaineMedicalLabel } from '../../models/entities.model';
 })
 export class GarantiesComponent implements OnInit {
   garanties: Garantie[] = [];
+  filteredGaranties: Garantie[] = [];
   loading = true;
 
   // Filter properties
-  domaineOptions: any[] = [];
-  selectedDomaine: any = null;
-  statusOptions: any[] = [];
-  selectedStatus: any = null;
+  domaineOptions: { label: string; value: DomaineMedical }[] = Object.values(DomaineMedical).map(d => ({
+    label: getDomaineMedicalLabel(d),
+    value: d
+  }));
+  selectedDomaine: DomaineMedical | null = null;
   globalFilterValue = '';
 
   constructor(
@@ -71,6 +73,7 @@ export class GarantiesComponent implements OnInit {
           ...g,
           nomGarantie: this.cleanGarantieName(g.nomGarantie)
         }));
+        this.applyFilters();
         this.loading = false;
       },
       error: (err) => {
@@ -118,29 +121,6 @@ export class GarantiesComponent implements OnInit {
     });
   }
 
-  getSeverity(statut: string): 'success' | 'info' | 'secondary' | 'contrast' | 'warning' | 'danger' {
-    switch (statut) {
-      case 'ACTIF': return 'success';
-      case 'INACTIF': return 'danger';
-      default: return 'info';
-    }
-  }
-  getStatusClass(statut: string): string {
-    switch (statut?.toUpperCase()) {
-      case 'ACTIF': return 'active';
-      case 'INACTIF': return 'inactive';
-      default: return 'unknown';
-    }
-  }
-
-  getStatusBadgeVariant(statut: string): 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
-    switch (statut?.toUpperCase()) {
-      case 'ACTIF': return 'success';
-      case 'INACTIF': return 'error';
-      default: return 'neutral';
-    }
-  }
-
   getDomaineOrTypeLabel(garantie: Garantie): string {
     if (garantie.domaine) {
       return getDomaineMedicalLabel(garantie.domaine);
@@ -168,6 +148,18 @@ export class GarantiesComponent implements OnInit {
     }
   }
 
+  getStatutLabel(statut?: StatutWorkflow): string {
+    return statut ? getStatutWorkflowLabel(statut) : '—';
+  }
+
+  getStatutBadgeVariant(statut?: StatutWorkflow): 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+    return statut ? getStatutWorkflowBadgeVariant(statut) : 'neutral';
+  }
+
+  isStatutOutlined(statut?: StatutWorkflow): boolean {
+    return statut ? isStatutWorkflowOutlined(statut) : false;
+  }
+
   addGarantie(): void {
     try {
       this.router.navigate(['/garanties/add']);
@@ -190,31 +182,31 @@ export class GarantiesComponent implements OnInit {
 
   // Filter methods
   applyFilters(): void {
-    // Filter logic would be implemented here
-    console.log('Applying filters:', {
-      domaine: this.selectedDomaine,
-      status: this.selectedStatus
+    const searchLower = this.globalFilterValue.trim().toLowerCase();
+    this.filteredGaranties = this.garanties.filter(g => {
+      if (this.selectedDomaine && g.domaine !== this.selectedDomaine) {
+        return false;
+      }
+      if (searchLower && !(g.nomGarantie || '').toLowerCase().includes(searchLower)
+          && !(g.description || '').toLowerCase().includes(searchLower)) {
+        return false;
+      }
+      return true;
     });
   }
 
   resetFilters(): void {
     this.selectedDomaine = null;
-    this.selectedStatus = null;
     this.globalFilterValue = '';
     this.applyFilters();
   }
 
   hasActiveFilters(): boolean {
-    return !!this.selectedDomaine || !!this.selectedStatus || !!this.globalFilterValue;
+    return !!this.selectedDomaine || !!this.globalFilterValue;
   }
 
   clearDomaineFilter(): void {
     this.selectedDomaine = null;
-    this.applyFilters();
-  }
-
-  clearStatusFilter(): void {
-    this.selectedStatus = null;
     this.applyFilters();
   }
 

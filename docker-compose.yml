@@ -1,0 +1,129 @@
+services:
+  # MongoDB
+  mongodb:
+    image: mongo:6
+    container_name: mongodb
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: vermeg_db
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - vermeg-network
+    restart: unless-stopped
+
+  # Keycloak
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1.5
+    container_name: keycloak
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "9090:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    networks:
+      - vermeg-network
+    restart: unless-stopped
+
+  # Eureka Server
+  eureka:
+    build:
+      context: ./Eureka
+      dockerfile: Dockerfile
+    container_name: eureka
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - vermeg-network
+    restart: unless-stopped
+
+  # API Gateway
+  gateway:
+    build:
+      context: .
+      dockerfile: ./Gateway/Dockerfile
+    container_name: gateway
+    ports:
+      - "9091:9091"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/vermeg-realm/protocol/openid-connect/certs
+    networks:
+      - vermeg-network
+    depends_on:
+      - eureka
+      - keycloak
+    restart: unless-stopped
+
+  # Gestion Produit
+  gestionproduit:
+    build:
+      context: ./GestionProduit
+      dockerfile: Dockerfile
+    container_name: gestionproduit
+    ports:
+      - "9093:9093"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATA_MONGODB_URI=mongodb://admin:password@mongodb:27017/vermeg_db?authSource=admin
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/vermeg-realm/protocol/openid-connect/certs
+    networks:
+      - vermeg-network
+    depends_on:
+      - mongodb
+      - keycloak
+    restart: unless-stopped
+
+  # Chatbot Service (Python FastAPI)
+  chatbot-service:
+    build:
+      context: ./chatbot-service
+      dockerfile: Dockerfile
+    container_name: chatbot-service
+    ports:
+      - "9001:9001"
+    env_file:
+      - ./chatbot-service/.env
+    networks:
+      - vermeg-network
+    depends_on:
+      - gestionproduit
+    restart: unless-stopped
+
+  # Frontend Angular
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "4200:80"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - vermeg-network
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+# Networks
+networks:
+  vermeg-network:
+    driver: bridge
+
+# Volumes
+volumes:
+  mongodb_data:
+    driver: local
+  keycloak_data:
+    driver: local

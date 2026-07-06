@@ -11,14 +11,16 @@ import {
   PackSimple,
   PackGarantie,
   Produit as ProduitModel,
-  Statut,
-  TypeClient,
+  ProduitDetail as ProduitDetailModel,
+  PackDetail as PackDetailModel,
   TypeProduit
 } from '../models/entities.model';
 
 export type Produit = ProduitModel;
 export type Pack = PackModel;
 export type Garantie = GarantieModel;
+export type ProduitDetail = ProduitDetailModel;
+export type PackDetail = PackDetailModel;
 
 @Injectable({
   providedIn: 'root'
@@ -39,9 +41,6 @@ export class GestionProduitService {
   getProduitsByType(typeProduit: TypeProduit | string): Observable<Produit[]> {
     return this.http.get<Produit[]>(`${this.produitsUrl}/type/${typeProduit}`);}
 
-  getProduitsByStatut(statut: Statut | string): Observable<Produit[]> {
-    return this.http.get<Produit[]>(`${this.produitsUrl}/statut/${statut}`);}
-
   searchProduits(nomProduit: string): Observable<Produit[]> {
     return this.http.get<Produit[]>(`${this.produitsUrl}/search?nom=${encodeURIComponent(nomProduit)}`);}
 
@@ -50,9 +49,6 @@ export class GestionProduitService {
 
   updateProduit(idProduit: string, produit: Produit): Observable<Produit> {
     return this.http.put<Produit>(`${this.produitsUrl}/${idProduit}`, produit);}
-
-  desactiverProduit(idProduit: string): Observable<Produit> {
-    return this.http.patch<Produit>(`${this.produitsUrl}/${idProduit}/desactiver`, {});}
 
   deleteProduit(idProduit: string): Observable<void> {
     return this.http.delete<void>(`${this.produitsUrl}/${idProduit}`);}
@@ -67,14 +63,8 @@ export class GestionProduitService {
   getPacksByProduit(produitId: string): Observable<Pack[]> {
     return this.http.get<Pack[]>(`${this.packsUrl}/produit/${produitId}`);}
 
-  getPacksByStatut(statut: Statut | string): Observable<Pack[]> {
-    return this.http.get<Pack[]>(`${this.packsUrl}/statut/${statut}`);}
-
   getPacksByNiveau(niveauCouverture: NiveauCouverture | string): Observable<Pack[]> {
     return this.http.get<Pack[]>(`${this.packsUrl}/niveau/${niveauCouverture}`);}
-
-  getPacksByTypeClient(typeClient: TypeClient | string): Observable<Pack[]> {
-    return this.http.get<Pack[]>(`${this.packsUrl}/type-client/${typeClient}`);}
 
   searchPacks(nomPack: string): Observable<Pack[]> {
     return this.http.get<Pack[]>(`${this.packsUrl}/search?nomPack=${encodeURIComponent(nomPack)}`);}
@@ -91,9 +81,6 @@ export class GestionProduitService {
   getPackGaranties(idPack: string): Observable<PackGarantie[]> {
     return this.http.get<PackGarantie[]>(`${this.packsUrl}/${idPack}/garanties`);}
 
-  desactiverPack(idPack: string): Observable<Pack> {
-    return this.http.patch<Pack>(`${this.packsUrl}/${idPack}/desactiver`, {});}
-
   deletePack(idPack: string): Observable<void> {
     return this.http.delete<void>(`${this.packsUrl}/${idPack}`);}
 
@@ -107,9 +94,6 @@ export class GestionProduitService {
   getGarantiesByDomaine(domaine: DomaineMedical | string): Observable<Garantie[]> {
     return this.http.get<Garantie[]>(`${this.garantiesUrl}/domaine/${domaine}`);}
 
-  getGarantiesByStatut(statut: Statut | string): Observable<Garantie[]> {
-    return this.http.get<Garantie[]>(`${this.garantiesUrl}/statut/${statut}`);}
-
   searchGaranties(nomGarantie: string): Observable<Garantie[]> {
     return this.http.get<Garantie[]>(`${this.garantiesUrl}/search?nomGarantie=${encodeURIComponent(nomGarantie)}`);}
 
@@ -120,9 +104,6 @@ export class GestionProduitService {
     return this.http.get<Garantie[]>(`${this.garantiesUrl}/plafond-min/${plafondMin}`);}
 
   // Endpoints pour la sélection par domaine médical
-  getGarantiesByDomaineAndStatut(domaine: DomaineMedical | string, statut: Statut | string): Observable<Garantie[]> {
-    return this.http.get<Garantie[]>(`${this.garantiesUrl}/domaine/${domaine}/statut/${statut}`);}
-
   getActiveGarantiesByDomaine(domaine: DomaineMedical | string): Observable<Garantie[]> {
     return this.http.get<Garantie[]>(`${this.garantiesUrl}/domaine/${domaine}/actives`);}
 
@@ -201,5 +182,14 @@ export class GestionProduitService {
 
   getAllPacksWithGaranties(): Observable<Pack[]> {
     return this.http.get<Pack[]>(`${this.packsUrl}/with-garanties`);
+  }
+
+  // Détail enrichi (idPacks / idGaranties + domainesMedicaux calculés à la demande côté serveur)
+  getProduitDetail(idProduit: string): Observable<ProduitDetail> {
+    return this.http.get<ProduitDetail>(`${this.produitsUrl}/${idProduit}/detail`);
+  }
+
+  getPackDetail(idPack: string): Observable<PackDetail> {
+    return this.http.get<PackDetail>(`${this.packsUrl}/${idPack}/detail`);
   }
 }

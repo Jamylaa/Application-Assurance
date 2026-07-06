@@ -249,6 +249,12 @@
   color: var(--text-color-secondary, #6c757d);
 }
 
+.tags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 @media (max-width: 768px) {
   .row {
     grid-template-columns: 1fr;

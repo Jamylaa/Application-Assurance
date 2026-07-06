@@ -28,13 +28,7 @@ class BusinessValidationService:
             missing_fields["prixMensuel"] = "Prix mensuel manquant ou invalide"
             score_penalty += 0.1
             suggestions.append("Spécifiez un prix mensuel valide (ex: 50 TND)")
-        
-        # Age consistency check (basic)
-        if (pack.age_minimum is not None and pack.age_maximum is not None and
-            pack.age_minimum >= pack.age_maximum):
-            errors.append("L'âge minimum doit être inférieur à l'âge maximum")
-            score_penalty += 0.1
-        
+
         adjusted_score = max(0.0, original_score - score_penalty)
         is_valid = score_penalty < 0.5  # More lenient since Java validates
         
@@ -64,24 +58,18 @@ class BusinessValidationService:
             score_penalty += 0.2
             suggestions.append("Spécifiez un nom pour la garantie")
         
-        if garantie.taux_remboursement is None or garantie.taux_remboursement <= 0.0:
+        if garantie.taux_remboursement_base is None or garantie.taux_remboursement_base <= 0.0:
             missing_fields["tauxRemboursement"] = "Taux de remboursement manquant"
             score_penalty += 0.1
-            suggestions.append("Indiquez le taux de remboursement (ex: 0.8 pour 80%)")
-        elif garantie.taux_remboursement > 1.0:
-            warnings.append("Le taux de remboursement semble être en pourcentage (ex: 80 au lieu de 0.8)")
+            suggestions.append("Indiquez le taux de remboursement (ex: 80 pour 80%)")
+        elif garantie.taux_remboursement_base <= 1.0:
+            warnings.append("Le taux de remboursement semble être une fraction (ex: 0.8 au lieu de 80)")
             score_penalty += 0.05
-        
+
         if garantie.domaine is None:
             missing_fields["domaine"] = "Domaine médical manquant"
             score_penalty += 0.1
             suggestions.append("Spécifiez le domaine médical (HOSPITALISATION, CONSULTATION, etc.)")
-        
-        # Duration consistency check (basic)
-        if (garantie.duree_min_contrat is not None and garantie.duree_max_contrat is not None and
-            garantie.duree_min_contrat >= garantie.duree_max_contrat):
-            errors.append("La durée minimum doit être inférieure à la durée maximum")
-            score_penalty += 0.1
         
         adjusted_score = max(0.0, original_score - score_penalty)
         is_valid = score_penalty < 0.5  # More lenient since Java validates
@@ -140,16 +128,11 @@ class BusinessValidationService:
         suggestions = []
         score_penalty = 0.0
         
-        # Light validation: Check for critical missing fields only
-        if pack_garantie.taux_remboursement is None or pack_garantie.taux_remboursement <= 0.0:
-            missing_fields["tauxRemboursement"] = "Taux de remboursement manquant"
+        # Light validation: ces champs sont optionnels dans le nouveau modèle (héritent de la
+        # Garantie de base si non surchargés) — on se contente d'avertir, sans pénaliser fortement.
+        if pack_garantie.taux_remboursement_specifique is not None and pack_garantie.taux_remboursement_specifique <= 0.0:
+            errors.append("Le taux de remboursement spécifique ne peut pas être nul ou négatif")
             score_penalty += 0.1
-            suggestions.append("Spécifiez le taux de remboursement pour cette garantie dans le pack")
-        
-        if pack_garantie.plafond is None or pack_garantie.plafond <= 0.0:
-            missing_fields["plafond"] = "Plafond manquant"
-            score_penalty += 0.1
-            suggestions.append("Spécifiez le plafond pour cette garantie dans le pack")
         
         adjusted_score = max(0.0, original_score - score_penalty)
         is_valid = score_penalty < 0.5  # More lenient since Java validates

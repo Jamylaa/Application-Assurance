@@ -17,11 +17,6 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: api-user-service
-          uri: lb://GESTIONUSER
-          predicates:
-            - Path=/api/auth/**,/api/users/**
-
         - id: api-product-service
           uri: lb://GESTIONPRODUIT
           predicates:

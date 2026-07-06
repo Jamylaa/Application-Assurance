@@ -5,9 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tn.vermeg.gestionproduit.dto.ProduitDetailDTO;
 import tn.vermeg.gestionproduit.entities.Produit;
-import tn.vermeg.gestionproduit.enums.Statut;
 import tn.vermeg.gestionproduit.enums.TypeProduit;
+import tn.vermeg.gestionproduit.exceptions.ResourceNotFoundException;
 import tn.vermeg.gestionproduit.services.HierarchicalService;
 import tn.vermeg.gestionproduit.services.ProduitService;
 
@@ -47,11 +48,6 @@ public class ProduitController {
         return ResponseEntity.ok(produitService.getProduitsByType(typeProduit));
     }
 
-    @GetMapping("/statut/{statut}")
-    public ResponseEntity<List<Produit>> getProduitsByStatut(@PathVariable Statut statut) {
-        return ResponseEntity.ok(produitService.getProduitsByStatut(statut));
-    }
-
     @GetMapping("/search")
     public ResponseEntity<List<Produit>> searchProduits(@RequestParam String nom) {
         return ResponseEntity.ok(produitService.searchProduits(nom));
@@ -83,10 +79,15 @@ public class ProduitController {
         }
     }
 
-    @PatchMapping("/{idProduit}/desactiver")
-    public ResponseEntity<Produit> desactiverProduit(@PathVariable String idProduit) {
+    /**
+     * Publie un produit (transition APPROUVE → PUBLIE).
+     */
+    @PostMapping("/{idProduit}/publier")
+    public ResponseEntity<Produit> publierProduit(
+            @PathVariable String idProduit,
+            @RequestParam(defaultValue = "system") String utilisateur) {
         try {
-            return ResponseEntity.ok(produitService.desactiverProduit(idProduit));
+            return ResponseEntity.ok(produitService.publierProduit(idProduit, utilisateur));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         } catch (IllegalStateException e) {
@@ -131,6 +132,19 @@ public class ProduitController {
             Produit produit = hierarchicalService.getProduitWithFullHierarchy(idProduit);
             return ResponseEntity.ok(produit);
         } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * Détail d'un produit avec idPacks calculé à la demande.
+     * GET /api/produits/{idProduit}/detail
+     */
+    @GetMapping("/{idProduit}/detail")
+    public ResponseEntity<ProduitDetailDTO> getProduitDetail(@PathVariable String idProduit) {
+        try {
+            return ResponseEntity.ok(hierarchicalService.getProduitDetail(idProduit));
+        } catch (ResourceNotFoundException e) {
             return ResponseEntity.notFound().build();
         }
     }

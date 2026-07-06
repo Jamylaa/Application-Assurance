@@ -431,6 +431,22 @@
   color: var(--text-color-secondary, #6c757d);
 }
 
+.tags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.color-swatch {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 4px;
+  vertical-align: middle;
+  margin-right: 0.4rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
 @media (max-width: 768px) {
   .row {
     grid-template-columns: 1fr;

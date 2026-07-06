@@ -1,27 +1,35 @@
+# Services retires du perimetre (references historiques)
 ai-service
 GestionSouscription
-# Ignorer le fichier DIAGRAMMES_UML_GLOBAL.md
+
+# Environnement / secrets
+.env
+.env.*
 *.env
-application-local.properties
+!**/.env.example
+
+# Build Java
 target/
-node_modules/
-create-test-user.http
 **/application.properties
-DIAGRAMME_CAS_UTILISATION.md
-DIAGRAMME_CLASSES_GLOBAL.md
-DIAGRAMME_SEQUENCE.md
-ARCHITECTURE.md
-CI-CD.md
-.idea
-architecture
-build-all.ps1
-build-all.sh
-start-gateway.ps1
-start-gestionproduit.ps1
-start-gestionuser.ps1
-start-recommendation.ps1
-start-souscription.ps1
+application-local.properties
+
+# Build Node / Angular
+node_modules/
+dist/
+build/
+
+# IDE
+.idea/
+.vscode/
 External Libraries
+
+# Logs
+*.log
+
+# Scripts locaux (non necessaires a la reproduction du build)
+*.ps1
+
+# Fixtures de test locales / notes temporaires
 create-test-user.http
 rapport_structure_latex.tex
 test_business.json
@@ -29,55 +37,6 @@ test_premium.json
 test_prompt.json
 test_souscription.json
 test_user.json
-test_souscription.json
 
-#README_ARCHITECTURE.md
-# Ignorer les fichiers de configuration IDE
-.idea/
-.env
-application.properties
-**/pom.xml
-build-all.ps1
-build-all.sh
-start-all.ps1
-start-gestionproduit.ps1
-start-gestionuser.ps1
-start-recommendation.ps1
-start-gateway.ps1
-start-souscription.ps1
-External Libraries
-create-test-user.http
-
-# Ignorer les fichiers de configuration Docker
-docker-compose.yml
-Dockerfile
-test_business.json
-test_premium.json
-test_prompt.json
-start-all.ps1
-
-
-# Build
-target/
-dist/
-build/
-
-# IDE
-.idea/
-.vscode/
-
-# Node
-node_modules/
-
-# Env
-.env
-
-# Logs
-*.log
-
-# PowerShell scripts
-*.ps1
-
-# Markdown docs temporaires
-DOCKER_DEPLOYMENT.md
-NETTOYAGE_FICHIERS_INUTILES.md
+# Documentation de travail non versionnee (notes/brouillons locaux)
+architecture

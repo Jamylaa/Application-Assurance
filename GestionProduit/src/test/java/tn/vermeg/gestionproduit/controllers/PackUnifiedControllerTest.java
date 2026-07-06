@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import tn.vermeg.gestionproduit.entities.*;
 import tn.vermeg.gestionproduit.enums.*;
+import tn.vermeg.gestionproduit.services.HierarchicalService;
 import tn.vermeg.gestionproduit.services.PackUnifiedService;
 
 import java.time.Instant;
@@ -23,6 +25,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 @WebMvcTest(PackUnifiedController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class PackUnifiedControllerTest {
 
     @Autowired
@@ -34,6 +37,9 @@ class PackUnifiedControllerTest {
     @MockBean
     private PackUnifiedService packUnifiedService;
 
+    @MockBean
+    private HierarchicalService hierarchicalService;
+
     private Pack packTest;
     private PackGarantie packGarantieTest;
 
@@ -42,14 +48,12 @@ class PackUnifiedControllerTest {
         // Setup Pack de test
         packTest = new Pack();
         packTest.setIdPack("1");
+        packTest.setCodePack("SANTE-PREMIUM-001");
         packTest.setNomPack("Pack Santé Premium");
         packTest.setDescription("Pack santé complet avec garanties étendues");
+        packTest.setProduitId("p1");
         packTest.setPrixMensuel(150.0);
-        packTest.setAgeMinimum(18);
-        packTest.setAgeMaximum(70);
-        packTest.setStatut(Statut.ACTIF);
         packTest.setNiveauCouverture(NiveauCouverture.PREMIUM);
-        packTest.setCouvertureGeographique(CouvertureGeographique.NATIONAL);
         packTest.setDateCreation(Instant.now());
         packTest.setDateModification(Instant.now());
 
@@ -57,6 +61,7 @@ class PackUnifiedControllerTest {
         packGarantieTest = new PackGarantie();
         packGarantieTest.setIdPackGarantie("pg1");
         packGarantieTest.setPackId("1");
+        packGarantieTest.setGarantieId("g1");
     }
 
     @Test
@@ -99,18 +104,6 @@ class PackUnifiedControllerTest {
     }
 
     @Test
-    void testGetPacksByStatut() throws Exception {
-        // Given
-        List<Pack> packs = Arrays.asList(packTest);
-        when(packUnifiedService.getPacksByStatut(Statut.ACTIF)).thenReturn(packs);
-
-        // When & Then
-        mockMvc.perform(get("/api/packs/statut/ACTIF"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].statut").value("ACTIF"));
-    }
-
-    @Test
     void testGetPacksByNiveau() throws Exception {
         // Given
         List<Pack> packs = Arrays.asList(packTest);
@@ -120,18 +113,6 @@ class PackUnifiedControllerTest {
         mockMvc.perform(get("/api/packs/niveau/PREMIUM"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].niveauCouverture").value("PREMIUM"));
-    }
-
-    @Test
-    void testGetPacksByTypeClient() throws Exception {
-        // Given
-        List<Pack> packs = Arrays.asList(packTest);
-        when(packUnifiedService.getPacksByTypeClient(TypeClient.INDIVIDUEL)).thenReturn(packs);
-
-        // When & Then
-        mockMvc.perform(get("/api/packs/type-client/INDIVIDUEL"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].typeClients[0]").value("INDIVIDUEL"));
     }
 
     @Test
@@ -197,12 +178,11 @@ class PackUnifiedControllerTest {
     void testCreatePack() throws Exception {
         // Given
         Pack newPack = new Pack();
+        newPack.setCodePack("NOUVEAU-PACK-001");
         newPack.setNomPack("Nouveau Pack");
         newPack.setDescription("Description");
+        newPack.setProduitId("p1");
         newPack.setPrixMensuel(100.0);
-        newPack.setAgeMinimum(18);
-        newPack.setAgeMaximum(65);
-        newPack.setCouvertureGeographique(CouvertureGeographique.NATIONAL);
         newPack.setNiveauCouverture(NiveauCouverture.BASIC);
 
         when(packUnifiedService.createPack(any(Pack.class))).thenReturn(newPack);
@@ -318,9 +298,13 @@ class PackUnifiedControllerTest {
     void testUpdatePack() throws Exception {
         // Given
         Pack updatedPack = new Pack();
+        updatedPack.setCodePack("SANTE-PREMIUM-001");
         updatedPack.setNomPack("Pack Mis à Jour");
         updatedPack.setDescription("Description mise à jour");
-        
+        updatedPack.setProduitId("p1");
+        updatedPack.setPrixMensuel(150.0);
+        updatedPack.setNiveauCouverture(NiveauCouverture.PREMIUM);
+
         when(packUnifiedService.updatePack(eq("1"), any(Pack.class))).thenReturn(updatedPack);
 
         // When & Then
@@ -336,18 +320,6 @@ class PackUnifiedControllerTest {
         // When & Then
         mockMvc.perform(delete("/api/packs/1"))
                 .andExpect(status().isNoContent());
-    }
-
-    @Test
-    void testDesactiverPack() throws Exception {
-        // Given
-        packTest.setStatut(Statut.INACTIF);
-        when(packUnifiedService.desactiverPack("1")).thenReturn(packTest);
-
-        // When & Then
-        mockMvc.perform(patch("/api/packs/1/desactiver"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.statut").value("INACTIF"));
     }
 
     @Test
@@ -381,6 +353,6 @@ class PackUnifiedControllerTest {
         mockMvc.perform(patch("/api/packs/associations/pg1/activation")
                         .param("active", "true"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.active").value(true));
+                .andExpect(jsonPath("$.actif").value(true));
     }
 }

@@ -34,7 +34,6 @@ class ProduitServiceTest {
         produitTest.setNomProduit("Assurance Santé Familiale");
         produitTest.setDescription("Assurance santé complète pour la famille");
         produitTest.setTypeProduit(TypeProduit.SANTE);
-        produitTest.setStatut(Statut.ACTIF);
     }
 
     @Test
@@ -87,7 +86,6 @@ class ProduitServiceTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(Statut.ACTIF, result.getStatut());
         verify(produitRepository, times(1)).save(any(Produit.class));
     }
 
@@ -110,7 +108,6 @@ class ProduitServiceTest {
         updatedDetails.setNomProduit("Assurance Santé Premium");
         updatedDetails.setDescription("Description mise à jour");
         updatedDetails.setTypeProduit(TypeProduit.SANTE);
-        updatedDetails.setStatut(Statut.ACTIF);
 
         when(produitRepository.findById("1")).thenReturn(Optional.of(produitTest));
         when(produitRepository.save(any(Produit.class))).thenReturn(produitTest);
@@ -149,19 +146,6 @@ class ProduitServiceTest {
         assertEquals(1, result.size());
         assertEquals(TypeProduit.SANTE, result.get(0).getTypeProduit());
         verify(produitRepository, times(1)).findByTypeProduit(TypeProduit.SANTE);
-    }
-
-    @Test
-    void testGetProduitsByStatut() {
-        // Given
-        List<Produit> produits = Arrays.asList(produitTest);
-        when(produitRepository.findByStatut(Statut.ACTIF)).thenReturn(produits);
-        // When
-        List<Produit> result = produitService.getProduitsByStatut(Statut.ACTIF);
-        // Then
-        assertEquals(1, result.size());
-        assertEquals(Statut.ACTIF, result.get(0).getStatut());
-        verify(produitRepository, times(1)).findByStatut(Statut.ACTIF);
     }
 
     @Test

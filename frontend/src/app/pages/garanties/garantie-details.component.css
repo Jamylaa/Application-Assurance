@@ -230,6 +230,45 @@
   color: var(--text-color-secondary, #6c757d);
 }
 
+.tags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.kv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.kv-list-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.3rem 0.6rem;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+.kv-list-key {
+  color: var(--text-color-secondary, #6c757d);
+  font-weight: 500;
+}
+
+.kv-list-value {
+  font-weight: 600;
+}
+
+.info-value.formule {
+  font-family: 'Courier New', monospace;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  display: inline-block;
+}
+
 @media (max-width: 768px) {
   .row {
     grid-template-columns: 1fr;

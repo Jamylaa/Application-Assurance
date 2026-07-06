@@ -2,7 +2,6 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom, Subscription } from 'rxjs';
 import { GestionProduitService } from '../../services/gestion-produit.service';
-import { GestionUserService } from '../../services/gestion-user.service';
 import { ThemeService } from '../../core/theme.service';
 import { KeycloakService } from 'keycloak-angular';
 import { ToastModule } from 'primeng/toast';
@@ -43,7 +42,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private themeSubscription?: Subscription;
 
   stats = {
-    totalUsers: 0,
     totalProduits: 0,
     totalPacks: 0,
     totalGaranties: 0
@@ -71,7 +69,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private readonly router: Router,
-    private readonly userService: GestionUserService,
     private readonly produitService: GestionProduitService,
     private readonly themeService: ThemeService,
     private readonly keycloak: KeycloakService
@@ -120,21 +117,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
   loadStats(): void {
     this.loading = true;
     Promise.all([
-      firstValueFrom(this.userService.getAllUsers()).catch(() => []),
       firstValueFrom(this.produitService.getAllProduits()).catch(() => []),
       firstValueFrom(this.produitService.getAllPacks()).catch(() => []),
       firstValueFrom(this.produitService.getAllGaranties()).catch(() => [])
     ])
-      .then(([users, produits, packs, garanties]) => {
+      .then(([produits, packs, garanties]) => {
         this.stats = {
-          totalUsers: users?.length || 0,
           totalProduits: produits?.length || 0,
           totalPacks: packs?.length || 0,
           totalGaranties: garanties?.length || 0
         };
         this.calculateAdvancedMetrics(packs, produits, garanties);
         this.initChartOptions();
-        this.prepareCharts(produits, packs, users, garanties);
+        this.prepareCharts(produits, packs, garanties);
       })
       .finally(() => { this.loading = false; });
   }
@@ -145,7 +140,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.metrics.avgPrixPacks = Math.round(totalPrix / packs.length);
     }
     if (garanties?.length > 0) {
-      const totalTaux = garanties.reduce((sum, g) => sum + ((g.tauxRemboursement || 0) * 100), 0);
+      const totalTaux = garanties.reduce((sum, g) => sum + (g.tauxRemboursementBase || 0), 0);
       this.metrics.avgTauxRemboursement = Math.round(totalTaux / garanties.length);
     }
     if (produits?.length > 0 && packs) {
@@ -195,7 +190,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     };
   }
 
-  prepareCharts(produits: any[], packs: any[], users: any[], garanties: any[]): void {
+  prepareCharts(produits: any[], packs: any[], garanties: any[]): void {
     // Bar chart — produits par type
     const produitsByType: Record<string, number> = {};
     Object.values(TypeProduit).forEach(t => { produitsByType[t] = 0; });
@@ -269,7 +264,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   logout(): void { this.keycloak.logout(); }
-  navigateToUsers(): void { this.router.navigate(['/users']); }
   navigateToProduits(): void { this.router.navigate(['/produits']); }
   navigateToPacks(): void { this.router.navigate(['/packs']); }
   navigateToGaranties(): void { this.router.navigate(['/garanties']); }

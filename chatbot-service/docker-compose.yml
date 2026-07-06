@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  chatbot-service:
+    build: .
+    container_name: chatbot-fastapi-service
+    ports:
+      - "9001:9001"
+    env_file:
+      - .env
+    networks:
+      - app-network
+    depends_on:
+      - gestionproduit
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:9001/api/chatbot/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Note: gestionproduit service is defined in the main docker-compose.yml
+  # This duplicate service definition has been removed to avoid conflicts
+
+networks:
+  app-network:
+    driver: bridge

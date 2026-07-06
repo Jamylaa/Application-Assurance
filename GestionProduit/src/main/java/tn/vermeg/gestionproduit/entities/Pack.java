@@ -1,138 +1,168 @@
 package tn.vermeg.gestionproduit.entities;
 
-import org.springframework.data.annotation.Id;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-import tn.vermeg.gestionproduit.enums.CouvertureGeographique;
-import tn.vermeg.gestionproduit.enums.NiveauCouverture;
-import tn.vermeg.gestionproduit.enums.Statut;
-import tn.vermeg.gestionproduit.enums.TypeClient;
+import tn.vermeg.gestionproduit.enums.*;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import java.time.Instant;
 import java.util.List;
-
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Document(collection = "packs")
 public class Pack {
 
     @Id
     private String idPack;
+
+    // ─── IDENTITÉ TECHNIQUE ───────────────────────────────────────────────────
+    /** Code métier unique (ex: "SANTE-COMP-BASIC-001"). */
+    @NotBlank(message = "Le code pack est obligatoire")
+    @Indexed(unique = true)
+    private String codePack;
+
+    /** Nom interne technique. */
+    @NotBlank(message = "Le nom du pack est obligatoire")
     private String nomPack;
+
+    /** Nom affiché aux clients (ex: "Formule Essentielle", "Formule Premium"). */
+    private String nomCommercial;
+
+    /** Description détaillée pour la fiche produit. */
+    @NotBlank(message = "La description est obligatoire")
     private String description;
+
+    /** Résumé court (max 280 caractères) pour les listes. */
+    private String descriptionCourte;
+
+    // ─── RELATION PRODUIT ─────────────────────────────────────────────────────
+    @NotBlank(message = "L'identifiant du produit parent est obligatoire")
+    @Indexed
     private String produitId;
-    private String nomProduit;
 
-    // Conditions d'éligibilité
-    private Integer ageMinimum;
-    private Integer ageMaximum;
-    private List<TypeClient> typeClients;
-    private int ancienneteContratMois;
-    private CouvertureGeographique couvertureGeographique;
+    // ─── CLASSIFICATION ───────────────────────────────────────────────────────
 
-    private double prixMensuel;
-    private int dureeMinContrat;
-    private int dureeMaxContrat;
-
+    @NotNull(message = "Le niveau de couverture est obligatoire")
     private NiveauCouverture niveauCouverture;
-    private Statut statut;
-    
-    // Domaines médicaux couverts par le pack
-    private List<String> domainesMedicaux;
+
+    // ─── WORKFLOW ─────────────────────────────────────────────────────────────
+    @Builder.Default
+    private StatutWorkflow statutWorkflow = StatutWorkflow.BROUILLON;
+
+    // ─── MISE EN AVANT COMMERCIALE ────────────────────────────────────────────
+
+    /** Badge "Recommandé" — formule la plus adaptée selon le profil moyen. */
+    @Builder.Default
+    private boolean packRecommande = false;
+
+    /** Couleur thème du badge (hex), ex: "#0d7377" pour teal. */
+    @Builder.Default
+    private String colorTheme = "#0f4c81";
+
+    // ─── TARIFICATION ─────────────────────────────────────────────────────────
+
+    /** Prime mensuelle (TND). */
+    @Positive(message = "Le prix mensuel doit être positif")
+    private double prixMensuel;
+
+    /**
+     * Prime annuelle (TND).
+     * Peut être différente de prixMensuel × 12 si une remise annuelle est appliquée.
+     */
+    private double prixAnnuel;
+
+    /** Taux de remise pour paiement annuel (ex: 5.0 pour 5%). */
+    @Builder.Default
+    private double tauxRemiseAnnuelle = 0.0;
+
+    @Builder.Default
+    private String devisePrix = "TND";
+
+    /** Numéro de version commerciale du pack (ex: "1.0", "1.1"). */
+    @Builder.Default
+    private String versionPack = "1.0";
+
+    // ─── OPTIONS ──────────────────────────────────────────────────────────────
+    /** Ce pack propose-t-il des garanties optionnelles ajoutables ? */
+    @Builder.Default
+    private boolean optionsDisponibles = false;
+
+    /**
+     * IDs des packs représentant des "extensions optionnelles" de cette formule.
+     * Permet d'associer des modules complémentaires (ex: "Module Optique Premium").
+     */
+    private List<String> optionsPackIds;
+    // ─── COMPATIBILITÉ MULTI-CONTRATS ─────────────────────────────────────────
+
+    /**
+     * IDs des packs d'autres produits pouvant être combinés avec celui-ci
+     * dans un contrat multi-risques.
+     */
+    private List<String> packsCompatibles;
+
+    /**
+     * IDs des packs exclusifs — souscrire l'un exclut l'autre
+     * (ex: deux niveaux du même produit).
+     */
+    private List<String> packsIncompatibles;
+
+    // ─── VALIDITÉ TEMPORELLE ──────────────────────────────────────────────────
+
+    /** Date d'entrée en commercialisation. */
+    private Instant dateEffet;
+    /** Date de fin de commercialisation (null = toujours actif). */
+    private Instant dateExpiration;
+
+    // ─── RELATIONS (CHARGÉES DYNAMIQUEMENT) ──────────────────────────────────
+
+    @Transient
+    private List<PackGarantie> garanties;
+
+    // ─── AUDIT ────────────────────────────────────────────────────────────────
+    private String creePar;
+    private String modifiePar;
 
     @CreatedDate
     private Instant dateCreation;
     @LastModifiedDate
     private Instant dateModification;
 
-    // NOTE: Les garanties associées ne sont pas stockées directement dans le document MongoDB
-    // pour éviter les problèmes de performance. Elles sont récupérées via le service
-    // et construites dynamiquement dans les entités.
-    private transient List<Garantie> garanties;
+    // ─── MÉTHODES MÉTIER ──────────────────────────────────────────────────────
 
-    public Pack() {}
-    public Pack(String idPack, String nomPack, String description, String produitId, String nomProduit,
-                Integer ageMinimum, Integer ageMaximum, List<TypeClient> typeClients,
-                int ancienneteContratMois, CouvertureGeographique couvertureGeographique,
-                double prixMensuel, int dureeMinContrat, int dureeMaxContrat,
-                NiveauCouverture niveauCouverture, Statut statut,
-                Instant dateCreation, Instant dateModification) {
-
-        this.idPack = idPack;
-        this.nomPack = nomPack;
-        this.description = description;
-        this.produitId = produitId;
-        this.nomProduit = nomProduit;
-        this.ageMinimum = ageMinimum;
-        this.ageMaximum = ageMaximum;
-        this.typeClients = typeClients;
-        this.ancienneteContratMois = ancienneteContratMois;
-        this.couvertureGeographique = couvertureGeographique;
-        this.prixMensuel = prixMensuel;
-        this.dureeMinContrat = dureeMinContrat;
-        this.dureeMaxContrat = dureeMaxContrat;
-        this.niveauCouverture = niveauCouverture;
-        this.statut = statut;
-        this.domainesMedicaux = new java.util.ArrayList<>();
-        this.dateCreation = dateCreation;
-        this.dateModification = dateModification;
+    public boolean estActif() {
+        return StatutWorkflow.PUBLIE.equals(statutWorkflow);
     }
 
-    //   Getters & Setters
+    public boolean estCommercialisable() {
+        return estActif()
+                && (dateExpiration == null || Instant.now().isBefore(dateExpiration));
+    }
 
-    public String getIdPack() { return idPack; }
-    public void setIdPack(String idPack) { this.idPack = idPack; }
+    /**
+     * Calcule le prix annuel avec remise si non défini.
+     */
+    public double getPrixAnnuelEffectif() {
+        if (prixAnnuel > 0) return prixAnnuel;
+        return prixMensuel * 12 * (1 - tauxRemiseAnnuelle / 100.0);
+    }
 
-    public String getNomPack() { return nomPack; }
-    public void setNomPack(String nomPack) { this.nomPack = nomPack; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public String getProduitId() { return produitId; }
-    public void setProduitId(String produitId) { this.produitId = produitId; }
-
-    public String getNomProduit() { return nomProduit; }
-    public void setNomProduit(String nomProduit) { this.nomProduit = nomProduit; }
-
-    public Integer getAgeMinimum() { return ageMinimum; }
-    public void setAgeMinimum(Integer ageMinimum) { this.ageMinimum = ageMinimum; }
-
-    public Integer getAgeMaximum() { return ageMaximum; }
-    public void setAgeMaximum(Integer ageMaximum) { this.ageMaximum = ageMaximum; }
-
-    public List<TypeClient> getTypeClients() { return typeClients; }
-    public void setTypeClients(List<TypeClient> typeClients) { this.typeClients = typeClients; }
-
-    public int getAncienneteContratMois() { return ancienneteContratMois; }
-    public void setAncienneteContratMois(int ancienneteContratMois) { this.ancienneteContratMois = ancienneteContratMois; }
-
-    public CouvertureGeographique getCouvertureGeographique() { return couvertureGeographique; }
-    public void setCouvertureGeographique(CouvertureGeographique couvertureGeographique) { this.couvertureGeographique = couvertureGeographique; }
-
-    public double getPrixMensuel() { return prixMensuel; }
-    public void setPrixMensuel(double prixMensuel) { this.prixMensuel = prixMensuel; }
-
-    public int getDureeMinContrat() { return dureeMinContrat; }
-    public void setDureeMinContrat(int dureeMinContrat) { this.dureeMinContrat = dureeMinContrat; }
-
-    public int getDureeMaxContrat() { return dureeMaxContrat; }
-    public void setDureeMaxContrat(int dureeMaxContrat) { this.dureeMaxContrat = dureeMaxContrat; }
-
-    public NiveauCouverture getNiveauCouverture() { return niveauCouverture; }
-    public void setNiveauCouverture(NiveauCouverture niveauCouverture) { this.niveauCouverture = niveauCouverture; }
-
-    public Statut getStatut() { return statut; }
-    public void setStatut(Statut statut) { this.statut = statut; }
-
-    public Instant getDateCreation() { return dateCreation; }
-    public void setDateCreation(Instant dateCreation) { this.dateCreation = dateCreation; }
-
-    public Instant getDateModification() { return dateModification; }
-    public void setDateModification(Instant dateModification) { this.dateModification = dateModification; }
-
-    public List<String> getDomainesMedicaux() { return domainesMedicaux; }
-    public void setDomainesMedicaux(List<String> domainesMedicaux) { this.domainesMedicaux = domainesMedicaux; }
-
-    public List<Garantie> getGaranties() { return garanties; }
-    public void setGaranties(List<Garantie> garanties) { this.garanties = garanties; }
+    public boolean estValide() {
+        return codePack != null && !codePack.isBlank()
+                && nomPack != null && !nomPack.isBlank()
+                && produitId != null && !produitId.isBlank()
+                && niveauCouverture != null
+                && prixMensuel > 0;
+    }
 }

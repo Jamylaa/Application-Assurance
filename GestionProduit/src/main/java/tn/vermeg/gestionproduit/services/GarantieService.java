@@ -3,7 +3,7 @@ package tn.vermeg.gestionproduit.services;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import tn.vermeg.gestionproduit.entities.Garantie;
-import tn.vermeg.gestionproduit.enums.Statut;
+import tn.vermeg.gestionproduit.enums.StatutWorkflow;
 import tn.vermeg.gestionproduit.enums.DomaineMedical;
 import tn.vermeg.gestionproduit.exceptions.ResourceNotFoundException;
 import tn.vermeg.gestionproduit.repositories.GarantieRepository;
@@ -29,21 +29,17 @@ public class GarantieService {
                         new ResourceNotFoundException("Garantie", idGarantie, "Garantie non trouvée avec l'ID: " + idGarantie));
     }
 
-    public List<Garantie> getGarantiesByStatut(Statut statut) {
-        return garantieRepository.findByStatut(statut);
-    }
-
     public List<Garantie> searchGaranties(String nom) {
         return garantieRepository.findByNomGarantieContainingIgnoreCase(nom);
     }
 
     public List<Garantie> getGarantiesByTauxRemboursementMin(double tauxMin) {
 
-        if (tauxMin < 0 || tauxMin > 1) {
-            throw new IllegalArgumentException("Le taux doit être entre 0 et 1.");
+        if (tauxMin < 0 || tauxMin > 100) {
+            throw new IllegalArgumentException("Le taux doit être entre 0 et 100.");
         }
 
-        return garantieRepository.findByTauxRemboursementGreaterThanEqual(tauxMin);
+        return garantieRepository.findByTauxRemboursementBaseGreaterThanEqual(tauxMin);
     }
 
     public List<Garantie> getGarantiesByPlafondMin(double plafondMin) {
@@ -52,7 +48,7 @@ public class GarantieService {
             throw new IllegalArgumentException("Le plafond ne peut pas être négatif.");
         }
 
-        return garantieRepository.findByPlafondAnnuelGreaterThanEqual(plafondMin);
+        return garantieRepository.findByPlafond_PlafondAnnuelGreaterThanEqual(plafondMin);
     }
 
     public List<Garantie> getGarantiesByDomaine(DomaineMedical domaine) {
@@ -62,18 +58,11 @@ public class GarantieService {
         return garantieRepository.findByDomaine(domaine);
     }
 
-    public List<Garantie> getGarantiesByDomaineAndStatut(DomaineMedical domaine, Statut statut) {
-        if (domaine == null || statut == null) {
-            throw new IllegalArgumentException("Le domaine et le statut ne peuvent pas être null");
-        }
-        return garantieRepository.findByDomaineAndStatut(domaine, statut);
-    }
-
     public List<Garantie> getActiveGarantiesByDomaine(DomaineMedical domaine) {
         if (domaine == null) {
             throw new IllegalArgumentException("Le domaine ne peut pas être null");
         }
-        return garantieRepository.findByDomaineAndStatutAndDateDesactivationIsNull(domaine, Statut.ACTIF);
+        return garantieRepository.findByDomaineAndStatutWorkflowAndDateDesactivationIsNull(domaine, StatutWorkflow.PUBLIE);
     }
 
     // UPDATE
@@ -93,17 +82,13 @@ public class GarantieService {
         garantie.setNomGarantie(details.getNomGarantie());
         garantie.setDescription(details.getDescription());
         garantie.setDomaine(details.getDomaine());
-        garantie.setTauxRemboursement(details.getTauxRemboursement());
-        garantie.setTypeMontant(details.getTypeMontant());
-        garantie.setTypePlafond(details.getTypePlafond());
-        garantie.setPlafondAnnuel(details.getPlafondAnnuel());
-        garantie.setPlafondMensuel(details.getPlafondMensuel());
-        garantie.setPlafondParActe(details.getPlafondParActe());
+        garantie.setTauxRemboursementBase(details.getTauxRemboursementBase());
+        garantie.setTauxRemboursementMinimum(details.getTauxRemboursementMinimum());
+        garantie.setTauxRemboursementMaximum(details.getTauxRemboursementMaximum());
+        garantie.setPlafond(details.getPlafond());
         garantie.setFranchise(details.getFranchise());
-        garantie.setCoutMoyenParSinistre(details.getCoutMoyenParSinistre());
-        garantie.setDureeMinContrat(details.getDureeMinContrat());
-        garantie.setDureeMaxContrat(details.getDureeMaxContrat());
-        garantie.setResiliableAnnuellement(details.isResiliableAnnuellement());
+        garantie.setTypeRemboursement(details.getTypeRemboursement());
+        garantie.setRegleCalcul(details.getRegleCalcul());
         garantie.setCreePar(details.getCreePar());
 
         return garantieRepository.save(garantie);
@@ -119,10 +104,9 @@ public class GarantieService {
 
     public Garantie desactiverGarantie(String idGarantie) {
         Garantie garantie = getGarantieById(idGarantie);
-        if (garantie.getStatut() == Statut.INACTIF) {
+        if (garantie.getDateDesactivation() != null) {
             throw new IllegalStateException("La garantie est déjà inactive.");}
 
-        garantie.setStatut(Statut.INACTIF);
         garantie.setDateDesactivation(Instant.now());
         return garantieRepository.save(garantie);
     }
@@ -143,9 +127,8 @@ public class GarantieService {
             throw new IllegalArgumentException("Une garantie avec ce nom existe déjà: " + garantie.getNomGarantie());
         }
 
-        garantie.setStatut(Statut.ACTIF);
         garantie.setCreePar("system");
-        
+
         return garantieRepository.save(garantie);
     }
 }

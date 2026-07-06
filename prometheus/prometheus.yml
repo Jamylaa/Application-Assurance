@@ -28,15 +28,6 @@ scrape_configs:
           service: 'gestion-produit'
           application: 'gestion-produit'
 
-  # Gestion User
-  - job_name: 'gestionuser'
-    metrics_path: '/actuator/prometheus'
-    static_configs:
-      - targets: ['gestionuser:9092']
-        labels:
-          service: 'gestion-user'
-          application: 'gestion-user'
-
   # Recommendation Service
   - job_name: 'recommendation'
     metrics_path: '/actuator/prometheus'

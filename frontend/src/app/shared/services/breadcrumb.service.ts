@@ -29,14 +29,6 @@ export class BreadcrumbService {
     ]);
   }
 
-  setUsersBreadcrumb(): void {
-    this.setBreadcrumb([
-      { label: 'Accueil', routerLink: ['/dashboard'], icon: 'pi pi-home' },
-      { label: 'Gestion', icon: 'pi pi-cog' },
-      { label: 'Utilisateurs', routerLink: ['/users'], icon: 'pi pi-users' }
-    ]);
-  }
-
   setProduitsBreadcrumb(): void {
     this.setBreadcrumb([
       { label: 'Accueil', routerLink: ['/dashboard'], icon: 'pi pi-home' },
@@ -84,9 +76,7 @@ export class BreadcrumbService {
   updateBreadcrumbFromUrl(): void {
     const url = this.router.url;
     
-    if (url.includes('/users')) {
-      this.setUsersBreadcrumb();
-    } else if (url.includes('/produits')) {
+    if (url.includes('/produits')) {
       this.setProduitsBreadcrumb();
     } else if (url.includes('/packs')) {
       this.setPacksBreadcrumb();

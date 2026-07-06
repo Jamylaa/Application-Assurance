@@ -1,145 +1,212 @@
 package tn.vermeg.gestionproduit.entities;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import tn.vermeg.gestionproduit.entities.embedded.FranchiseGarantie;
+import tn.vermeg.gestionproduit.entities.embedded.PlafondGarantie;
+import tn.vermeg.gestionproduit.entities.embedded.RegleCalcul;
+import tn.vermeg.gestionproduit.enums.*;
+
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import tn.vermeg.gestionproduit.enums.DomaineMedical;
-import tn.vermeg.gestionproduit.enums.Statut;
-import tn.vermeg.gestionproduit.enums.TypeMontant;
-import tn.vermeg.gestionproduit.enums.TypePlafond;
-
 import java.time.Instant;
-
+import java.util.List;
+import java.util.Map;
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Document(collection = "garanties")
 public class Garantie {
 
     @Id
     private String idGarantie;
+
+    // ─── IDENTITÉ TECHNIQUE ───────────────────────────────────────────────────
+
+    /** Code métier unique (ex: "GAR-HOSP-001", "GAR-OPT-002"). */
+    @NotBlank(message = "Le code garantie est obligatoire")
+    @Indexed(unique = true)
+    private String codeGarantie;
+
+    /** Nom complet de la garantie. */
+    @NotBlank(message = "Le nom de la garantie est obligatoire")
     private String nomGarantie;
+
+    /**
+     * Nom court pour les tableaux et comparatifs (max 30 caractères).
+     * Ex: "Hospitalisation", "Optique", "Dentaire"
+     */
+    private String nomCourt;
+
+    /** Description complète pour l'assuré. */
+    @NotBlank(message = "La description est obligatoire")
     private String description;
 
-    @NotNull(message = "Le statut est obligatoire")
-    private Statut statut;
+    /** Description technique destinée aux actuaires et juristes. */
+    private String descriptionTechnique;
+
+    // ─── CLASSIFICATION ───────────────────────────────────────────────────────
+
+    @NotNull(message = "Le domaine médical est obligatoire")
     private DomaineMedical domaine;
 
-    // PARAMÈTRES FINANCIERS
-    private double tauxRemboursement; // 0 → 1 recommandé
-    private TypeMontant typeMontant;
-    private TypePlafond typePlafond;
+    /**
+     * Indique si la garantie est par nature obligatoire dans tous les packs qui l'incluent
+     * (peut être surchargé par PackGarantie.optionnelle).
+     */
+    @Builder.Default
+    private boolean garantieObligatoireParDefaut = false;
 
-    private double plafondAnnuel;
-    private double plafondMensuel;
-    private double plafondParActe;
+    // ─── WORKFLOW ─────────────────────────────────────────────────────────────
 
-    private double franchise;
-    private double coutMoyenParSinistre;
-    // PARAMÈTRES CONTRACTUELS
-    private int dureeMinContrat;
-    private int dureeMaxContrat;
-    private boolean resiliableAnnuellement;
+    @Builder.Default
+    private StatutWorkflow statutWorkflow = StatutWorkflow.BROUILLON;
 
-    // RÉFÉRENCE AU PACK PARENT
-    private String packId;
+    // ─── ÉVÉNEMENTS COUVERTS ──────────────────────────────────────────────────
 
-    // AUDIT
+    /**
+     * Liste des actes, soins ou événements pris en charge par cette garantie.
+     * Sert de base documentaire et au moteur de recommandation du chatbot.
+     * Ex: ["Consultation généraliste", "Consultation spécialiste", "Urgences 24h/24"]
+     */
+    private List<String> evenementsCouvertsParDefaut;
+
+    // ─── PLAFONDS (Value Object) ──────────────────────────────────────────────
+
+    /**
+     * Structure de plafonds remplaçant les 3 primitifs plats de la v1
+     * (plafondAnnuel, plafondMensuel, plafondParActe).
+     * Inclut plafondGlobal et plafondParSoins, plus la méthode appliquerPlafond().
+     */
+    private PlafondGarantie plafond;
+
+    // ─── FRANCHISE (Value Object) ─────────────────────────────────────────────
+
+    /**
+     * Structure de franchise remplaçant le double plat de la v1.
+     * Supporte les types FIXE, POURCENTAGE, RELATIVE, ABSOLUE.
+     */
+    private FranchiseGarantie franchise;
+
+    // ─── REMBOURSEMENT ────────────────────────────────────────────────────────
+
+    /** Mode de calcul du remboursement. */
+    @Builder.Default
+    private TypeRemboursement typeRemboursement = TypeRemboursement.FRAIS_REELS;
+
+    /**
+     * Taux de remboursement de base en % (0–100).
+     * Ex: 80 = remboursement à 80% des frais réels.
+     */
+    @Min(0) @Max(100)
+    @Builder.Default
+    private double tauxRemboursementBase = 80.0;
+
+    /** Taux minimal applicable (plancher, si le taux peut être modulé). */
+    @Min(0) @Max(100)
+    @Builder.Default
+    private double tauxRemboursementMinimum = 0.0;
+
+    /** Taux maximal applicable (plafond, pour les cas exceptionnels). */
+    @Min(0) @Max(100)
+    @Builder.Default
+    private double tauxRemboursementMaximum = 100.0;
+
+    // ─── RÈGLE DE CALCUL (Value Object) ──────────────────────────────────────
+
+    /**
+     * Règle paramétrée de calcul du remboursement.
+     * Permet de définir une formule sans modifier le code du moteur de calcul.
+     */
+    private RegleCalcul regleCalcul;
+
+    // ─── DÉPENDANCES ENTRE GARANTIES ──────────────────────────────────────────
+
+    /**
+     * IDs des garanties prérequises pour activer celle-ci.
+     * Ex: une garantie "Chambre particulière" peut nécessiter "Hospitalisation de base".
+     */
+    private List<String> prerequisGarantieIds;
+
+    // ─── PARAMÈTRES DYNAMIQUES ────────────────────────────────────────────────
+
+    /**
+     * Paramètres variables utilisés dans la formule de calcul.
+     * Permet d'adapter la garantie sans recompiler le code.
+     * Ex: {"tauxSpecialiste": 90.0, "plafondUrgences": 500.0}
+     */
+    private Map<String, Object> parametresDynamiques;
+
+    // ─── DONNÉES ACTUARIELLES ─────────────────────────────────────────────────
+
+    /**
+     * Prime pure de base — contribution de cette garantie à la prime totale (TND/mois).
+     * Calculée par les actuaires à partir des statistiques de sinistralité.
+     */
+    @Builder.Default
+    private double primePureBase = 0.0;
+
+    // ─── AUDIT ────────────────────────────────────────────────────────────────
+
     private String creePar;
+    private String modifiePar;
+
     @CreatedDate
     private Instant dateCreation;
+
     @LastModifiedDate
     private Instant dateModification;
+
     private Instant dateDesactivation;
 
-    // MÉTHODES MÉTIER
+    // ─── MÉTHODES MÉTIER ──────────────────────────────────────────────────────
+
     public boolean estValide() {
-        return tauxRemboursement >= 0
-                && tauxRemboursement <= 1
-                && plafondAnnuel >= 0
-                && franchise >= 0;}
+        return codeGarantie != null && !codeGarantie.isBlank()
+                && nomGarantie != null && !nomGarantie.isBlank()
+                && domaine != null
+                && tauxRemboursementBase >= 0
+                && tauxRemboursementBase <= 100;
+    }
 
     public boolean estActive() {
-        return statut == Statut.ACTIF && dateDesactivation == null;
-    }
-    // CONSTRUCTEURS
-    public Garantie() {}
-    public Garantie(String idGarantie, String nomGarantie, String description, DomaineMedical domaine,
-                    Statut statut, double tauxRemboursement, TypeMontant typeMontant,
-                    TypePlafond typePlafond,
-                    double plafondAnnuel, double plafondMensuel,
-                    double plafondParActe, double franchise,
-                    double coutMoyenParSinistre,
-                    int dureeMinContrat, int dureeMaxContrat,
-                    boolean resiliableAnnuellement,
-                    String creePar,
-                    Instant dateCreation,
-                    Instant dateModification,
-                    Instant dateDesactivation) {
-
-        this.idGarantie = idGarantie;
-        this.nomGarantie = nomGarantie;
-        this.description = description;
-        this.domaine = domaine;
-        this.statut = statut;
-        this.tauxRemboursement = tauxRemboursement;
-        this.typeMontant = typeMontant;
-        this.typePlafond = typePlafond;
-        this.plafondAnnuel = plafondAnnuel;
-        this.plafondMensuel = plafondMensuel;
-        this.plafondParActe = plafondParActe;
-        this.franchise = franchise;
-        this.coutMoyenParSinistre = coutMoyenParSinistre;
-        this.dureeMinContrat = dureeMinContrat;
-        this.dureeMaxContrat = dureeMaxContrat;
-        this.resiliableAnnuellement = resiliableAnnuellement;
-        this.creePar = creePar;
-        this.dateCreation = dateCreation;
-        this.dateModification = dateModification;
-        this.dateDesactivation = dateDesactivation;
+        return StatutWorkflow.PUBLIE.equals(statutWorkflow) && dateDesactivation == null;
     }
 
-    // GETTERS & SETTERS
-    public String getIdGarantie() { return idGarantie; }
-    public void setIdGarantie(String idGarantie) { this.idGarantie = idGarantie; }
-    public String getNomGarantie() { return nomGarantie; }
-    public void setNomGarantie(String nomGarantie) { this.nomGarantie = nomGarantie; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public Statut getStatut() { return statut; }
-    public void setStatut(Statut statut) { this.statut = statut; }
-    public DomaineMedical getDomaine() { return domaine; }
-    public void setDomaine(DomaineMedical domaine) { this.domaine = domaine; }
-    public double getTauxRemboursement() { return tauxRemboursement; }
-    public void setTauxRemboursement(double tauxRemboursement) { this.tauxRemboursement = tauxRemboursement; }
-    public TypeMontant getTypeMontant() { return typeMontant; }
-    public void setTypeMontant(TypeMontant typeMontant) { this.typeMontant = typeMontant; }
-    public TypePlafond getTypePlafond() { return typePlafond; }
-    public void setTypePlafond(TypePlafond typePlafond) { this.typePlafond = typePlafond; }
-    public double getPlafondAnnuel() { return plafondAnnuel; }
-    public void setPlafondAnnuel(double plafondAnnuel) { this.plafondAnnuel = plafondAnnuel; }
-    public double getPlafondMensuel() { return plafondMensuel; }
-    public void setPlafondMensuel(double plafondMensuel) { this.plafondMensuel = plafondMensuel; }
-    public double getPlafondParActe() { return plafondParActe; }
-    public void setPlafondParActe(double plafondParActe) { this.plafondParActe = plafondParActe; }
-    public double getFranchise() { return franchise; }
-    public void setFranchise(double franchise) { this.franchise = franchise; }
-    public double getCoutMoyenParSinistre() { return coutMoyenParSinistre; }
-    public void setCoutMoyenParSinistre(double coutMoyenParSinistre) { this.coutMoyenParSinistre = coutMoyenParSinistre; }
-    public int getDureeMinContrat() { return dureeMinContrat; }
-    public void setDureeMinContrat(int dureeMinContrat) { this.dureeMinContrat = dureeMinContrat; }
-    public int getDureeMaxContrat() { return dureeMaxContrat; }
-    public void setDureeMaxContrat(int dureeMaxContrat) { this.dureeMaxContrat = dureeMaxContrat; }
-    public boolean isResiliableAnnuellement() { return resiliableAnnuellement; }
-    public void setResiliableAnnuellement(boolean resiliableAnnuellement) { this.resiliableAnnuellement = resiliableAnnuellement; }
-    public String getCreePar() { return creePar; }
-    public void setCreePar(String creePar) { this.creePar = creePar; }
-    public Instant getDateCreation() { return dateCreation; }
-    public void setDateCreation(Instant dateCreation) { this.dateCreation = dateCreation; }
-    public Instant getDateModification() { return dateModification; }
-    public void setDateModification(Instant dateModification) { this.dateModification = dateModification; }
-    public Instant getDateDesactivation() { return dateDesactivation; }
-    public void setDateDesactivation(Instant dateDesactivation) { this.dateDesactivation = dateDesactivation; }
+    /**
+     * Calcule le remboursement en appliquant taux → plafond → franchise
+     * selon la règle de calcul configurée.
+     *
+     * @param montantSinistre montant brut du sinistre (TND)
+     * @return montant remboursé net (TND)
+     */
+    public double calculerRemboursement(double montantSinistre) {
+        if (!estActive() || montantSinistre <= 0) return 0.0;
 
-    public String getPackId() { return packId; }
-    public void setPackId(String packId) { this.packId = packId; }
+        double franchiseApplicable = (franchise != null)
+                ? franchise.calculerFranchise(montantSinistre) : 0.0;
+        double plafondApplicable = (plafond != null && plafond.getTypePrincipal() != null)
+                ? plafond.appliquerPlafond(montantSinistre * tauxRemboursementBase / 100.0)
+                : montantSinistre * tauxRemboursementBase / 100.0;
+
+        if (regleCalcul != null) {
+            return regleCalcul.calculerRemboursement(
+                    montantSinistre, tauxRemboursementBase, franchiseApplicable, plafondApplicable);
+        }
+
+        // Calcul par défaut : taux → plafond → franchise
+        double base = montantSinistre * tauxRemboursementBase / 100.0;
+        if (plafond != null) base = plafond.appliquerPlafond(base);
+        return Math.max(0, base - franchiseApplicable);
+    }
 }

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { GestionProduitService, Produit } from '../../services/gestion-produit.service';
-import { TypeProduit, Statut } from '../../models/entities.model';
+import { TypeProduit, StatutWorkflow, CouvertureGeographique, getStatutWorkflowLabel, getCouvertureGeographiqueLabel } from '../../models/entities.model';
 import { ToastService } from '../../shared/services/toast.service';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
 import { NotificationService } from '../../services/notification.service';
@@ -11,6 +11,9 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextareaModule } from 'primeng/inputtextarea';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { CalendarModule } from 'primeng/calendar';
+import { ChipsModule } from 'primeng/chips';
 import { ToastModule } from 'primeng/toast';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -27,6 +30,9 @@ import { RouterModule } from '@angular/router';
     InputTextModule,
     DropdownModule,
     InputTextareaModule,
+    InputNumberModule,
+    CalendarModule,
+    ChipsModule,
     ToastModule,
     CommonModule,
     ReactiveFormsModule,
@@ -47,10 +53,15 @@ export class ProduitFormComponent implements OnInit {
     { label: 'Vie', value: TypeProduit.VIE }
   ];
 
-  statutOptions = [
-    { label: 'Actif', value: Statut.ACTIF },
-    { label: 'Inactif', value: Statut.INACTIF }
-  ];
+  statutWorkflowOptions = Object.values(StatutWorkflow).map(s => ({
+    label: getStatutWorkflowLabel(s),
+    value: s
+  }));
+
+  couvertureGeographiqueOptions = Object.values(CouvertureGeographique).map(c => ({
+    label: getCouvertureGeographiqueLabel(c),
+    value: c
+  }));
 
   constructor(
     private fb: FormBuilder,
@@ -63,9 +74,18 @@ export class ProduitFormComponent implements OnInit {
   ) {
     this.produitForm = this.fb.group({
       nomProduit: ['', [Validators.required]],
+      codeProduit: ['', [Validators.required]],
+      nomCommercial: [''],
       description: ['', [Validators.required]],
       typeProduit: [null, [Validators.required]],
-      statut: [Statut.ACTIF, [Validators.required]]
+      statutWorkflow: [StatutWorkflow.BROUILLON],
+      prixBase: [0, [Validators.min(0)]],
+      devisePrix: ['TND'],
+      couvertureGeographique: [CouvertureGeographique.NATIONAL],
+      territoiresExclus: [[] as string[]],
+      version: ['1.0'],
+      dateEffet: [null as Date | null],
+      dateExpiration: [null as Date | null]
     });
     
     // Prevent initial disabled state
@@ -90,9 +110,18 @@ export class ProduitFormComponent implements OnInit {
         next: (produit) => {
           this.produitForm.patchValue({
             nomProduit: produit.nomProduit,
+            codeProduit: produit.codeProduit ?? '',
+            nomCommercial: produit.nomCommercial ?? '',
             description: produit.description,
             typeProduit: produit.typeProduit,
-            statut: produit.statut
+            statutWorkflow: produit.statutWorkflow ?? StatutWorkflow.BROUILLON,
+            prixBase: produit.prixBase ?? 0,
+            devisePrix: produit.devisePrix ?? 'TND',
+            couvertureGeographique: produit.couvertureGeographique ?? CouvertureGeographique.NATIONAL,
+            territoiresExclus: produit.territoiresExclus ?? [],
+            version: produit.version ?? '1.0',
+            dateEffet: produit.dateEffet ? new Date(produit.dateEffet) : null,
+            dateExpiration: produit.dateExpiration ? new Date(produit.dateExpiration) : null
           });
           this.loading = false;
         },
@@ -113,7 +142,12 @@ export class ProduitFormComponent implements OnInit {
     }
 
     this.loading = true;
-    const produitData = this.produitForm.value;
+    const formValue = this.produitForm.value;
+    const produitData = {
+      ...formValue,
+      dateEffet: formValue.dateEffet ? (formValue.dateEffet as Date).toISOString() : undefined,
+      dateExpiration: formValue.dateExpiration ? (formValue.dateExpiration as Date).toISOString() : undefined
+    };
     const request$ = this.isEdit && this.produitId
       ? this.produitService.updateProduit(this.produitId, { ...produitData, idProduit: this.produitId } as unknown as Produit)
       : this.produitService.createProduit(produitData);

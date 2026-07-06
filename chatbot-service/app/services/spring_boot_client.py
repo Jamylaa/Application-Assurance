@@ -3,7 +3,7 @@ from typing import List, Optional, Dict, Any
 import httpx
 import json
 from app.config import settings
-from app.models.schemas import GarantieDTO, PackDTO, ProduitDTO
+from app.models.schemas import GarantieDTO, PackDTO, ProduitDTO, PackGarantieDTO
 
 logger = logging.getLogger(__name__)
 
@@ -15,14 +15,6 @@ class SpringBootClient:
         self.timeout = settings.spring_boot_timeout
         self.max_retries = settings.spring_boot_max_retries
         self.retry_delay = settings.spring_boot_retry_delay
-    
-    def _convert_to_camel_case(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Convert snake_case keys to camelCase for Spring Boot API."""
-        def to_camel_case(key: str) -> str:
-            components = key.split('_')
-            return components[0] + ''.join(x.title() for x in components[1:])
-        
-        return {to_camel_case(k): v for k, v in data.items() if v is not None}
     
     def _handle_response(self, response: httpx.Response, operation: str) -> Any:
         """Handle HTTP response with proper error handling and logging."""
@@ -89,8 +81,7 @@ class SpringBootClient:
     async def create_garantie(self, garantie: GarantieDTO, jwt_token: Optional[str] = None) -> GarantieDTO:
         """Create a guarantee via Spring Boot API."""
         url = f"{self.base_url}/garanties"
-        data = garantie.model_dump(mode='json', exclude_none=True, exclude={"id_garantie"})
-        camel_case_data = self._convert_to_camel_case(data)
+        camel_case_data = garantie.model_dump(mode='json', exclude_none=True, exclude={"id_garantie"}, by_alias=True)
 
         headers = {"Content-Type": "application/json"}
         if jwt_token:
@@ -107,8 +98,7 @@ class SpringBootClient:
     async def create_produit(self, produit: ProduitDTO, jwt_token: Optional[str] = None) -> ProduitDTO:
         """Create a product via Spring Boot API."""
         url = f"{self.base_url}/produits"
-        data = produit.model_dump(mode='json', exclude_none=True, exclude={"id_produit"})
-        camel_case_data = self._convert_to_camel_case(data)
+        camel_case_data = produit.model_dump(mode='json', exclude_none=True, exclude={"id_produit"}, by_alias=True)
 
         headers = {"Content-Type": "application/json"}
         if jwt_token:
@@ -125,8 +115,7 @@ class SpringBootClient:
     async def create_pack(self, pack: PackDTO, jwt_token: Optional[str] = None) -> PackDTO:
         """Create a pack via Spring Boot API."""
         url = f"{self.base_url}/packs"
-        data = pack.model_dump(mode='json', exclude_none=True, exclude={"id_pack", "garanties"})
-        camel_case_data = self._convert_to_camel_case(data)
+        camel_case_data = pack.model_dump(mode='json', exclude_none=True, exclude={"id_pack", "garanties", "nom_produit"}, by_alias=True)
 
         headers = {"Content-Type": "application/json"}
         if jwt_token:
@@ -140,6 +129,17 @@ class SpringBootClient:
 
         return PackDTO.model_validate(result)
     
+    async def get_pack_detail(self, pack_id: str, jwt_token: Optional[str] = None) -> Dict[str, Any]:
+        """Détail enrichi d'un pack (idGaranties + domainesMedicaux calculés côté serveur)."""
+        url = f"{self.base_url}/packs/{pack_id}/detail"
+
+        headers = {}
+        if jwt_token:
+            headers["Authorization"] = f"Bearer {jwt_token}"
+
+        response = await self._make_request_with_retry("GET", url, headers=headers)
+        return self._handle_response(response, "Get Pack Detail") or {}
+
     async def get_all_packs(self, jwt_token: Optional[str] = None) -> List[PackDTO]:
         """Get all packs from Spring Boot API."""
         url = f"{self.base_url}/packs"
@@ -238,9 +238,8 @@ class SpringBootClient:
         """Add a guarantee to a pack via Spring Boot API."""
         url = f"{self.base_url}/packs/{pack_id}/garanties/{garantie_id}"
 
-        data = pack_garantie_dto.model_dump(mode='json', exclude_none=True)
-        camel_case_data = self._convert_to_camel_case(data)
-        
+        camel_case_data = pack_garantie_dto.model_dump(mode='json', exclude_none=True, by_alias=True)
+
         headers = {"Content-Type": "application/json"}
         if jwt_token:
             headers["Authorization"] = f"Bearer {jwt_token}"
@@ -250,14 +249,39 @@ class SpringBootClient:
         
         response = await self._make_request_with_retry("POST", url, json=camel_case_data, headers=headers)
         self._handle_response(response, "Add Garantie To Pack")
-        
+
         return True
-    
+
+    async def get_pack_garanties(self, pack_id: str, jwt_token: Optional[str] = None) -> List[PackGarantieDTO]:
+        """Liste les associations pack-garantie d'un pack."""
+        url = f"{self.base_url}/packs/{pack_id}/garanties"
+
+        headers = {}
+        if jwt_token:
+            headers["Authorization"] = f"Bearer {jwt_token}"
+
+        response = await self._make_request_with_retry("GET", url, headers=headers)
+        result = self._handle_response(response, "Get Pack Garanties") or []
+        return [PackGarantieDTO.model_validate(item) for item in result]
+
+    async def update_pack_garantie(self, id_pack_garantie: str, pack_garantie_dto,
+                                    jwt_token: Optional[str] = None) -> PackGarantieDTO:
+        """Met à jour la configuration d'une association pack-garantie existante."""
+        url = f"{self.base_url}/packs/associations/{id_pack_garantie}"
+        camel_case_data = pack_garantie_dto.model_dump(mode='json', exclude_none=True, by_alias=True)
+
+        headers = {"Content-Type": "application/json"}
+        if jwt_token:
+            headers["Authorization"] = f"Bearer {jwt_token}"
+
+        response = await self._make_request_with_retry("PUT", url, json=camel_case_data, headers=headers)
+        result = self._handle_response(response, "Update Pack Garantie")
+        return PackGarantieDTO.model_validate(result)
+
     async def update_garantie(self, id_garantie: str, garantie: GarantieDTO, jwt_token: Optional[str] = None) -> GarantieDTO:
         """Update a guarantee via Spring Boot API."""
         url = f"{self.base_url}/garanties/{id_garantie}"
-        data = garantie.model_dump(mode='json', exclude_none=True, exclude={"id_garantie"})
-        camel_case_data = self._convert_to_camel_case(data)
+        camel_case_data = garantie.model_dump(mode='json', exclude_none=True, exclude={"id_garantie"}, by_alias=True)
 
         headers = {"Content-Type": "application/json"}
         if jwt_token:
@@ -273,8 +297,7 @@ class SpringBootClient:
     async def update_produit(self, id_produit: str, produit: ProduitDTO, jwt_token: Optional[str] = None) -> ProduitDTO:
         """Update a product via Spring Boot API."""
         url = f"{self.base_url}/produits/{id_produit}"
-        data = produit.model_dump(mode='json', exclude_none=True, exclude={"id_produit"})
-        camel_case_data = self._convert_to_camel_case(data)
+        camel_case_data = produit.model_dump(mode='json', exclude_none=True, exclude={"id_produit"}, by_alias=True)
 
         headers = {"Content-Type": "application/json"}
         if jwt_token:
@@ -290,8 +313,7 @@ class SpringBootClient:
     async def update_pack(self, id_pack: str, pack: PackDTO, jwt_token: Optional[str] = None) -> PackDTO:
         """Update a pack via Spring Boot API."""
         url = f"{self.base_url}/packs/{id_pack}"
-        data = pack.model_dump(mode='json', exclude_none=True, exclude={"id_pack", "garanties"})
-        camel_case_data = self._convert_to_camel_case(data)
+        camel_case_data = pack.model_dump(mode='json', exclude_none=True, exclude={"id_pack", "garanties", "nom_produit"}, by_alias=True)
 
         headers = {"Content-Type": "application/json"}
         if jwt_token:
@@ -377,6 +399,9 @@ class SpringBootClient:
     def create_pack_sync(self, pack: PackDTO, jwt_token: Optional[str] = None) -> PackDTO:
         return self._run_sync(self.create_pack(pack, jwt_token))
 
+    def get_pack_detail_sync(self, pack_id: str, jwt_token: Optional[str] = None) -> Dict[str, Any]:
+        return self._run_sync(self.get_pack_detail(pack_id, jwt_token))
+
     def get_all_packs_sync(self, jwt_token: Optional[str] = None) -> List[PackDTO]:
         return self._run_sync(self.get_all_packs(jwt_token))
 
@@ -413,3 +438,10 @@ class SpringBootClient:
     def add_garantie_to_pack_sync(self, pack_id: str, garantie_id: str,
                                    pack_garantie_dto, jwt_token: Optional[str] = None) -> bool:
         return self._run_sync(self.add_garantie_to_pack(pack_id, garantie_id, pack_garantie_dto, jwt_token))
+
+    def get_pack_garanties_sync(self, pack_id: str, jwt_token: Optional[str] = None) -> List[PackGarantieDTO]:
+        return self._run_sync(self.get_pack_garanties(pack_id, jwt_token))
+
+    def update_pack_garantie_sync(self, id_pack_garantie: str, pack_garantie_dto,
+                                   jwt_token: Optional[str] = None) -> PackGarantieDTO:
+        return self._run_sync(self.update_pack_garantie(id_pack_garantie, pack_garantie_dto, jwt_token))

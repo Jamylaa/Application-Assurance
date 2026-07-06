@@ -22,6 +22,17 @@ export enum NiveauCouverture {
   GOLD = 'GOLD'
 }
 
+export enum StatutWorkflow {
+  BROUILLON = 'BROUILLON',
+  SOUMIS_VALIDATION = 'SOUMIS_VALIDATION',
+  EN_COURS_VALIDATION = 'EN_COURS_VALIDATION',
+  APPROUVE = 'APPROUVE',
+  REJETE = 'REJETE',
+  PUBLIE = 'PUBLIE',
+  ARCHIVE = 'ARCHIVE',
+  SUSPENDU = 'SUSPENDU'
+}
+
 export enum DomaineMedical {
   // Médecine générale
   CONSULTATION_GENERALE = 'CONSULTATION_GENERALE',
@@ -141,15 +152,6 @@ export enum TypeMontant {
   TARIF_CONVENTIONNE = 'TARIF_CONVENTIONNE'
 }
 
-export enum Statut {
-  ACTIF = 'ACTIF',
-  INACTIF = 'INACTIF',
-  EN_ATTENTE = 'EN_ATTENTE',
-  SUSPENDU = 'SUSPENDU',
-  EXPIRE = 'EXPIRE',
-  RESILIE = 'RESILIE'
-}
-
 export enum TypePlafond {
   PAR_ACTE = 'PAR_ACTE',
   ANNUEL = 'ANNUEL',
@@ -166,6 +168,26 @@ export enum CouvertureGeographique {
   MAGHREB = 'MAGHREB'
 }
 
+export enum TypeFranchise {
+  AUCUNE = 'AUCUNE',
+  FIXE = 'FIXE',
+  POURCENTAGE = 'POURCENTAGE',
+  RELATIVE = 'RELATIVE',
+  ABSOLUE = 'ABSOLUE'
+}
+
+export enum TypeRemboursement {
+  FRAIS_REELS = 'FRAIS_REELS',
+  FORFAIT = 'FORFAIT',
+  TARIF_CONVENTIONNE = 'TARIF_CONVENTIONNE',
+  CAPITAL_DECES = 'CAPITAL_DECES',
+  INDEMNITE_JOURNALIERE = 'INDEMNITE_JOURNALIERE',
+  RENTE_VIAGERE = 'RENTE_VIAGERE',
+  RENTE_EDUCATION = 'RENTE_EDUCATION',
+  VALEUR_A_NEUF = 'VALEUR_A_NEUF',
+  VALEUR_VENALE = 'VALEUR_VENALE'
+}
+
 // === ENTITÉS PRINCIPALES ===
 
 // DTOs simplifiés pour éviter les relations circulaires
@@ -173,7 +195,6 @@ export interface GarantieSimple {
   idGarantie: string;
   nomGarantie: string;
   domaine?: DomaineMedical;
-  statut?: Statut;
 }
 
 export interface PackSimple {
@@ -182,64 +203,114 @@ export interface PackSimple {
   description: string;
   prixMensuel: number;
   niveauCouverture?: NiveauCouverture;
-  statut?: Statut;
 }
 
 export interface Produit {
   idProduit: string;
+  codeProduit?: string;
   nomProduit: string;
+  nomCommercial?: string;
   description: string;
   typeProduit: TypeProduit;
-  statut: Statut;
+  statutWorkflow?: StatutWorkflow;
+  prixBase?: number;
+  devisePrix?: string;
+  couvertureGeographique?: CouvertureGeographique;
+  territoiresExclus?: string[];
+  version?: string;
+  dateEffet?: string;
+  dateExpiration?: string;
   dateCreation: string;
   dateModification: string;
   packs?: PackSimple[]; // Liste des packs associés
 }
 
+// Value Objects (remplacent les anciens champs plats — cf. Phase 1 backend)
+export interface PlafondGarantie {
+  plafondParActe?: number;
+  plafondMensuel?: number;
+  plafondAnnuel?: number;
+  plafondGlobal?: number;
+  plafondParSoins?: number;
+  typePrincipal?: TypePlafond;
+  description?: string;
+  devise?: string;
+}
+
+export interface FranchiseGarantie {
+  type?: TypeFranchise;
+  montantFixe?: number;
+  pourcentage?: number;
+  montantMinimum?: number;
+  montantMaximum?: number;
+  description?: string;
+  devise?: string;
+}
+
+export interface RegleCalcul {
+  formule?: string;
+  descriptionFormule?: string;
+  parametresFormule?: string[];
+  valeursDefaut?: Record<string, number>;
+  prioriteCalcul?: number;
+  appliquerPlafondApresCalcul?: boolean;
+  deduireFranchiseAvantPlafond?: boolean;
+  baseConventionnee?: boolean;
+}
+
 export interface Pack {
   idPack: string;
+  codePack?: string;
   nomPack: string;
+  nomCommercial?: string;
   description: string;
+  descriptionCourte?: string;
   produitId: string;
-  nomProduit: string;
-  ageMinimum?: number;
-  ageMaximum?: number;
-  typeClients: TypeClient[];
-  ancienneteContratMois: number;
-  couvertureGeographique: CouvertureGeographique;
   prixMensuel: number;
-  dureeMinContrat: number;
-  dureeMaxContrat: number;
+  prixAnnuel?: number;
+  tauxRemiseAnnuelle?: number;
+  devisePrix?: string;
+  versionPack?: string;
   niveauCouverture?: NiveauCouverture;
-  statut: Statut;
-  domainesMedicaux?: string[];
+  statutWorkflow?: StatutWorkflow;
+  packRecommande?: boolean;
+  colorTheme?: string;
+  optionsDisponibles?: boolean;
+  optionsPackIds?: string[];
+  packsCompatibles?: string[];
+  packsIncompatibles?: string[];
+  dateEffet?: string;
+  dateExpiration?: string;
   dateCreation: string;
   dateModification: string;
-  garanties?: GarantieSimple[]; // Liste des garanties associées
+  garanties?: PackGarantie[]; // Liste des garanties associées
 }
 
 export interface Garantie {
   idGarantie: string;
+  codeGarantie?: string;
   nomGarantie: string;
+  nomCourt?: string;
   description: string;
-  statut: Statut;
+  descriptionTechnique?: string;
   domaine?: DomaineMedical;
-  tauxRemboursement?: number;
-  typeMontant?: TypeMontant;
-  typePlafond?: TypePlafond;
-  plafondAnnuel?: number;
-  plafondMensuel?: number;
-  plafondParActe?: number;
-  franchise?: number;
-  coutMoyenParSinistre?: number;
-  dureeMinContrat?: number;
-  dureeMaxContrat?: number;
-  resiliableAnnuellement?: boolean;
+  garantieObligatoireParDefaut?: boolean;
+  statutWorkflow?: StatutWorkflow;
+  evenementsCouvertsParDefaut?: string[];
+  typeRemboursement?: TypeRemboursement;
+  tauxRemboursementBase?: number;
+  tauxRemboursementMinimum?: number;
+  tauxRemboursementMaximum?: number;
+  plafond?: PlafondGarantie;
+  franchise?: FranchiseGarantie;
+  regleCalcul?: RegleCalcul;
+  prerequisGarantieIds?: string[];
+  parametresDynamiques?: Record<string, number>;
+  primePureBase?: number;
   creePar?: string;
   dateCreation: string;
   dateModification: string;
   dateDesactivation?: string;
-  packId?: string; // Référence au pack parent
 }
 
 export interface PackGarantie {
@@ -247,17 +318,28 @@ export interface PackGarantie {
   packId: string;
   garantieId: string;
   nomGarantie: string;
-  tauxRemboursement: number;
-  plafond: number;
-  franchise: number;
+  codeGarantie?: string;
+  tauxRemboursementSpecifique?: number;
+  plafondSpecifique?: PlafondGarantie;
+  franchiseSpecifique?: FranchiseGarantie;
   typeMontant?: TypeMontant;
-  delaiCarence: number;
-  priorite: number;
   actif: boolean;
   dateActivation: string;
   dateDesactivation?: string;
   optionnelle: boolean;
   supplementPrix: number;
+}
+
+// Vues enrichies (endpoints /detail) — idPacks/idGaranties/domainesMedicaux calculés côté serveur
+export interface ProduitDetail {
+  produit: Produit;
+  idPacks: string[];
+}
+
+export interface PackDetail {
+  pack: Pack;
+  idGaranties: string[];
+  domainesMedicaux: DomaineMedical[];
 }
 
 //  INTERFACES API
@@ -302,7 +384,6 @@ export interface PackFilter {
 
 export interface GarantieFilter {
   domaine?: DomaineMedical;
-  statut?: Statut;
   searchTerm?: string;
 }
 
@@ -427,4 +508,47 @@ export function getNiveauCouvertureLabel(niveau: NiveauCouverture): string {
     GOLD: 'Gold'
   };
   return labels[niveau] || niveau;
+}
+
+export function getStatutWorkflowLabel(statut: StatutWorkflow): string {
+  const labels: Record<StatutWorkflow, string> = {
+    BROUILLON: 'Brouillon',
+    SOUMIS_VALIDATION: 'Soumis pour validation',
+    EN_COURS_VALIDATION: 'En cours de validation',
+    APPROUVE: 'Approuvé',
+    REJETE: 'Rejeté',
+    PUBLIE: 'Publié',
+    ARCHIVE: 'Archivé',
+    SUSPENDU: 'Suspendu'
+  };
+  return labels[statut] || statut;
+}
+
+export function getStatutWorkflowBadgeVariant(statut: StatutWorkflow): 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+  const variants: Record<StatutWorkflow, 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' | 'neutral'> = {
+    BROUILLON: 'neutral',
+    SOUMIS_VALIDATION: 'info',
+    EN_COURS_VALIDATION: 'info',
+    APPROUVE: 'secondary',
+    REJETE: 'error',
+    PUBLIE: 'success',
+    ARCHIVE: 'neutral',
+    SUSPENDU: 'warning'
+  };
+  return variants[statut] || 'neutral';
+}
+
+export function isStatutWorkflowOutlined(statut: StatutWorkflow): boolean {
+  return statut === StatutWorkflow.ARCHIVE;
+}
+
+export function getCouvertureGeographiqueLabel(couverture: CouvertureGeographique): string {
+  const labels: Record<CouvertureGeographique, string> = {
+    LOCAL: 'Local',
+    NATIONAL: 'National',
+    INTERNATIONAL: 'International',
+    UE: 'Union européenne',
+    MAGHREB: 'Maghreb'
+  };
+  return labels[couverture] || couverture;
 }
