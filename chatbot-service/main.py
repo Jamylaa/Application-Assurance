@@ -22,11 +22,13 @@ app = FastAPI(
 )
 
 # Configure CORS
+# Origines explicites (via CORS_ALLOWED_ORIGINS, defaut http://localhost:4200) : un wildcard "*"
+# combine a allow_credentials=True est invalide cote navigateur des que des credentials sont envoyes.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins in development (Docker + local)
+    allow_origins=settings.cors_allowed_origins_list,
     allow_credentials=True,
-    allow_methods=["POST", "GET", "PUT", "DELETE"],  # Allow all methods including OPTIONS
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 

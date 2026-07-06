@@ -32,6 +32,13 @@ class Settings(BaseSettings):
     enable_detailed_logging: bool = True
     strict_validation: bool = True
 
+    # CORS Configuration — liste d'origines separees par des virgules
+    cors_allowed_origins: str = "http://localhost:4200"
+
+    @property
+    def cors_allowed_origins_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_allowed_origins.split(",") if origin.strip()]
+
     class Config:
         env_file = str(_ENV_FILE)
         case_sensitive = False
