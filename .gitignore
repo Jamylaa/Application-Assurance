@@ -1,7 +1,7 @@
 # Services retires du perimetre (references historiques)
 ai-service
 GestionSouscription
-
+audit-pfe-vermeg.html
 # Environnement / secrets
 .env
 .env.*
@@ -13,7 +13,7 @@ QA_soutenance.md
 target/
 **/application.properties
 application-local.properties
-
+audit-pfe-vermeg.html
 # Build Node / Angular
 node_modules/
 dist/
@@ -41,3 +41,6 @@ test_user.json
 
 # Documentation de travail non versionnee (notes/brouillons locaux)
 architecture
+
+# Configuration locale Claude Code (specifique a chaque poste de dev)
+.claude/
