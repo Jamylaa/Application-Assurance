@@ -10,6 +10,7 @@ on:
     branches: [ main, develop ]
     paths:
       - 'chatbot-service/**'
+  workflow_dispatch: {}
 
 jobs:
   build-and-test:
