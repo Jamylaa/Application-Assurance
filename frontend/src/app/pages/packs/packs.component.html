@@ -38,11 +38,48 @@
           <span class="count-badge">{{ packs.length }}</span>
         </div>
       </div>
+      <div class="toolbar-right">
+        <!-- Advanced Filters -->
+        <div class="filters-group">
+          <p-dropdown
+            [options]="niveauOptions"
+            placeholder="Niveau"
+            [(ngModel)]="selectedNiveau"
+            (onChange)="applyFilters()"
+            styleClass="filter-dropdown"
+            [showClear]="true">
+          </p-dropdown>
+        </div>
+        <div class="search-box">
+          <i class="bi bi-search"></i>
+          <input type="text" placeholder="Rechercher un pack..." (input)="onGlobalFilter($event)" [value]="globalFilterValue">
+        </div>
+        <p-button
+          icon="pi pi-filter-slash"
+          pTooltip="Réinitialiser les filtres"
+          tooltipPosition="top"
+          styleClass="p-button-outlined p-button-rounded"
+          (click)="resetFilters()">
+        </p-button>
+      </div>
+    </div>
+
+    <!-- Active Filters Display -->
+    <div class="active-filters" *ngIf="hasActiveFilters()">
+      <span class="filters-label">Filtres actifs:</span>
+      <div class="filter-tag" *ngIf="selectedNiveau">
+        Niveau: {{ selectedNiveau }}
+        <i class="bi bi-x-circle" (click)="clearNiveauFilter()"></i>
+      </div>
+      <div class="filter-tag" *ngIf="globalFilterValue">
+        Recherche: {{ globalFilterValue }}
+        <i class="bi bi-x-circle" (click)="clearSearchFilter()"></i>
+      </div>
     </div>
 
     <div class="responsive-table">
       <p-table
-        [value]="packs"
+        [value]="filteredPacks"
         [loading]="loading"
         [paginator]="true"
         [rows]="10"
@@ -134,15 +171,27 @@
           </td>
           <td>
             <div class="table-actions">
-              <button class="action-btn view-btn" pTooltip="Détails" tooltipPosition="top" (click)="viewPack(pack.idPack || '')">
-                <i class="bi bi-eye"></i>
-              </button>
-              <button class="action-btn edit-btn" pTooltip="Modifier" tooltipPosition="top" (click)="editPack(pack.idPack || '')">
-                <i class="bi bi-pencil"></i>
-              </button>
-              <button class="action-btn delete-btn" pTooltip="Supprimer" tooltipPosition="top" (click)="deletePack(pack.idPack || '')">
-                <i class="bi bi-trash"></i>
-              </button>
+              <p-button
+                icon="pi pi-eye"
+                pTooltip="Détails"
+                tooltipPosition="top"
+                styleClass="p-button-rounded p-button-text"
+                (click)="viewPack(pack.idPack || '')">
+              </p-button>
+              <p-button
+                icon="pi pi-pencil"
+                pTooltip="Modifier"
+                tooltipPosition="top"
+                styleClass="p-button-rounded p-button-text p-button-info"
+                (click)="editPack(pack.idPack || '')">
+              </p-button>
+              <p-button
+                icon="pi pi-trash"
+                pTooltip="Supprimer"
+                tooltipPosition="top"
+                styleClass="p-button-rounded p-button-text p-button-danger"
+                (click)="deletePack(pack.idPack || '')">
+              </p-button>
             </div>
           </td>
         </tr>

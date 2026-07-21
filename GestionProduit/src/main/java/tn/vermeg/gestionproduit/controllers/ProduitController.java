@@ -13,7 +13,6 @@ import tn.vermeg.gestionproduit.services.HierarchicalService;
 import tn.vermeg.gestionproduit.services.ProduitService;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/produits")

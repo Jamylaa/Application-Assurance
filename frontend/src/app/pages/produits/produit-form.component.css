@@ -31,3 +31,8 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Dark Mode Overrides */
+:host-context(.my-app-dark) .form-card {
+  background: rgba(30, 30, 50, 0.95);
+}

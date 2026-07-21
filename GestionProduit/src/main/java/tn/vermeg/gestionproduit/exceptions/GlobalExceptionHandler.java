@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -58,6 +59,44 @@ public class GlobalExceptionHandler {
             .build();
 
         return ResponseEntity.badRequest().body(errorResponse);
+    }
+// Gère les requêtes dont le corps JSON est illisible ou mal typé (date/enum invalide, champ du
+// mauvais type, JSON malformé...) — sans ce handler, Spring les remonte comme une exception non
+// gérée, capturée par le handler générique ci-dessous et renvoyée en 500 au lieu d'un 400 clair.
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException ex, WebRequest request) {
+
+        logger.warn("Requête JSON illisible: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.BAD_REQUEST.value())
+            .error("MALFORMED_REQUEST_BODY")
+            .message("Le corps de la requête est invalide (JSON malformé, date ou valeur d'énumération incorrecte).")
+            .path(request.getDescription(false))
+            .build();
+
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+// Gère les conflits d'état métier (ex: association impossible car l'entité n'est pas PUBLIE) —
+// sans ce handler, ces exceptions retombaient dans le handler générique et sortaient en 500,
+// masquant un message métier pourtant explicite (ex: "statut actuel = BROUILLON, PUBLIE requis").
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalStateException(
+            IllegalStateException ex, WebRequest request) {
+
+        logger.warn("Conflit d'état métier: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.CONFLICT.value())
+            .error("BUSINESS_STATE_CONFLICT")
+            .message(ex.getMessage())
+            .path(request.getDescription(false))
+            .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }
 // Gère les exceptions de ressource non trouvée
     @ExceptionHandler(ResourceNotFoundException.class)

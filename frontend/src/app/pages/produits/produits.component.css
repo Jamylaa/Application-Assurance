@@ -8,7 +8,7 @@
 }
 
 .page-header {
-  background: linear-gradient(135deg, #0D7377 0%, #095C5F 100%);
+  background: linear-gradient(135deg, #0D7377 0%, #0C5C5F 100%);
   border-radius: var(--radius-xl, 16px);
   padding: 1.5rem 2rem;
   display: flex;
@@ -305,7 +305,7 @@
   50% { opacity: 0.4; }
 }
 
-.action-btns {
+.table-actions {
   display: flex;
   align-items: center;
   gap: 0.375rem;
@@ -329,7 +329,7 @@
 .delete-btn { background: rgba(239,68,68,0.08); color: #B91C1C; }
 .delete-btn:hover { background: #B91C1C; color: white; transform: scale(1.05); box-shadow: 0 3px 10px rgba(239,68,68,0.3); }
 
-.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3.5rem 2rem; text-align: center; }
+.table-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3.5rem 2rem; text-align: center; }
 .empty-icon {
   width: 72px; height: 72px;
   background: rgba(13,115,119,0.08);
@@ -339,8 +339,8 @@
   color: rgba(13,115,119,0.4);
   margin-bottom: 1.25rem;
 }
-.empty-state h3 { font-family: var(--font-heading); font-size: 1rem; font-weight: 700; color: var(--app-text); margin: 0 0 0.375rem; }
-.empty-state p { color: var(--app-text-muted, #94A3B8); font-size: 0.875rem; margin: 0; }
+.table-empty h3 { font-family: var(--font-heading); font-size: 1rem; font-weight: 700; color: var(--app-text); margin: 0 0 0.375rem; }
+.table-empty p { color: var(--app-text-muted, #94A3B8); font-size: 0.875rem; margin: 0; }
 
 /* Packs cell (relation Produit -> Packs) */
 .garanties-cell {

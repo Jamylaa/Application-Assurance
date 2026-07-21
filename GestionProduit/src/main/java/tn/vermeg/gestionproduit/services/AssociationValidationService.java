@@ -18,10 +18,8 @@ public class AssociationValidationService {
     public AssociationValidationService(GarantieRepository garantieRepository) {
         this.garantieRepository = garantieRepository;
     }
-
     /**
      * Vérifie que la garantie existe et qu'elle est PUBLIE.
-     *
      * @throws ResourceNotFoundException si la garantie n'existe pas
      * @throws IllegalStateException si la garantie n'est pas PUBLIE
      */

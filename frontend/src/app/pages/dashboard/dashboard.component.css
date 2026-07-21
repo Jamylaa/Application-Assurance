@@ -8,11 +8,11 @@
   --navy:         #0f4c81;
   --navy-dark:    #062d52;
   --navy-mid:     #083b6b;
-  --navy-light:   #1565a0;
+  --navy-light:   #60A5FA;
   --navy-bg:      #eff6ff;
   --teal:         #0d7377;
   --teal-dark:    #0c5c5f;
-  --teal-light:   #14a0a0;
+  --teal-light:   #2DD4BF;
   --teal-bg:      #f0fdfa;
   --slate-50:     #f8fafc;
   --slate-100:    #f1f5f9;
@@ -188,7 +188,7 @@
 
 .wchip--teal {
   background: rgba(13,115,119,0.35);
-  border: 1px solid rgba(20,160,160,0.4);
+  border: 1px solid rgba(13,115,119,0.4);
   color: rgba(255,255,255,0.9);
 }
 
@@ -556,7 +556,7 @@
   position: absolute;
   top: -30%; right: -5%;
   width: 300px; height: 300px;
-  background: radial-gradient(circle, rgba(20,160,160,0.2) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(13,115,119,0.2) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -844,7 +844,7 @@
 .qa-btn--navy .qa-icon-wrap { background: var(--navy-bg); color: var(--navy); }
 .qa-btn--teal .qa-icon-wrap { background: var(--teal-bg); color: var(--teal); }
 .qa-btn--slate .qa-icon-wrap { background: var(--slate-100); color: var(--slate-600); }
-.qa-btn--ai .qa-icon-wrap { background: #fdf4ff; color: #7c3aed; }
+.qa-btn--ai .qa-icon-wrap { background: #F0FDFA; color: #0D7377; }
 
 .qa-btn--navy:hover {
   background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
@@ -862,8 +862,8 @@
 }
 
 .qa-btn--ai:hover {
-  background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
-  box-shadow: 0 12px 30px rgba(124,58,237,0.3);
+  background: linear-gradient(135deg, #0C5C5F 0%, #0D7377 100%);
+  box-shadow: 0 12px 30px rgba(13,115,119,0.3);
 }
 
 /* ══════════════════════════════════════

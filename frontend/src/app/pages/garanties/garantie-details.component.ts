@@ -65,6 +65,7 @@ export class GarantieDetailsComponent implements OnInit {
         this.garantie = g;
         this.calculateMetrics();
         this.loading = false;
+        this.loadPacksCount(idGarantie);
       },
       error: () => {
         this.loading = false;
@@ -93,12 +94,16 @@ export class GarantieDetailsComponent implements OnInit {
     return Object.keys(map).map(key => ({ key, value: map[key] }));
   }
 
+  private loadPacksCount(idGarantie: string): void {
+    this.garantieService.getPacksByGarantieId(idGarantie).subscribe({
+      next: (packGaranties) => this.packsCount = packGaranties.length,
+      error: () => this.packsCount = 0
+    });
+  }
+
   private calculateMetrics(): void {
     if (!this.garantie) return;
-    
-    // Calculer le nombre de packs (simulé pour l'instant)
-    this.packsCount = this.garantie.idGarantie ? Math.floor(Math.random() * 6) + 1 : 0;
-    
+
     // Calculer une note basée sur le taux de remboursement et les plafonds
     const tauxScore = this.garantie.tauxRemboursementBase ?? 0;
     const plafondAnnuel = this.garantie.plafond?.plafondAnnuel ?? 0;

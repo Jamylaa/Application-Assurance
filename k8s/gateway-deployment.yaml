@@ -48,6 +48,13 @@ spec:
               key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
         - name: JAVA_OPTS
           value: "-Xms512m -Xmx1024m"
+        resources:
+          requests:
+            memory: "384Mi"
+            cpu: "250m"
+          limits:
+            memory: "768Mi"
+            cpu: "500m"
         livenessProbe:
           httpGet:
             path: /actuator/health

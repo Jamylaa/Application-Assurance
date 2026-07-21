@@ -44,6 +44,7 @@ class RecommendationService:
 
             all_packs = self.spring_boot_client.get_all_packs_sync(jwt_token)
             active_packs = [p for p in all_packs if p.statut_workflow and p.statut_workflow.value == "PUBLIE"]
+            pack_produit_ids = {p.id_pack: p.produit_id for p in active_packs if p.id_pack}
 
             recommended_packs = []
             for pack in active_packs:
@@ -70,7 +71,7 @@ class RecommendationService:
             top_packs = recommended_packs[:3]
 
             response.recommended_packs = top_packs
-            response.recommended_products = []
+            response.recommended_products = self._resolve_recommended_products(top_packs, pack_produit_ids, jwt_token)
             response.success = True
 
             if not top_packs:
@@ -119,6 +120,45 @@ class RecommendationService:
             profile.coverage_level = "PREMIUM" if request.monthly_budget >= 100 else "BASIC"
 
         return profile
+
+    def _resolve_recommended_products(self, top_packs: List[RecommendationResultDTO],
+                                       pack_produit_ids: dict, jwt_token: Optional[str]) -> List[RecommendationResultDTO]:
+        """Dérive les produits (lignes) recommandés à partir des packs recommandés. Un Produit n'a
+        pas de prix ni de domaines médicaux propres (ce sont les Packs qui les portent), donc son
+        score et son niveau de couverture reprennent ceux du meilleur pack recommandé qui lui appartient."""
+        if not top_packs:
+            return []
+
+        try:
+            all_produits = self.spring_boot_client.get_all_produits_sync(jwt_token)
+        except Exception:
+            logger.warning("Impossible de récupérer les produits pour la recommandation")
+            return []
+
+        produits_by_id = {p.id_produit: p for p in all_produits if p.id_produit}
+
+        best_per_produit: dict = {}
+        for pack_result in top_packs:
+            produit_id = pack_produit_ids.get(pack_result.id)
+            produit = produits_by_id.get(produit_id) if produit_id else None
+            if not produit:
+                continue
+            existing = best_per_produit.get(produit_id)
+            if existing and existing.compatibility_score >= pack_result.compatibility_score:
+                continue
+            best_per_produit[produit_id] = RecommendationResultDTO(
+                id=produit.id_produit or "",
+                nom=produit.nom_produit or "",
+                description=produit.description,
+                compatibility_score=pack_result.compatibility_score,
+                scoring_result=pack_result.scoring_result,
+                why_recommended=f"Contient le pack recommandé '{pack_result.nom}'",
+                monthly_price=None,
+                coverage_level=pack_result.coverage_level,
+                detailed_explanation=f"Ce produit propose notamment le pack '{pack_result.nom}', qui correspond à votre profil."
+            )
+
+        return sorted(best_per_produit.values(), key=lambda x: x.compatibility_score, reverse=True)
 
     def _get_pack_domaines_medicaux(self, pack: PackDTO, jwt_token: Optional[str]) -> List[str]:
         """Domaines médicaux couverts par le pack — dérivés côté serveur via /packs/{id}/detail."""

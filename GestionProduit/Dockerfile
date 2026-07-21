@@ -8,5 +8,9 @@ RUN mvn -B -DskipTests package
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=builder /app/target/GestionProduit-0.0.1-SNAPSHOT.jar app.jar
+RUN addgroup -S app && adduser -S app -G app
+USER app
 EXPOSE 9093
+HEALTHCHECK --interval=30s --timeout=5s --start-period=45s --retries=3 \
+    CMD wget -q -O- http://localhost:9093/actuator/health | grep -q '"status":"UP"' || exit 1
 ENTRYPOINT ["java", "-jar", "app.jar"]

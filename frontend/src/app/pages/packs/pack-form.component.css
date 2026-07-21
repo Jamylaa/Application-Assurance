@@ -28,7 +28,7 @@
 
 .field-help {
   font-size: 0.875rem;
-  color: #6c757d;
+  color: #64748B;
   margin-top: 0.25rem;
 }
 
@@ -52,4 +52,13 @@
   .form-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Dark Mode Overrides */
+:host-context(.my-app-dark) .form-card {
+  background: rgba(30, 30, 50, 0.95);
+}
+
+:host-context(.my-app-dark) .field-help {
+  color: #94A3B8;
 }

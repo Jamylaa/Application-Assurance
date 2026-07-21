@@ -17,6 +17,12 @@ class Settings(BaseSettings):
     spring_boot_max_retries: int = 3
     spring_boot_retry_delay: int = 1000
 
+    # MongoDB Configuration — base logique dédiée au chatbot (historique des conversations,
+    # journal d'actions pour l'undo), distincte de vermeg_db (données métier GestionProduit).
+    # Même instance Mongo que GestionProduit par défaut, base différente.
+    chatbot_mongodb_uri: str = "mongodb://admin:password@mongodb:27017/vermeg_chatbot_db?authSource=admin"
+    chatbot_mongodb_database: str = "vermeg_chatbot_db"
+
     # GitHub AI Models API Configuration
     github_api_key: Optional[str] = None
     github_model: str = "gpt-4o-mini"  # Default model for GitHub Models

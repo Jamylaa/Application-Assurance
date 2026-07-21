@@ -7,6 +7,13 @@
       "runtimeArgs": ["ng", "serve", "--port", "4200", "--host", "0.0.0.0", "--configuration", "development"],
       "port": 4200,
       "cwd": "frontend"
+    },
+    {
+      "name": "gestion-produit",
+      "runtimeExecutable": ".\\mvnw.cmd",
+      "runtimeArgs": ["spring-boot:run"],
+      "port": 9093,
+      "cwd": "GestionProduit"
     }
   ]
 }

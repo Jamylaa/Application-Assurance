@@ -237,28 +237,28 @@
 }
 
 // Dark Mode
-.my-app-dark .ui-card {
-  background: rgba(30, 30, 50, 0.95);
+:host-context(.my-app-dark) .ui-card {
+  background: rgba(30, 41, 59, 0.95);
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-.my-app-dark .card-loading {
-  background: rgba(30, 30, 50, 0.9);
+:host-context(.my-app-dark) .card-loading {
+  background: rgba(30, 41, 59, 0.9);
 }
 
-.my-app-dark .loading-spinner {
+:host-context(.my-app-dark) .loading-spinner {
   border-color: rgba(15, 76, 129, 0.2);
 }
 
-.my-app-dark .card-title {
+:host-context(.my-app-dark) .card-title {
   color: $neutral-100;
 }
 
-.my-app-dark .card-subtitle {
+:host-context(.my-app-dark) .card-subtitle {
   color: $neutral-400;
 }
 
-.my-app-dark .card-footer {
+:host-context(.my-app-dark) .card-footer {
   border-top-color: rgba(255, 255, 255, 0.1);
 }
 

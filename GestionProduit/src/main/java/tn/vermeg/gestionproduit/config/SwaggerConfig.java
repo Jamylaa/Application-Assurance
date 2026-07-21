@@ -37,14 +37,11 @@ public class SwaggerConfig {
                 .version("1.0.0")
                 .contact(contact)
                 .description("""
-                    API pour la gestion des produits d'assurance, packs et garanties avec moteur de recommandation IA  
+                    API pour la gestion du catalogue de produits d'assurance : produits, packs et garanties.
                     ## Fonctionnalités principales
                     - Gestion des produits d'assurance (Santé, Vie, Auto, Habitation)
                     - Gestion des packs d'assurance avec associations de garanties
                     - Gestion des garanties individuelles
-                    - Chatbot IA pour la création et recommandation de packs
-                    - Système de mémoire conversationnelle (RAG)
-                    - Moteur de recommandation basé sur l'IA
                     ## Authentification
                     L'API utilise Keycloak pour l'authentification et l'autorisation.
                     Incluez le token JWT dans le header Authorization: Bearer {token}

@@ -35,9 +35,15 @@ spec:
           name: grafana
         env:
         - name: GF_SECURITY_ADMIN_USER
-          value: "admin"
+          valueFrom:
+            secretKeyRef:
+              name: vermeg-secrets
+              key: GRAFANA_ADMIN_USER
         - name: GF_SECURITY_ADMIN_PASSWORD
-          value: "admin"
+          valueFrom:
+            secretKeyRef:
+              name: vermeg-secrets
+              key: GRAFANA_ADMIN_PASSWORD
         - name: GF_USERS_ALLOW_SIGN_UP
           value: "false"
         volumeMounts:
@@ -45,4 +51,16 @@ spec:
           mountPath: /var/lib/grafana
       volumes:
       - name: grafana-data
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: grafana-data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-data
+  namespace: vermeg-assurance
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  resources:
+    requests:
+      storage: 2Gi

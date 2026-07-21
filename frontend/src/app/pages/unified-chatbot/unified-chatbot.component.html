@@ -38,6 +38,11 @@
         <i class="bi bi-download"></i>
         <span class="hdr-btn-label">Exporter</span>
       </button>
+      <button class="hdr-btn" (click)="undoLastAction()" [disabled]="isLoading"
+              aria-label="Annuler la dernière action" title="Annuler la dernière création/modification">
+        <i class="bi bi-arrow-counterclockwise"></i>
+        <span class="hdr-btn-label">Annuler</span>
+      </button>
       <button class="hdr-btn hdr-btn--danger" (click)="clearChat()"
               aria-label="Effacer la conversation">
         <i class="bi bi-trash3"></i>
@@ -142,6 +147,39 @@
           </div>
         </ng-container>
 
+        <!-- Produits correspondants (lignes contenant les packs recommandés ci-dessus) -->
+        <ng-container *ngIf="getRecommendedProducts(message).length > 0">
+          <div class="reco-container">
+            <div class="reco-header">
+              <i class="bi bi-box-seam-fill"></i>
+              <span>Produits correspondants</span>
+            </div>
+            <div *ngFor="let prod of getRecommendedProducts(message); let i = index" class="reco-card">
+              <div class="reco-card-header">
+                <span class="reco-rank">{{ i + 1 }}</span>
+                <span class="reco-name">{{ prod.nom }}</span>
+                <span *ngIf="prod.compatibilityScore" class="reco-score">
+                  {{ prod.compatibilityScore.toFixed(1) }}%
+                </span>
+              </div>
+              <div class="reco-details">
+                <div *ngIf="prod.coverageLevel" class="reco-item">
+                  <i class="bi bi-shield-check"></i>
+                  <span>{{ prod.coverageLevel }}</span>
+                </div>
+                <div *ngIf="prod.description" class="reco-item">
+                  <i class="bi bi-info-circle"></i>
+                  <span>{{ prod.description }}</span>
+                </div>
+                <div *ngIf="prod.whyRecommended" class="reco-item reco-item--why">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span>{{ prod.whyRecommended }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
         <!-- Horodatage -->
         <div class="msg-time">{{ formatTime(message.timestamp) }}</div>
 
@@ -156,6 +194,33 @@
             <i class="bi" [ngClass]="getActionIcon(action.type)"></i>
             {{ action.label }}
           </button>
+        </div>
+
+        <!-- Choix structurés (ex: garantie introuvable → créer/remplacer) -->
+        <div *ngIf="message.choices && message.choices.length > 0" class="msg-choices">
+          <ng-container *ngFor="let choice of message.choices; trackBy: trackByChoiceId">
+            <button
+              *ngIf="!choice.options || choice.options.length === 0"
+              type="button"
+              class="msg-choice-btn msg-choice-btn--primary"
+              [disabled]="isLoading"
+              (click)="selectChoice(message, choice)">
+              {{ choice.label }}
+            </button>
+            <div *ngIf="choice.options && choice.options.length > 0" class="msg-choice-group">
+              <span class="msg-choice-group-label">{{ choice.label }}</span>
+              <div class="msg-choice-group-options">
+                <button
+                  *ngFor="let option of choice.options; trackBy: trackByOptionId"
+                  type="button"
+                  class="msg-choice-btn msg-choice-btn--secondary"
+                  [disabled]="isLoading"
+                  (click)="selectChoiceOption(message, choice, option)">
+                  {{ option.label }}
+                </button>
+              </div>
+            </div>
+          </ng-container>
         </div>
       </div>
     </div>

@@ -235,6 +235,9 @@ class ChatbotResponseDTO(BaseModel):
     entity_type: Optional[str] = None
     correlation_id: Optional[str] = None
     debug_trace: Optional[Dict[str, Any]] = None
+    # Choix structurés proposés à l'utilisateur (ex: garantie introuvable -> remplacer/créer),
+    # à afficher comme boutons cliquables côté frontend plutôt qu'une simple question en texte libre.
+    choices: Optional[List[Dict[str, Any]]] = None
 
 
 class BusinessValidationResult(BaseModel):

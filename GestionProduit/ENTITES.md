@@ -1,6 +1,6 @@
 # Entités et Relations — GestionProduit
 
-Référence pratique et exhaustive du modèle de données **actuel** du microservice `GestionProduit`. La section [9. Genèse du modèle](#9-genèse-du-modèle) explique le *pourquoi* de ces choix de conception.
+Référence pratique et exhaustive du modèle de données **actuel** du microservice `GestionProduit`. La section [8. Genèse du modèle](#8-genèse-du-modèle) explique le *pourquoi* de ces choix de conception.
 
 > Généré à partir du code source (`entities/`, `entities/embedded/`, `enums/`) pour garantir l'exactitude. Toute évolution du modèle doit être répercutée ici.
 >
@@ -13,9 +13,6 @@ Référence pratique et exhaustive du modèle de données **actuel** du microser
 ```
 Produit (1) ──────< Pack (N)                    [Pack.produitId]
 Pack (1) ──────< PackGarantie (N) >────── (1) Garantie   [table de jonction enrichie]
-
-Produit (1) ──────< CritereRecommandation (N)   [CritereRecommandation.produitId]
-Pack    (0..1) ──── CritereRecommandation (N)   [CritereRecommandation.packId, optionnel]
 
 Pack (N) ──────< Pack (N)        via packsCompatibles / packsIncompatibles / optionsPackIds (auto-référence par IDs)
 Garantie (N) ──────< Garantie (N) via prerequisGarantieIds (auto-référence par IDs)
@@ -107,17 +104,17 @@ Une garantie définit CE QUI EST COUVERT (l'événement, le montant, les conditi
 | `nomCourt` | String | Nom court pour tableaux comparatifs (≤30 car.) |
 | `description` | String (requis) | Description complète pour l'assuré |
 | `descriptionTechnique` | String | Destinée aux actuaires/juristes |
-| `domaine` | DomaineMedical (requis) | Domaine médical — voir §6.1 |
+| `domaine` | DomaineMedical (requis) | Domaine médical — voir §5.1 |
 | `garantieObligatoireParDefaut` | boolean (défaut false) | Obligatoire par nature dans tout pack qui l'inclut |
 | `statutWorkflow` | StatutWorkflow (défaut BROUILLON) | Cycle de vie éditorial — seul mécanisme de statut |
 | `evenementsCouvertsParDefaut` | List\<String\> | Actes/événements pris en charge (doc + chatbot) |
-| `plafond` | PlafondGarantie (embedded) | Value Object — voir §4.1 |
-| `franchise` | FranchiseGarantie (embedded) | Value Object — voir §4.2 |
+| `plafond` | PlafondGarantie (embedded) | Value Object — voir §3.1 |
+| `franchise` | FranchiseGarantie (embedded) | Value Object — voir §3.2 |
 | `typeRemboursement` | TypeRemboursement (défaut FRAIS_REELS) | Mode de calcul |
 | `tauxRemboursementBase` | double (0–100, défaut 80.0) | Taux de remboursement standard, **en %** |
 | `tauxRemboursementMinimum` | double (0–100, défaut 0) | Plancher modulable |
 | `tauxRemboursementMaximum` | double (0–100, défaut 100) | Plafond modulable |
-| `regleCalcul` | RegleCalcul (embedded) | Value Object — voir §4.3 |
+| `regleCalcul` | RegleCalcul (embedded) | Value Object — voir §3.3 |
 | `prerequisGarantieIds` | List\<String\> | IDs de garanties requises au préalable (auto-référence) |
 | `parametresDynamiques` | Map\<String, Object\> | Paramètres variables de la formule de calcul |
 | `primePureBase` | double (défaut 0) | Donnée actuarielle (TND/mois) |
@@ -125,9 +122,7 @@ Une garantie définit CE QUI EST COUVERT (l'événement, le montant, les conditi
 | `dateCreation`, `dateModification`, `dateDesactivation` | Instant | Horodatage |
 
 **Méthodes métier** : `estValide()`, `estActive()` (⇔ `statutWorkflow == PUBLIE` **et** `dateDesactivation == null`), `calculerRemboursement(montantSinistre)` (applique taux → plafond → franchise, ou délègue à `regleCalcul` si définie)
-
 ---
-
 ### 2.4 PackGarantie
 
 **Collection** : `pack_garanties` · **Fichier** : `entities/PackGarantie.java`
@@ -151,47 +146,15 @@ Table de jonction **enrichie** entre `Pack` et `Garantie` : elle ne fait pas que
 | `dateActivation` (auto), `dateDesactivation`, `dateModification` (auto) | Instant | Horodatage |
 
 **Contrainte** : index composé unique `(packId, garantieId)` — une garantie ne peut être associée qu'une fois au même pack.
-
 **Méthodes métier** : `estValide()`, `estActif()`, `calculerRemboursement(montantSinistre, tauxBase, plafondBase, franchiseBase)`
 
 ---
 
-## 3. Entités de support
-
-### 3.1 CritereRecommandation
-
-**Collection** : `criteres_recommandation` · **Fichier** : `entities/CritereRecommandation.java` · **API** : `/api/criteres-recommandation`
-
-Règles de scoring éditables pour le moteur de recommandation du chatbot IA, sans avoir à modifier le code Python.
-
-| Champ | Type | Description |
-|-------|------|-------------|
-| `idCritere` | String (@Id) | Identifiant technique |
-| `produitId` | String (requis, indexé) | **Référence vers `Produit.idProduit`** |
-| `packId` | String (indexé, nullable) | **Référence vers `Pack.idPack`** ; `null` = critères génériques du produit |
-| `motsCles` | List\<String\> | Déclencheurs de recommandation |
-| `synonymes` | List\<String\> | Variantes acceptées (NLP) |
-| `casUsages` | List\<String\> | Situations typiques recommandées |
-| `profilsRecommandes` | List\<String\> | Profils clients types |
-| `scoreBase` | double (0–100, défaut 50.0) | Score de départ avant pondération |
-| `poidsAttributs` | Map\<String, Double\> | Poids par attribut, clés libres (ex: `budget`, `age`, `couverture`, `duree`) |
-| `bonusConditionnels` | Map\<String, Double\> | Bonus si condition remplie |
-| `reglesDisqualification` | List\<String\> | Conditions excluant l'offre de la recommandation |
-| `prioriteAffichage` | int (défaut 5) | Départage en cas d'égalité de score |
-| `actif` | boolean (défaut true) | Règle active |
-| `creePar`, `dateCreation`, `dateModification` | String / Instant | Audit |
-
-**Contrainte** : un seul `CritereRecommandation` par pack (`findByPackId` retourne un `Optional`).
-
-**Méthodes métier** : `calculerScore(attributsProfil)`, `contientMotCle(terme)`
-
----
-
-## 4. Objets embarqués (Value Objects)
+## 3. Objets embarqués (Value Objects)
 
 Ces objets n'ont pas de collection propre : ils sont sérialisés à l'intérieur du document parent (Produit/Pack/Garantie/PackGarantie).
 
-### 4.1 PlafondGarantie
+### 3.1 PlafondGarantie
 *(dans `Garantie.plafond` et `PackGarantie.plafondSpecifique`)*
 
 | Champ | Type | Description |
@@ -207,7 +170,7 @@ Ces objets n'ont pas de collection propre : ils sont sérialisés à l'intérieu
 
 **Méthodes** : `estIllimite()` (true si les 5 montants sont à 0), `appliquerPlafond(montantCalcule)`
 
-### 4.2 FranchiseGarantie
+### 3.2 FranchiseGarantie
 *(dans `Garantie.franchise` et `PackGarantie.franchiseSpecifique`)*
 
 | Champ | Type | Description |
@@ -221,7 +184,7 @@ Ces objets n'ont pas de collection propre : ils sont sérialisés à l'intérieu
 
 **Méthode** : `calculerFranchise(montantSinistre)`
 
-### 4.3 RegleCalcul
+### 3.3 RegleCalcul
 *(dans `Garantie.regleCalcul`)*
 
 | Champ | Type | Description |
@@ -239,14 +202,12 @@ Ces objets n'ont pas de collection propre : ils sont sérialisés à l'intérieu
 
 ---
 
-## 5. Relations entre entités — détail
+## 4. Relations entre entités — détail
 
 | Relation | Cardinalité | Portée par | Requête clé |
 |----------|-------------|-----------|--------------|
 | Produit → Pack | 1 – N | `Pack.produitId` | `PackUnifiedRepository.findByProduitId(produitId)` |
 | Pack ↔ Garantie | N – N (via jonction) | `PackGarantie.packId` + `PackGarantie.garantieId` | `PackGarantieRepository.findByPackIdAndActifTrue(packId)` / `findByGarantieId(garantieId)` |
-| Produit → CritereRecommandation | 1 – N | `CritereRecommandation.produitId` | `findByProduitIdAndActifTrue(produitId)` |
-| Pack → CritereRecommandation | 0..1 – 1 | `CritereRecommandation.packId` (nullable) | `findByPackId(packId)` → `Optional` (un seul critère par pack) |
 | Pack ↔ Pack | N – N (auto-référence) | `packsCompatibles` / `packsIncompatibles` / `optionsPackIds` | Listes d'IDs, non contraintes en base |
 | Garantie ↔ Garantie | N – N (auto-référence) | `prerequisGarantieIds` | Liste d'IDs, non contrainte en base |
 
@@ -262,9 +223,9 @@ Ces endpoints s'ajoutent aux endpoints CRUD existants sans les modifier (le chat
 
 ---
 
-## 6. Énumérations
+## 5. Énumérations
 
-### 6.1 DomaineMedical
+### 5.1 DomaineMedical
 *(dans `Garantie.domaine`)* — méthode utilitaire `fromString(text)` tolérant espaces/tirets/slashes.
 
 | Catégorie | Valeurs |
@@ -311,7 +272,7 @@ Ces endpoints s'ajoutent aux endpoints CRUD existants sans les modifier (le chat
 
 ---
 
-## 7. Collections MongoDB
+## 6. Collections MongoDB
 
 | Collection | Entité | Notes |
 |------------|--------|-------|
@@ -319,13 +280,12 @@ Ces endpoints s'ajoutent aux endpoints CRUD existants sans les modifier (le chat
 | `packs` | Pack | |
 | `garanties` | Garantie | Indépendante de tout pack |
 | `pack_garanties` | PackGarantie | Table de jonction enrichie, index unique (packId, garantieId) |
-| `criteres_recommandation` | CritereRecommandation | Un seul document par pack |
 
 `PlafondGarantie`, `FranchiseGarantie` et `RegleCalcul` n'ont **pas** de collection — ce sont des sous-documents embedded.
 
 ---
 
-## 8. Conventions de code
+## 7. Conventions de code
 
 Conventions appliquées dans `GestionProduit` (Java 21 / Spring Boot 3) :
 
@@ -347,9 +307,9 @@ Formatage : indentation 4 espaces, lignes ≤ 120 caractères, imports ordonnés
 
 ---
 
-## 9. Genèse du modèle
+## 8. Genèse du modèle
 
-Le modèle a traversé 3 refontes successives. Comprendre cette trajectoire aide à ne pas réintroduire des champs déjà écartés délibérément.
+Le modèle a traversé 4 refontes successives. Comprendre cette trajectoire aide à ne pas réintroduire des champs déjà écartés délibérément.
 
 **v1 (modèle plat initial)** — Produit à 5 champs sans information commerciale ; `Garantie.packId` couplait une garantie à un seul pack (alors qu'une même garantie peut apparaître dans plusieurs formules avec des taux différents) ; plafond et franchise étaient de simples `double` sans logique de calcul associée ; aucun cycle de vie (workflow), aucun versioning, aucune règle de recommandation éditable.
 
@@ -357,7 +317,9 @@ Le modèle a traversé 3 refontes successives. Comprendre cette trajectoire aide
 
 **v2.1 et v2.2 (recentrage sur le catalogue)** — Deux passes de simplification ont retiré tout ce qui relevait de la gestion de contrat ou de la souscription plutôt que du catalogue produit lui-même : `VersionProduit`, `OffreCommerciale`, `DocumentRequis`, `Exclusion` et `CritereEligibilite` ont été supprimés entièrement (entité, repository, service, controller), avec leurs enums associés (`TypeRenouvellement`, `TypeResiliation`, `CanalDistribution`, `TypeDocument`, `FrequenceRemboursement`, `TypeOffre`, `TypeExclusion`, `TypeClient`, `NiveauRisque`). Le champ `statut` (ACTIF/INACTIF), devenu redondant avec `StatutWorkflow`, a été retiré de `Produit`/`Pack`/`Garantie` — partout où il conditionnait une règle métier, la condition a été réécrite sur `statutWorkflow == PUBLIE`.
 
-**Décision de périmètre qui en résulte** : `GestionProduit` décrit la **relation d'assurance** — quel produit, quelle formule, quelles garanties, à quel tarif — pas la gestion administrative des contrats ni la souscription. C'est ce modèle final, stable, que documentent les sections 1 à 7 ci-dessus.
+**v2.3 (suppression de `CritereRecommandation`)** — L'entité `CritereRecommandation` (collection `criteres_recommandation`, API `/api/criteres-recommandation`), conçue pour porter des règles de scoring éditables pour un moteur de recommandation chatbot, a été supprimée entièrement (entité, repository, service, controller) : aucun autre composant du microservice n'en dépendait, et le service Python (`recommendation_service.py`) n'appelle jamais cette API — le lien documenté à l'origine entre les deux n'a jamais été implémenté côté chatbot.
+
+**Décision de périmètre qui en résulte** : `GestionProduit` décrit la **relation d'assurance** — quel produit, quelle formule, quelles garanties, à quel tarif — pas la gestion administrative des contrats, la souscription, ni le scoring de recommandation. C'est ce modèle final, stable, que documentent les sections 1 à 6 ci-dessus.
 
 **Effets de bord notables** :
 - Le moteur de recommandation Python (`recommendation_service.py`) a perdu 2 de ses 5 critères de score (`eligibilite`, `type_client`, dérivés de `criteresEligibilite`) ; les 3 critères restants ont été rééquilibrés pour retotaliser 1.0, et le filtre "packs actifs" est passé de `statut == "ACTIF"` à `statut_workflow == "PUBLIE"`.
@@ -366,4 +328,4 @@ Le modèle a traversé 3 refontes successives. Comprendre cette trajectoire aide
 
 ---
 
-*Document généré pour le microservice GestionProduit — reflète le modèle simplifié centré sur la relation d'assurance (produit/pack/garantie), sans paramètres de gestion de contrat ni critères d'éligibilité de souscription.*
+*Document généré pour le microservice GestionProduit — reflète le modèle simplifié centré sur la relation d'assurance (produit/pack/garantie), sans paramètres de gestion de contrat, critères d'éligibilité de souscription, ni critères de recommandation.*

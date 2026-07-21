@@ -16,14 +16,6 @@ import tn.vermeg.gestionproduit.repositories.ProduitRepository;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-/**
- * Crée un produit complet (produit + packs + garanties par pack) en une seule opération.
- *
- * <p>MongoDB tourne ici en instance unique sans replica set : les transactions ACID
- * multi-documents ne sont pas disponibles. La création est donc séquentielle, avec
- * compensation manuelle (suppression des entités déjà créées) en cas d'échec à mi-parcours.
- */
 @Service
 public class ProduitCompletService {
 
@@ -56,17 +48,14 @@ public class ProduitCompletService {
         this.garantieRepository = garantieRepository;
         this.packGarantieRepository = packGarantieRepository;
     }
-
     public Produit creerProduitComplet(CreationProduitCompletRequest request) {
         List<String> produitIdsCrees = new ArrayList<>();
         List<String> packIdsCrees = new ArrayList<>();
         List<String> garantieIdsCrees = new ArrayList<>();
         List<String> packGarantieIdsCrees = new ArrayList<>();
-
         try {
             Produit produit = produitService.createProduit(request.getProduit());
             produitIdsCrees.add(produit.getIdProduit());
-
             for (PackAvecGarantiesRequest packReq : orEmpty(request.getPacks())) {
                 packReq.getPack().setProduitId(produit.getIdProduit());
                 Pack pack = packUnifiedService.createPack(packReq.getPack());
@@ -79,11 +68,19 @@ public class ProduitCompletService {
                                 .validateGarantieExisteEtActive(garantieReq.getGarantieIdExistante())
                                 .getIdGarantie();
                     } else {
+                        // Verrou : une garantie ne peut être créée à la volée que si l'appelant a
+                        // explicitement présenté ce choix à l'utilisateur (formulaire ou chatbot) —
+                        // aucune création silencieuse d'une garantie "libre" non référencée.
+                        if (!garantieReq.isCreationConfirmee()) {
+                            throw new IllegalArgumentException(
+                                    "Création de garantie non confirmée : la garantie \""
+                                            + (garantieReq.getGarantie() != null ? garantieReq.getGarantie().getNomGarantie() : "?")
+                                            + "\" n'existe pas et 'creationConfirmee' doit être à true pour la créer.");
+                        }
                         Garantie garantie = garantieService.createGarantie(garantieReq.getGarantie());
                         garantieIdsCrees.add(garantie.getIdGarantie());
                         garantieId = garantie.getIdGarantie();
                     }
-
                     PackGarantie configuration = garantieReq.getConfiguration() != null
                             ? garantieReq.getConfiguration() : new PackGarantie();
                     PackGarantie association = packUnifiedService.ajouterGarantieAuPack(
@@ -91,9 +88,7 @@ public class ProduitCompletService {
                     packGarantieIdsCrees.add(association.getIdPackGarantie());
                 }
             }
-
             return hierarchicalService.getProduitWithFullHierarchy(produit.getIdProduit());
-
         } catch (Exception e) {
             packGarantieIdsCrees.forEach(packGarantieRepository::deleteById);
             garantieIdsCrees.forEach(garantieRepository::deleteById);
@@ -104,7 +99,6 @@ public class ProduitCompletService {
                             + e.getMessage(), e);
         }
     }
-
     private static <T> List<T> orEmpty(List<T> list) {
         return list != null ? list : Collections.emptyList();
     }

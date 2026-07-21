@@ -22,36 +22,37 @@ class SpringBootClient:
             if response.status_code == 200:
                 return response.json()
             elif response.status_code == 201:
-                logger.info(f"✅ {operation} - Created successfully")
+                logger.info(f"{operation} - Created successfully")
                 return response.json()
             elif response.status_code == 204:
-                logger.info(f"✅ {operation} - No content (successful)")
+                logger.info(f"{operation} - No content (successful)")
                 return None
             elif response.status_code == 400:
                 error_detail = response.text
-                logger.error(f"❌ {operation} - Bad Request: {error_detail}")
+                logger.error(f"{operation} - Bad Request: {error_detail}")
                 raise Exception(f"Bad Request: {error_detail}")
             elif response.status_code == 401:
-                logger.error(f"❌ {operation} - Unauthorized")
+                logger.error(f"{operation} - Unauthorized")
                 raise Exception("Unauthorized: Invalid or missing JWT token")
             elif response.status_code == 403:
-                logger.error(f"❌ {operation} - Forbidden")
+                logger.error(f"{operation} - Forbidden")
                 raise Exception("Forbidden: Insufficient permissions")
             elif response.status_code == 404:
-                logger.error(f"❌ {operation} - Not Found")
+                logger.error(f"{operation} - Not Found")
                 raise Exception("Resource not found")
             elif response.status_code == 422:
                 error_detail = response.text
-                logger.error(f"❌ {operation} - Unprocessable Entity: {error_detail}")
+                logger.error(f"{operation} - Unprocessable Entity: {error_detail}")
                 raise Exception(f"Validation error: {error_detail}")
             elif response.status_code == 500:
-                logger.error(f"❌ {operation} - Internal Server Error")
-                raise Exception("Internal server error")
+                error_detail = response.text
+                logger.error(f"{operation} - Internal Server Error: {error_detail}")
+                raise Exception(f"Internal server error: {error_detail}")
             else:
-                logger.error(f"❌ {operation} - Unexpected status code: {response.status_code}")
+                logger.error(f"{operation} - Unexpected status code: {response.status_code}")
                 raise Exception(f"Unexpected error: {response.status_code}")
         except json.JSONDecodeError as e:
-            logger.error(f"❌ {operation} - JSON decode error: {e}")
+            logger.error(f"{operation} - JSON decode error: {e}")
             raise Exception(f"Invalid JSON response: {e}")
     
     async def _make_request_with_retry(self, method: str, url: str, **kwargs) -> httpx.Response:
@@ -64,18 +65,18 @@ class SpringBootClient:
                     return response
             except httpx.TimeoutException as e:
                 last_error = e
-                logger.warning(f"⚠️ Timeout on attempt {attempt + 1}/{self.max_retries} for {url}")
+                logger.warning(f"Timeout on attempt {attempt + 1}/{self.max_retries} for {url}")
                 if attempt < self.max_retries - 1:
                     import asyncio
                     await asyncio.sleep(self.retry_delay / 1000)
             except httpx.ConnectError as e:
                 last_error = e
-                logger.warning(f"⚠️ Connection error on attempt {attempt + 1}/{self.max_retries} for {url}")
+                logger.warning(f"Connection error on attempt {attempt + 1}/{self.max_retries} for {url}")
                 if attempt < self.max_retries - 1:
                     import asyncio
                     await asyncio.sleep(self.retry_delay / 1000)
         
-        logger.error(f"❌ Failed to connect to Spring Boot service after {self.max_retries} attempts")
+        logger.error(f"Failed to connect to Spring Boot service after {self.max_retries} attempts")
         raise Exception(f"Failed to connect to Spring Boot service: {last_error}")
     
     async def create_garantie(self, garantie: GarantieDTO, jwt_token: Optional[str] = None) -> GarantieDTO:
@@ -87,8 +88,8 @@ class SpringBootClient:
         if jwt_token:
             headers["Authorization"] = f"Bearer {jwt_token}"
 
-        logger.info(f"🔵 Creating garantie: {garantie.nom_garantie}")
-        logger.info(f"🔵 Request data: {json.dumps(camel_case_data, ensure_ascii=False)}")
+        logger.info(f"Creating garantie: {garantie.nom_garantie}")
+        logger.info(f"Request data: {json.dumps(camel_case_data, ensure_ascii=False)}")
 
         response = await self._make_request_with_retry("POST", url, json=camel_case_data, headers=headers)
         result = self._handle_response(response, "Create Garantie")
@@ -104,8 +105,8 @@ class SpringBootClient:
         if jwt_token:
             headers["Authorization"] = f"Bearer {jwt_token}"
 
-        logger.info(f"🔵 Creating produit: {produit.nom_produit}")
-        logger.info(f"🔵 Request data: {json.dumps(camel_case_data, ensure_ascii=False)}")
+        logger.info(f"Creating produit: {produit.nom_produit}")
+        logger.info(f"Request data: {json.dumps(camel_case_data, ensure_ascii=False)}")
 
         response = await self._make_request_with_retry("POST", url, json=camel_case_data, headers=headers)
         result = self._handle_response(response, "Create Produit")
@@ -121,8 +122,8 @@ class SpringBootClient:
         if jwt_token:
             headers["Authorization"] = f"Bearer {jwt_token}"
 
-        logger.info(f"🔵 Creating pack: {pack.nom_pack}")
-        logger.info(f"🔵 Request data: {json.dumps(camel_case_data, ensure_ascii=False)}")
+        logger.info(f"Creating pack: {pack.nom_pack}")
+        logger.info(f"Request data: {json.dumps(camel_case_data, ensure_ascii=False)}")
 
         response = await self._make_request_with_retry("POST", url, json=camel_case_data, headers=headers)
         result = self._handle_response(response, "Create Pack")
@@ -148,7 +149,7 @@ class SpringBootClient:
         if jwt_token:
             headers["Authorization"] = f"Bearer {jwt_token}"
 
-        logger.info("🔵 Fetching all packs")
+        logger.info("Fetching all packs")
 
         response = await self._make_request_with_retry("GET", url, headers=headers)
         result = self._handle_response(response, "Get All Packs")
@@ -163,7 +164,7 @@ class SpringBootClient:
         if jwt_token:
             headers["Authorization"] = f"Bearer {jwt_token}"
 
-        logger.info("🔵 Fetching all produits")
+        logger.info("Fetching all produits")
 
         response = await self._make_request_with_retry("GET", url, headers=headers)
         result = self._handle_response(response, "Get All Produits")
@@ -178,7 +179,7 @@ class SpringBootClient:
         if jwt_token:
             headers["Authorization"] = f"Bearer {jwt_token}"
         
-        logger.info(f"🔵 Searching pack by name: {name}")
+        logger.info(f"Searching pack by name: {name}")
         
         try:
             response = await self._make_request_with_retry("GET", url, headers=headers)
@@ -199,7 +200,7 @@ class SpringBootClient:
         if jwt_token:
             headers["Authorization"] = f"Bearer {jwt_token}"
 
-        logger.info(f"🔵 Searching garantie by name: {name}")
+        logger.info(f"Searching garantie by name: {name}")
 
         try:
             response = await self._make_request_with_retry("GET", url, headers=headers)
@@ -212,6 +213,25 @@ class SpringBootClient:
                 return None
             raise
 
+    async def search_garanties(self, name: str, jwt_token: Optional[str] = None) -> List[GarantieDTO]:
+        """Recherche partielle de garanties par nom (toutes les correspondances, pas seulement
+        la première) — utilisé pour proposer des suggestions de remplacement à l'utilisateur
+        quand la garantie qu'il a nommée n'existe pas."""
+        url = f"{self.base_url}/garanties/search?nomGarantie={name}"
+
+        headers = {}
+        if jwt_token:
+            headers["Authorization"] = f"Bearer {jwt_token}"
+
+        try:
+            response = await self._make_request_with_retry("GET", url, headers=headers)
+            result = self._handle_response(response, "Search Garanties")
+            return [GarantieDTO.model_validate(item) for item in (result or [])]
+        except Exception as e:
+            if "404" in str(e) or "Resource not found" in str(e):
+                return []
+            raise
+
     async def get_produit_by_name(self, name: str, jwt_token: Optional[str] = None) -> Optional[ProduitDTO]:
         """Get a product by name from Spring Boot API."""
         url = f"{self.base_url}/produits/search?nom={name}"
@@ -220,7 +240,7 @@ class SpringBootClient:
         if jwt_token:
             headers["Authorization"] = f"Bearer {jwt_token}"
 
-        logger.info(f"🔵 Searching produit by name: {name}")
+        logger.info(f"Searching produit by name: {name}")
 
         try:
             response = await self._make_request_with_retry("GET", url, headers=headers)
@@ -244,8 +264,8 @@ class SpringBootClient:
         if jwt_token:
             headers["Authorization"] = f"Bearer {jwt_token}"
         
-        logger.info(f"🔵 Adding garantie {garantie_id} to pack {pack_id}")
-        logger.debug(f"🔵 Request data: {json.dumps(camel_case_data, indent=2)}")
+        logger.info(f"Adding garantie {garantie_id} to pack {pack_id}")
+        logger.debug(f"Request data: {json.dumps(camel_case_data, indent=2)}")
         
         response = await self._make_request_with_retry("POST", url, json=camel_case_data, headers=headers)
         self._handle_response(response, "Add Garantie To Pack")
@@ -287,7 +307,7 @@ class SpringBootClient:
         if jwt_token:
             headers["Authorization"] = f"Bearer {jwt_token}"
 
-        logger.info(f"🔵 Updating garantie: {id_garantie}")
+        logger.info(f"Updating garantie: {id_garantie}")
 
         response = await self._make_request_with_retry("PUT", url, json=camel_case_data, headers=headers)
         result = self._handle_response(response, "Update Garantie")
@@ -303,7 +323,7 @@ class SpringBootClient:
         if jwt_token:
             headers["Authorization"] = f"Bearer {jwt_token}"
 
-        logger.info(f"🔵 Updating produit: {id_produit}")
+        logger.info(f"Updating produit: {id_produit}")
 
         response = await self._make_request_with_retry("PUT", url, json=camel_case_data, headers=headers)
         result = self._handle_response(response, "Update Produit")
@@ -319,7 +339,7 @@ class SpringBootClient:
         if jwt_token:
             headers["Authorization"] = f"Bearer {jwt_token}"
 
-        logger.info(f"🔵 Updating pack: {id_pack}")
+        logger.info(f"Updating pack: {id_pack}")
 
         response = await self._make_request_with_retry("PUT", url, json=camel_case_data, headers=headers)
         result = self._handle_response(response, "Update Pack")
@@ -334,7 +354,7 @@ class SpringBootClient:
         if jwt_token:
             headers["Authorization"] = f"Bearer {jwt_token}"
         
-        logger.info(f"🔵 Deleting garantie: {id_garantie}")
+        logger.info(f"Deleting garantie: {id_garantie}")
         
         response = await self._make_request_with_retry("DELETE", url, headers=headers)
         self._handle_response(response, "Delete Garantie")
@@ -349,7 +369,7 @@ class SpringBootClient:
         if jwt_token:
             headers["Authorization"] = f"Bearer {jwt_token}"
         
-        logger.info(f"🔵 Deleting produit: {id_produit}")
+        logger.info(f"Deleting produit: {id_produit}")
         
         response = await self._make_request_with_retry("DELETE", url, headers=headers)
         self._handle_response(response, "Delete Produit")
@@ -364,7 +384,7 @@ class SpringBootClient:
         if jwt_token:
             headers["Authorization"] = f"Bearer {jwt_token}"
         
-        logger.info(f"🔵 Deleting pack: {id_pack}")
+        logger.info(f"Deleting pack: {id_pack}")
         
         response = await self._make_request_with_retry("DELETE", url, headers=headers)
         self._handle_response(response, "Delete Pack")
@@ -413,6 +433,9 @@ class SpringBootClient:
 
     def get_garantie_by_name_sync(self, name: str, jwt_token: Optional[str] = None) -> Optional[GarantieDTO]:
         return self._run_sync(self.get_garantie_by_name(name, jwt_token))
+
+    def search_garanties_sync(self, name: str, jwt_token: Optional[str] = None) -> List[GarantieDTO]:
+        return self._run_sync(self.search_garanties(name, jwt_token))
 
     def get_produit_by_name_sync(self, name: str, jwt_token: Optional[str] = None) -> Optional[ProduitDTO]:
         return self._run_sync(self.get_produit_by_name(name, jwt_token))

@@ -122,6 +122,26 @@ class ProduitServiceTest {
     }
 
     @Test
+    void testUpdateProduit_PartialUpdate_PreservesUnmentionedFields() {
+        // Given: seul le nom commercial est fourni, comme le ferait un appel partiel du chatbot
+        Produit partialDetails = new Produit();
+        partialDetails.setNomCommercial("FamilySanté+");
+
+        when(produitRepository.findById("1")).thenReturn(Optional.of(produitTest));
+        when(produitRepository.save(any(Produit.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        Produit result = produitService.updateProduit("1", partialDetails);
+
+        // Then: le champ fourni est appliqué, les champs non mentionnés (dont typeProduit,
+        // obligatoire) restent inchangés au lieu de faire échouer la mise à jour
+        assertEquals("FamilySanté+", result.getNomCommercial());
+        assertEquals("Assurance Santé Familiale", result.getNomProduit());
+        assertEquals("Assurance santé complète pour la famille", result.getDescription());
+        assertEquals(TypeProduit.SANTE, result.getTypeProduit());
+    }
+
+    @Test
     void testDeleteProduit_Success() {
         // Given
         when(produitRepository.existsById("1")).thenReturn(true);

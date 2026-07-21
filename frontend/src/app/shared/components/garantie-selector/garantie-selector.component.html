@@ -1,0 +1,84 @@
+<div class="garantie-selector">
+  <label class="selector-label">{{ label }}</label>
+
+  <p-autoComplete
+    [ngModel]="selectedGaranties"
+    (ngModelChange)="onSelectionChange($event)"
+    [suggestions]="suggestions"
+    (completeMethod)="search($event)"
+    field="nomGarantie"
+    [multiple]="true"
+    [dropdown]="false"
+    placeholder="Rechercher une garantie par nom..."
+    styleClass="garantie-autocomplete"
+  >
+    <ng-template let-garantie pTemplate="item">
+      <div class="garantie-suggestion">
+        <span class="garantie-suggestion-nom">{{ garantie.nomGarantie }}</span>
+        <span class="garantie-suggestion-domaine" *ngIf="garantie.domaine">{{ garantie.domaine }}</span>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="empty">
+      <div class="garantie-not-found" *ngIf="currentQuery">
+        <p class="garantie-not-found-text">
+          <i class="bi bi-exclamation-triangle"></i>
+          La garantie « {{ currentQuery }} » n'existe pas.
+        </p>
+        <div class="garantie-not-found-actions">
+          <button type="button" class="btn-resolve btn-resolve-secondary" (click)="currentQuery = ''">
+            Choisir une garantie existante
+          </button>
+          <button type="button" class="btn-resolve btn-resolve-primary" (click)="openCreateModal()">
+            Créer « {{ currentQuery }} » maintenant
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </p-autoComplete>
+
+  <app-ui-modal
+    [visible]="showCreateModal"
+    title="Créer une nouvelle garantie"
+    submitButtonLabel="Créer et ajouter au pack"
+    [submitting]="creating"
+    (onClose)="closeCreateModal()"
+    (onSubmit)="confirmCreateGarantie()"
+  >
+    <ng-template #body>
+      <form [formGroup]="createForm" class="garantie-create-form">
+        <div class="form-field">
+          <label>Code garantie *</label>
+          <input type="text" pInputText formControlName="codeGarantie" placeholder="ex: GAR-DENTAIRE-001" />
+        </div>
+        <div class="form-field">
+          <label>Nom de la garantie *</label>
+          <input type="text" pInputText formControlName="nomGarantie" />
+        </div>
+        <div class="form-field">
+          <label>Description *</label>
+          <textarea pInputTextarea formControlName="description" rows="3"></textarea>
+        </div>
+        <div class="form-field">
+          <label>Domaine médical *</label>
+          <p-dropdown
+            [options]="domaineOptions"
+            formControlName="domaine"
+            [filter]="true"
+            filterBy="label"
+            placeholder="Sélectionner un domaine"
+            appendTo="body"
+          ></p-dropdown>
+        </div>
+        <div class="form-field">
+          <label>Taux de remboursement de base (%)</label>
+          <p-inputNumber formControlName="tauxRemboursementBase" [min]="0" [max]="100"></p-inputNumber>
+        </div>
+      </form>
+    </ng-template>
+  </app-ui-modal>
+
+  <div class="selected-garanties-hint" *ngIf="selectedGaranties.length">
+    {{ selectedGaranties.length }} garantie(s) sélectionnée(s)
+  </div>
+</div>

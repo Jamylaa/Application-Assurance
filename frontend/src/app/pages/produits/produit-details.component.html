@@ -11,19 +11,13 @@
     </div>
     <div class="page-header-actions">
       <p-button label="Retour" icon="pi pi-arrow-left" styleClass="p-button-outlined" (click)="back()"></p-button>
+      <p-button *ngIf="canPublier()" label="Publier" icon="pi pi-send" styleClass="p-button-success" (click)="publier()"></p-button>
       <p-button label="Modifier" icon="pi pi-pencil" [disabled]="!produitId" (click)="edit()"></p-button>
     </div>
   </div>
 
   <!-- Dashboard Metrics -->
   <div class="metrics-dashboard" *ngIf="produit">
-    <div class="metric-card rating">
-      <div class="metric-icon"><i class="bi bi-star-fill"></i></div>
-      <div class="metric-content">
-        <span class="metric-label">Note produit</span>
-        <span class="metric-value">{{ productRating }}/100</span>
-      </div>
-    </div>
     <div class="metric-card packs">
       <div class="metric-icon"><i class="bi bi-collection"></i></div>
       <div class="metric-content">
@@ -54,6 +48,10 @@
           <div class="details-section">
             <h3><i class="bi bi-info-circle"></i> Informations principales</h3>
             <div class="section-grid">
+              <div class="info-item">
+                <span class="info-label">Code produit</span>
+                <span class="info-value">{{ p.codeProduit || '—' }}</span>
+              </div>
               <div class="info-item">
                 <span class="info-label">Nom</span>
                 <span class="info-value primary">{{ p.nomProduit || '—' }}</span>
@@ -126,6 +124,50 @@
             </div>
           </div>
 
+          <!-- Packs associés -->
+          <div class="details-section">
+            <h3><i class="bi bi-collection"></i> Packs associés ({{ packsCount }})</h3>
+            <div *ngIf="loadingPacks" class="loading-small">
+              <p-progressSpinner strokeWidth="2" [style]="{ width: '24px', height: '24px' }"></p-progressSpinner>
+              <span>Chargement des packs...</span>
+            </div>
+            <div *ngIf="!loadingPacks && packs.length === 0" class="empty-packs">
+              <i class="bi bi-inbox"></i>
+              <span>Aucun pack associé à ce produit</span>
+            </div>
+            <div *ngIf="!loadingPacks && packs.length > 0" class="packs-list">
+              <div
+                class="pack-item"
+                *ngFor="let pack of packs"
+                tabindex="0"
+                role="button"
+                [attr.aria-label]="'Voir le pack ' + pack.nomPack"
+                (click)="goToPack(pack.idPack)"
+                (keydown.enter)="goToPack(pack.idPack)">
+                <div class="pack-item-header">
+                  <div class="pack-item-name">
+                    <i class="bi bi-collection-fill"></i>
+                    <span>{{ pack.nomPack }}</span>
+                  </div>
+                  <app-ui-badge [variant]="getStatutBadgeVariant(pack.statutWorkflow)" [outlined]="isStatutOutlined(pack.statutWorkflow)" size="sm">
+                    {{ getStatutLabel(pack.statutWorkflow) }}
+                  </app-ui-badge>
+                </div>
+                <div class="pack-item-details">
+                  <div class="pack-item-detail">
+                    <span class="detail-label">Prix mensuel</span>
+                    <span class="detail-value">{{ pack.prixMensuel }} {{ pack.devisePrix || 'TND' }}</span>
+                  </div>
+                  <div class="pack-item-detail" *ngIf="pack.niveauCouverture">
+                    <span class="detail-label">Niveau</span>
+                    <span class="detail-value">{{ pack.niveauCouverture }}</span>
+                  </div>
+                </div>
+                <i class="bi bi-chevron-right pack-item-arrow"></i>
+              </div>
+            </div>
+          </div>
+
           <!-- Métadonnées -->
           <div class="details-section meta">
             <h3><i class="bi bi-gear"></i> Métadonnées</h3>
@@ -133,6 +175,18 @@
               <div class="info-item">
                 <span class="info-label">ID</span>
                 <span class="info-value small">{{ p.idProduit || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Créé par</span>
+                <span class="info-value small">{{ p.creePar || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Validé par</span>
+                <span class="info-value small">{{ p.validePar || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Date de validation</span>
+                <span class="info-value small">{{ formatDateValue(p.dateValidation) }}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">Date de création</span>

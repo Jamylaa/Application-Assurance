@@ -7,7 +7,6 @@ import tn.vermeg.gestionproduit.enums.TypeProduit;
 import java.util.List;
 @Repository
 public interface ProduitRepository extends MongoRepository<Produit, String> {
-
     List<Produit> findByTypeProduit(TypeProduit typeProduit);
     List<Produit> findByNomProduitContainingIgnoreCase(String nomProduit);
     boolean existsByNomProduitIgnoreCase(String nomProduit);

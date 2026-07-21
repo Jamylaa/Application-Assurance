@@ -16,11 +16,6 @@ import tn.vermeg.gestionproduit.repositories.ProduitRepository;
 
 import java.util.List;
 import java.util.Objects;
-
-/**
- * Service pour gérer les relations hiérarchiques entre Produit → Pack → Garantie
- * Utilise directement les entités MongoDB sans DTOs
- */
 @Service
 public class HierarchicalService {
 
@@ -38,9 +33,7 @@ public class HierarchicalService {
         this.packGarantieRepository = packGarantieRepository;
         this.garantieRepository = garantieRepository;
     }
-
     // ==================== PRODUIT AVEC PACKS ====================
-
     /**
      * Récupère un produit avec tous ses packs associés
      * Retourne l'entité Produit avec la liste des packs
@@ -54,10 +47,7 @@ public class HierarchicalService {
         produit.setPacks(packs);
         return produit;
     }
-
-    /**
-     * Récupère tous les produits avec leurs packs associés
-     */
+// Récupère tous les produits avec leurs packs associé
     public List<Produit> getAllProduitsWithPacks() {
         List<Produit> produits = produitRepository.findAll();
         return produits.stream()
@@ -70,11 +60,8 @@ public class HierarchicalService {
     }
 
     // ==================== PACK AVEC GARANTIES ====================
-
-    /**
-     * Récupère un pack avec toutes ses garanties associées
-     * Retourne l'entité Pack avec la liste des garanties
-     */
+// Récupère un pack avec toutes ses garanties associées
+// Retourne l'entité Pack avec la liste des garanties
     public Pack getPackWithGaranties(String packId) {
         Pack pack = packRepository.findById(packId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pack", packId,
@@ -83,10 +70,7 @@ public class HierarchicalService {
         pack.setGaranties(packGarantieRepository.findByPackIdAndActifTrue(packId));
         return pack;
     }
-
-    /**
-     * Récupère tous les packs avec leurs garanties associées
-     */
+//Récupère tous les packs avec leurs garanties associées
     public List<Pack> getAllPacksWithGaranties() {
         List<Pack> packs = packRepository.findAll();
         return packs.stream()
@@ -96,10 +80,7 @@ public class HierarchicalService {
                 })
                 .toList();
     }
-
-    /**
-     * Récupère tous les packs d'un produit avec leurs garanties
-     */
+// Récupère tous les packs d'un produit avec leurs garanties
     public List<Pack> getPacksByProduitWithGaranties(String produitId) {
         List<Pack> packs = packRepository.findByProduitId(produitId);
         return packs.stream()
@@ -109,13 +90,9 @@ public class HierarchicalService {
                 })
                 .toList();
     }
-
     // ==================== HIÉRARCHIE COMPLÈTE ====================
-
-    /**
-     * Récupère la hiérarchie complète : Produit → Packs → Garanties
-     * Cette méthode est utile pour l'affichage dans le frontend
-     */
+    // Récupère la hiérarchie complète : Produit → Packs → Garanties
+     // Cette méthode est utile pour l'affichage dans le frontend
     public Produit getProduitWithFullHierarchy(String produitId) {
         Produit produit = getProduitWithPacks(produitId);
         if (produit.getPacks() != null) {
@@ -124,29 +101,20 @@ public class HierarchicalService {
         }
         return produit;
     }
-
     // ==================== DONNÉES DÉRIVÉES (calculées à la demande) ====================
-
-    /**
-     * Détail d'un produit avec {@code idPacks} calculé à la demande
-     * (jamais stocké/dénormalisé sur l'entité Produit).
-     */
+    // Détail d'un produit avec {@code idPacks} calculé à la demande
+     // (jamais stocké/dénormalisé sur l'entité Produit).
     public ProduitDetailDTO getProduitDetail(String produitId) {
         Produit produit = produitRepository.findById(produitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Produit", produitId,
                         "Produit non trouvé avec l'ID: " + produitId));
-
         List<String> idPacks = packRepository.findByProduitId(produitId).stream()
                 .map(Pack::getIdPack)
                 .toList();
-
         return new ProduitDetailDTO(produit, idPacks);
     }
-
-    /**
-     * Détail d'un pack avec {@code idGaranties} et {@code domainesMedicaux} calculés
-     * à la demande via PackGarantie → Garantie.domaine (jamais stockés sur l'entité Pack).
-     */
+//Détail d'un pack avec {@code idGaranties} et {@code domainesMedicaux} calculés
+//à la demande via PackGarantie → Garantie.domaine (jamais stockés sur l'entité Pack).
     public PackDetailDTO getPackDetail(String packId) {
         Pack pack = packRepository.findById(packId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pack", packId,

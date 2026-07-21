@@ -77,17 +77,18 @@
       </div>
     </div>
 
-    <p-table
-      [value]="filteredProduits"
-      [loading]="loading"
-      [paginator]="true"
-      [rows]="10"
-      [rowsPerPageOptions]="[5,10,20,50]"
-      [showCurrentPageReport]="true"
-      currentPageReportTemplate="Affichage {first} – {last} sur {totalRecords}"
-      sortMode="single"
-      styleClass="p-table"
-      responsiveLayout="scroll">
+    <div class="responsive-table">
+      <p-table
+        [value]="filteredProduits"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[5,10,20,50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Affichage {first} – {last} sur {totalRecords}"
+        sortMode="single"
+        styleClass="p-table"
+        responsiveLayout="scroll">
 
       <ng-template pTemplate="header">
         <tr>
@@ -152,7 +153,7 @@
             }
           </td>
           <td>
-            <div class="action-btns">
+            <div class="table-actions">
               <p-button
                 icon="pi pi-eye"
                 pTooltip="Détails"
@@ -182,7 +183,7 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <td colspan="6">
-            <div class="empty-state">
+            <div class="table-empty">
               <div class="empty-icon"><i class="bi bi-box-seam"></i></div>
               <h3>Aucun produit trouvé</h3>
               <p>Commencez par ajouter un produit d'assurance</p>
@@ -190,6 +191,7 @@
           </td>
         </tr>
       </ng-template>
-    </p-table>
+      </p-table>
+    </div>
   </div>
 </div>

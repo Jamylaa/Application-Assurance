@@ -35,6 +35,19 @@ export interface ChatbotRequest {
   };
 }
 
+export interface ChatbotChoiceOption {
+  id: string;
+  label: string;
+}
+
+// Choix structuré proposé par le backend (ex: garantie introuvable → créer/remplacer),
+// à afficher comme boutons cliquables plutôt qu'attendre une réponse en texte libre.
+export interface ChatbotChoice {
+  id: string;
+  label: string;
+  options?: ChatbotChoiceOption[];
+}
+
 export interface ChatbotResponse {
   success: boolean;
   intent: ChatbotIntent;
@@ -53,6 +66,7 @@ export interface ChatbotResponse {
       garanties: Array<{ garantie: Garantie; packGarantie: PackGarantie }>;
     };
     recommendations?: unknown[];
+    recommendedProducts?: unknown[];
     explanation?: string;
   };
   validation?: {
@@ -66,6 +80,7 @@ export interface ChatbotResponse {
     data?: unknown;
     route?: string[];
   }>;
+  choices?: ChatbotChoice[];
   error?: string;
   timestamp: number;
 }
@@ -87,6 +102,7 @@ export interface ChatbotResponseDTO {
   entity_type?: string;
   timestamp?: number;
   data?: Record<string, unknown>;
+  choices?: ChatbotChoice[];
 }
 
 @Injectable({
@@ -119,6 +135,12 @@ export class ChatbotService {
         if (dto.data?.['sessionId'] && typeof dto.data['sessionId'] === 'string') {
           this.currentSessionId = dto.data['sessionId'] as string;
         }
+        // Choix structurés (ex: garantie introuvable) : champ de premier niveau du DTO,
+        // indépendant du succès/échec — propagé après coup pour ne pas dupliquer la logique
+        // de mapping success/failure ci-dessus.
+        if (dto.choices) {
+          response.choices = dto.choices;
+        }
         return response;
       }),
       catchError((error) =>
@@ -137,6 +159,14 @@ export class ChatbotService {
         })
       )
     );
+  }
+
+  /** Export serveur d'une conversation déjà sauvegardée (fpdf2 pour le PDF côté chatbot-service). */
+  exportConversation(conversationId: string, format: 'pdf' | 'txt' = 'pdf'): Observable<Blob> {
+    return this.http.get(`${this.chatbotUrl}/export/${conversationId}`, {
+      params: { format },
+      responseType: 'blob'
+    });
   }
 
   healthCheck(): Observable<{ status: string; timestamp: number }> {
@@ -341,8 +371,9 @@ export class ChatbotService {
     const isRecommendation = (dto.intent || dto.action || '').toUpperCase() === 'RECOMMANDATION' ||
                              (dto.intent || dto.action || '').toUpperCase() === 'RECOMMENDATION';
     if (isRecommendation) {
-      // Python retourne les recs dans result.recommendations
+      // Python retourne les recs dans result.recommendations / result.recommended_products
       data.recommendations = (result['recommendations'] || result['recommendedPacks'] || result['packs']) as unknown[];
+      data.recommendedProducts = (result['recommended_products'] || result['recommendedProducts']) as unknown[];
       const explanation = result['explanation'] || result['message'];
       data.explanation = typeof explanation === 'string' ? explanation : undefined;
     }

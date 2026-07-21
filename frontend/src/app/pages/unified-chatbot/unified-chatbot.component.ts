@@ -13,7 +13,7 @@ import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 
-import { ChatbotService, ChatbotResponse, ChatbotIntent } from '../../services/chatbot.service';
+import { ChatbotService, ChatbotResponse, ChatbotIntent, ChatbotChoice } from '../../services/chatbot.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
 import { KeyboardShortcutDirective, KeyboardShortcut } from '../../shared/directives/keyboard-shortcut.directive';
@@ -45,6 +45,7 @@ interface ChatMessage {
     data?: unknown;
     route?: string[];
   }>;
+  choices?: ChatbotChoice[];
 }
 
 interface SearchResult {
@@ -182,7 +183,7 @@ Comment puis-je vous aider aujourd'hui ?`;
     this.currentMessage = '';
     this.isLoading = true;
 
-    this.chatbotService.processPrompt({ prompt: userMessage }).subscribe({
+    this.chatbotService.processPrompt({ prompt: userMessage, sessionId: this.currentConversationId }).subscribe({
       next: (response) => {
         this.handleChatbotResponse(response);
         this.isLoading = false;
@@ -213,31 +214,31 @@ Comment puis-je vous aider aujourd'hui ?`;
       message += this.formatDataForDisplay(response.data);
     }
 
-    this.addBotMessage(message, response.intent, response.actions, response.data);
+    this.addBotMessage(message, response.intent, response.actions, response.data, response.choices);
   }
 
   private formatDataForDisplay(data: ChatbotResponse['data']): string {
     if (!data) return '';
 
-    let formatted = '\n\n---\n';
+    let formatted = '';
 
-    if (data.produit) {
+    if (data.produit?.nomProduit) {
       const produit = data.produit as { nomProduit: string; description: string; typeProduit: string };
-      formatted += `\n📦 **Produit**: ${produit.nomProduit}`;
+      formatted += `\n**Produit**: ${produit.nomProduit}`;
       formatted += `\n   Type: ${produit.typeProduit}`;
       if (produit.description && produit.description.length < 100) {
         formatted += `\n   ${produit.description}`;
       }
     }
 
-    if (data.garantie) {
+    if (data.garantie?.nomGarantie) {
       const garantie = data.garantie as {
         nomGarantie: string; description: string; domaine?: string;
         tauxRemboursementBase?: number; typeRemboursement?: string;
         plafond?: { plafondAnnuel?: number; plafondMensuel?: number };
       };
       const cleanedName = this.cleanGarantieName(garantie.nomGarantie);
-      formatted += `\n🛡️ **Garantie**: ${cleanedName}`;
+      formatted += `\n**Garantie**: ${cleanedName}`;
       formatted += `\n   Taux: ${(garantie.tauxRemboursementBase ?? 0).toFixed(0)}% | Domaine: ${garantie.domaine ?? '—'}`;
       if (garantie.plafond?.plafondAnnuel || garantie.plafond?.plafondMensuel) {
         formatted += `\n   Plafond: ${garantie.plafond?.plafondAnnuel ?? 0} TND/an – ${garantie.plafond?.plafondMensuel ?? 0} TND/mois`;
@@ -247,39 +248,39 @@ Comment puis-je vous aider aujourd'hui ?`;
       }
     }
 
-    if (data.pack) {
+    if (data.pack?.nomPack) {
       const pack = data.pack as { nomPack: string; description: string; prixMensuel: number; niveauCouverture: string };
-      formatted += `\n📋 **Pack**: ${pack.nomPack}`;
+      formatted += `\n**Pack**: ${pack.nomPack}`;
       formatted += `\n   Prix: ${pack.prixMensuel} TND/mois | Niveau: ${pack.niveauCouverture}`;
       if (pack.description && pack.description.length < 80) {
         formatted += `\n   ${pack.description}`;
       }
     }
 
-    if (data.packGarantie) {
+    if (data.packGarantie?.packId) {
       const pg = data.packGarantie as {
         packId: string; garantieId: string;
         tauxRemboursementSpecifique?: number; plafondSpecifique?: { plafondAnnuel?: number };
       };
-      formatted += `\n🔗 **Association**: Pack → Garantie`;
+      formatted += `\n**Association**: Pack → Garantie`;
       const taux = pg.tauxRemboursementSpecifique != null ? `${Number(pg.tauxRemboursementSpecifique).toFixed(0)}%` : '—';
       const plafond = pg.plafondSpecifique?.plafondAnnuel != null ? `${pg.plafondSpecifique.plafondAnnuel} TND` : '—';
       formatted += `\n   Taux: ${taux} | Plafond: ${plafond}`;
     }
 
     if (data.recommendations) {
-      formatted += `\n🎯 **Recommandations**:\n`;
+      formatted += `\n**Recommandations**:\n`;
       data.recommendations.slice(0, 3).forEach((rec: unknown, index: number) => {
         const recObj = rec as { id: string; nom: string; description: string; compatibilityScore: number; monthlyPrice?: number; coverageLevel?: string; whyRecommended?: string; explanation?: string };
         formatted += `\n${index + 1}. **${recObj.nom}** (${recObj.compatibilityScore.toFixed(1)}%)`;
         if (recObj.monthlyPrice) formatted += ` - ${recObj.monthlyPrice} TND/mois`;
         if (recObj.whyRecommended && recObj.whyRecommended.length < 100) {
-          formatted += `\n   ✅ ${recObj.whyRecommended}`;
+          formatted += `\n   ${recObj.whyRecommended}`;
         }
       });
     }
 
-    return formatted;
+    return formatted ? '\n\n---\n' + formatted : '';
   }
 
   executeAction(action: { type: 'CREATE' | 'UPDATE' | 'DELETE' | 'NAVIGATE' | 'LIST'; label: string; data?: unknown; route?: string[] }): void {
@@ -301,7 +302,7 @@ Comment puis-je vous aider aujourd'hui ?`;
     this.isLoading = true;
 
     // Simuler la création via le chatbot
-    this.chatbotService.processPrompt({ prompt: `Créer ${action.label}` }).subscribe({
+    this.chatbotService.processPrompt({ prompt: `Créer ${action.label}`, sessionId: this.currentConversationId }).subscribe({
       next: (response) => {
         this.addBotMessage(response.message);
         if (response.success) {
@@ -318,6 +319,47 @@ Comment puis-je vous aider aujourd'hui ?`;
         this.isLoading = false;
       }
     });
+  }
+
+  selectChoice(message: ChatMessage, choice: ChatbotChoice): void {
+    if (choice.options && choice.options.length > 0) {
+      return; // Choix à sous-options : seules les options elles-mêmes sont cliquables.
+    }
+    this.applyChoice(message, choice.id, choice.label);
+  }
+
+  selectChoiceOption(message: ChatMessage, choice: ChatbotChoice, option: { id: string; label: string }): void {
+    this.applyChoice(message, `${choice.id}:${option.id}`, option.label);
+  }
+
+  private applyChoice(message: ChatMessage, code: string, displayLabel: string): void {
+    if (this.isLoading) {
+      return;
+    }
+    // Consomme les choix affichés pour éviter un second clic après la reprise de session.
+    message.choices = undefined;
+    this.addUserMessage(displayLabel);
+    this.isLoading = true;
+
+    this.chatbotService.processPrompt({ prompt: code, sessionId: this.currentConversationId }).subscribe({
+      next: (response) => {
+        this.handleChatbotResponse(response);
+        this.isLoading = false;
+      },
+      error: () => {
+        this.addBotMessage('Erreur de communication avec l\'assistant. Veuillez réessayer.');
+        this.toastService.showError('Erreur chatbot', 'Communication impossible');
+        this.isLoading = false;
+      }
+    });
+  }
+
+  trackByChoiceId(index: number, choice: ChatbotChoice): string {
+    return choice.id;
+  }
+
+  trackByOptionId(index: number, option: { id: string; label: string }): string {
+    return option.id;
   }
 
   onKeyDown(event: KeyboardEvent): void {
@@ -345,6 +387,18 @@ Comment puis-je vous aider aujourd'hui ?`;
     );
   }
 
+  // Annule la dernière création/modification de la session (un seul niveau — voir
+  // action_log_service côté chatbot-service pour le périmètre exact). Réutilise le
+  // pipeline normal du chatbot : "annule" est reconnu comme une commande à part entière,
+  // pas un endpoint séparé.
+  undoLastAction(): void {
+    if (this.isLoading) {
+      return;
+    }
+    this.currentMessage = 'annule';
+    this.sendMessage();
+  }
+
   goBack(): void {
     this.router.navigate(['/dashboard']);
   }
@@ -366,7 +420,7 @@ Comment puis-je vous aider aujourd'hui ?`;
     });
   }
 
-  private addBotMessage(text: string, intent?: ChatbotIntent, actions?: Array<{ type: 'CREATE' | 'UPDATE' | 'DELETE' | 'NAVIGATE' | 'LIST'; label: string; data?: unknown; route?: string[] }>, data?: ChatbotResponse['data']): void {
+  private addBotMessage(text: string, intent?: ChatbotIntent, actions?: Array<{ type: 'CREATE' | 'UPDATE' | 'DELETE' | 'NAVIGATE' | 'LIST'; label: string; data?: unknown; route?: string[] }>, data?: ChatbotResponse['data'], choices?: ChatbotChoice[]): void {
     this.messages.push({
       id: this.generateId(),
       sender: 'bot',
@@ -374,8 +428,13 @@ Comment puis-je vous aider aujourd'hui ?`;
       timestamp: new Date(),
       intent,
       actions,
-      data
+      data,
+      choices
     });
+    // Sauvegarde après chaque échange (pas seulement à ngOnDestroy) : un rechargement de
+    // page complet ne déclenche jamais ngOnDestroy, ce qui laissait le titre bloqué sur
+    // "Nouvelle conversation" côté serveur pour la quasi-totalité des sessions.
+    this.saveCurrentConversation();
   }
 
   private generateId(): string {
@@ -392,6 +451,11 @@ Comment puis-je vous aider aujourd'hui ?`;
   getRecommendations(message: ChatMessage): RecommendationItem[] {
     if (!message.data?.recommendations) return [];
     return message.data.recommendations as unknown as RecommendationItem[];
+  }
+
+  getRecommendedProducts(message: ChatMessage): RecommendationItem[] {
+    if (!message.data?.recommendedProducts) return [];
+    return message.data.recommendedProducts as unknown as RecommendationItem[];
   }
 
   getExplanation(message: ChatMessage): string {
@@ -502,11 +566,39 @@ Comment puis-je vous aider aujourd'hui ?`;
       next: (conversations) => {
         this.conversations = conversations;
         this.filteredHistory = [...conversations];
+        this.mergeServerConversations();
       },
       error: (error) => {
         console.error('Error loading conversations', error);
         this.conversations = [];
       }
+    });
+  }
+
+  // Complète l'historique local (IndexedDB, chargé en premier ci-dessus pour un rendu
+  // instantané) avec la copie serveur durable — utile après un changement de device ou
+  // un nettoyage du navigateur local. Ne remplace jamais : ne garde que la version la
+  // plus récente par conversation (id), en tolérant un serveur indisponible.
+  private mergeServerConversations(): void {
+    this.conversationStorage.getAllConversationsFromServer().subscribe(serverConversations => {
+      if (!serverConversations.length) {
+        return;
+      }
+      const normalized = serverConversations.map(c => ({
+        ...c,
+        createdAt: new Date(c.createdAt),
+        updatedAt: new Date(c.updatedAt),
+        messages: (c.messages || []).map(m => ({ ...m, timestamp: new Date(m.timestamp) }))
+      }));
+      const byId = new Map(this.conversations.map(c => [c.id, c]));
+      for (const serverConv of normalized) {
+        const local = byId.get(serverConv.id);
+        if (!local || serverConv.updatedAt.getTime() > local.updatedAt.getTime()) {
+          byId.set(serverConv.id, serverConv);
+        }
+      }
+      this.conversations = Array.from(byId.values()).sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+      this.filteredHistory = [...this.conversations];
     });
   }
 
@@ -648,15 +740,30 @@ Comment puis-je vous aider aujourd'hui ?`;
       return;
     }
 
-    const title = conversation.title || 'Conversation';
+    // L'export serveur (PDF via fpdf2) lit depuis MongoDB, pas depuis cet objet en
+    // mémoire — on s'assure d'abord que le serveur a bien la dernière version.
+    this.conversationStorage.saveConversation(conversation).subscribe({
+      next: () => this.downloadServerExport(conversation),
+      error: () => this.downloadServerExport(conversation)
+    });
+  }
 
-    this.exportService.exportToTXT([conversation]).subscribe({
-      next: (content) => {
-        this.exportService.downloadFile(content, `${title.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.txt`, 'text/plain');
-        this.toastService.showSuccess('Export réussi', 'Conversation téléchargée');
+  private downloadServerExport(conversation: Conversation): void {
+    const title = conversation.title || 'Conversation';
+    const datedName = `${title.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}`;
+
+    this.chatbotService.exportConversation(conversation.id, 'pdf').subscribe({
+      next: (blob) => {
+        this.exportService.downloadFile(blob, `${datedName}.pdf`, 'application/pdf');
+        this.toastService.showSuccess('Export réussi', 'Conversation téléchargée (PDF)');
       },
       error: () => {
-        this.toastService.showError('Erreur', 'Impossible d\'exporter la conversation');
+        // Repli sur l'export local existant si le serveur est indisponible — ne bloque
+        // jamais l'utilisateur qui veut juste récupérer sa conversation.
+        this.exportService.exportToTXT([conversation]).subscribe(content => {
+          this.exportService.downloadFile(content, `${datedName}.txt`, 'text/plain');
+          this.toastService.showSuccess('Export réussi', 'Conversation téléchargée (texte, hors-ligne)');
+        });
       }
     });
   }

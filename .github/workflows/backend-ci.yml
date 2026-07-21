@@ -7,74 +7,94 @@ on:
     branches: [ main, develop ]
 
 jobs:
+  # Un job par service Java, en matrice : chacun est testé et packagé indépendamment
+  # (GestionProduit, Gateway et Eureka partagent tous Java 21 / Spring Boot 3.2.3).
   build-and-test:
     runs-on: ubuntu-latest
-    
+    strategy:
+      matrix:
+        service: [GestionProduit, Gateway, Eureka]
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
         java-version: '21'
         distribution: 'temurin'
         cache: maven
-    
+        cache-dependency-path: ${{ matrix.service }}/pom.xml
+
     - name: Build with Maven
-      working-directory: ./GestionProduit
+      working-directory: ./${{ matrix.service }}
       run: mvn clean install -DskipTests
-    
+
     - name: Run tests
-      working-directory: ./GestionProduit
+      working-directory: ./${{ matrix.service }}
       run: mvn test
-    
+
     - name: Generate test report
       if: always()
-      working-directory: ./GestionProduit
+      working-directory: ./${{ matrix.service }}
       run: mvn surefire-report:report
-    
+
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: test-results
-        path: GestionProduit/target/surefire-reports/
-    
+        name: test-results-${{ matrix.service }}
+        path: ${{ matrix.service }}/target/surefire-reports/
+
+    # IMPORTANT : le nom d'image DOIT être préfixé par le namespace Docker Hub
+    # (${{ secrets.DOCKER_USERNAME }}/...). Sans préfixe, Docker résout vers le
+    # namespace réservé "library/" (images officielles) et le push est refusé
+    # ("denied: requested access to the resource is denied") pour tout compte
+    # standard, même authentifié.
     - name: Build Docker image
       if: github.ref == 'refs/heads/main'
       run: |
-        docker build -t vermeg-assurance-backend:${{ github.sha }} ./GestionProduit
-        docker tag vermeg-assurance-backend:${{ github.sha }} vermeg-assurance-backend:latest
-    
+        IMAGE=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]')
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/vermeg-$IMAGE:${{ github.sha }} ./${{ matrix.service }}
+        docker tag ${{ secrets.DOCKER_USERNAME }}/vermeg-$IMAGE:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/vermeg-$IMAGE:latest
+
     - name: Login to Docker Hub
       if: github.ref == 'refs/heads/main'
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-    
+
     - name: Push Docker image
       if: github.ref == 'refs/heads/main'
       run: |
-        docker push vermeg-assurance-backend:${{ github.sha }}
-        docker push vermeg-assurance-backend:latest
+        IMAGE=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]')
+        docker push ${{ secrets.DOCKER_USERNAME }}/vermeg-$IMAGE:${{ github.sha }}
+        docker push ${{ secrets.DOCKER_USERNAME }}/vermeg-$IMAGE:latest
 
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+    strategy:
+      matrix:
+        include:
+          - service: GestionProduit
+            deployment: gestionproduit
+          - service: Gateway
+            deployment: gateway
+          - service: Eureka
+            deployment: eureka
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
     - name: Configure kubectl
       uses: azure/k8s-set-context@v4
       with:
         kubeconfig: ${{ secrets.KUBE_CONFIG }}
-    
+
     - name: Deploy to Kubernetes
       run: |
-        kubectl set image deployment/gestionproduit gestionproduit=vermeg-assurance-backend:latest -n vermeg-assurance
-        kubectl rollout status deployment/gestionproduit -n vermeg-assurance
+        IMAGE=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]')
+        kubectl set image deployment/${{ matrix.deployment }} ${{ matrix.deployment }}=${{ secrets.DOCKER_USERNAME }}/vermeg-$IMAGE:latest -n vermeg-assurance
+        kubectl rollout status deployment/${{ matrix.deployment }} -n vermeg-assurance

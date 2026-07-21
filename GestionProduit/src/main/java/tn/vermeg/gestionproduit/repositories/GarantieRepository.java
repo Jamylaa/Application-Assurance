@@ -11,14 +11,10 @@ import java.util.Optional;
 
 @Repository
 public interface GarantieRepository extends MongoRepository<Garantie, String> {
-
     boolean existsByNomGarantieIgnoreCase(String nomGarantie);
-    Optional<Garantie> findFirstByNomGarantieIgnoreCase(String nomGarantie);
     List<Garantie> findByNomGarantieContainingIgnoreCase(String nomGarantie);
     List<Garantie> findByTauxRemboursementBaseGreaterThanEqual(double tauxMin);
     List<Garantie> findByPlafond_PlafondAnnuelGreaterThanEqual(double plafondMin);
     List<Garantie> findByDomaine(DomaineMedical domaine);
     List<Garantie> findByDomaineAndStatutWorkflowAndDateDesactivationIsNull(DomaineMedical domaine, StatutWorkflow statutWorkflow);
-    long countByDomaine(DomaineMedical domaine);
- boolean existsByDomaine(DomaineMedical domaine);
 }

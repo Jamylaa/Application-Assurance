@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
 import { GestionProduitService, Pack } from '../../services/gestion-produit.service';
-import { PackGarantie, DomaineMedical, getDomaineMedicalLabel, StatutWorkflow, getStatutWorkflowLabel, getStatutWorkflowBadgeVariant, isStatutWorkflowOutlined } from '../../models/entities.model';
+import { PackGarantie, DomaineMedical, getDomaineMedicalLabel, StatutWorkflow, getStatutWorkflowLabel, getStatutWorkflowBadgeVariant, isStatutWorkflowOutlined, NiveauCouverture, getNiveauCouvertureLabel } from '../../models/entities.model';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -10,7 +10,9 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
+import { DropdownModule } from 'primeng/dropdown';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../shared/services/toast.service';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
 import { UiBadgeComponent } from '../../shared/components/ui-badge/ui-badge.component';
@@ -28,7 +30,9 @@ import { UiBadgeComponent } from '../../shared/components/ui-badge/ui-badge.comp
     ToastModule,
     ConfirmDialogModule,
     TooltipModule,
+    DropdownModule,
     CommonModule,
+    FormsModule,
     RouterModule,
     UiBadgeComponent
   ],
@@ -36,9 +40,18 @@ import { UiBadgeComponent } from '../../shared/components/ui-badge/ui-badge.comp
 })
 export class PacksComponent implements OnInit {
   packs: Pack[] = [];
+  filteredPacks: Pack[] = [];
   loading = true;
   packsWithGaranties: Map<string, { garanties: PackGarantie[]; loading: boolean; show: boolean }> = new Map();
   domainesMedicauxByPack: Map<string, DomaineMedical[]> = new Map();
+
+  // Filter properties
+  niveauOptions: { label: string; value: NiveauCouverture }[] = Object.values(NiveauCouverture).map(n => ({
+    label: getNiveauCouvertureLabel(n),
+    value: n
+  }));
+  selectedNiveau: NiveauCouverture | null = null;
+  globalFilterValue = '';
 
   constructor(
     private readonly packService: GestionProduitService,
@@ -58,6 +71,7 @@ export class PacksComponent implements OnInit {
     this.packService.getAllPacks().subscribe({
       next: (data) => {
         this.packs = data;
+        this.applyFilters();
         this.loading = false;
       },
       error: (err) => {
@@ -66,6 +80,47 @@ export class PacksComponent implements OnInit {
         this.toastService.showLoadError('packs');
       }
     });
+  }
+
+  onGlobalFilter(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.globalFilterValue = target.value;
+    this.applyFilters();
+  }
+
+  applyFilters(): void {
+    const searchLower = this.globalFilterValue.trim().toLowerCase();
+    this.filteredPacks = this.packs.filter(p => {
+      if (this.selectedNiveau && p.niveauCouverture !== this.selectedNiveau) {
+        return false;
+      }
+      if (searchLower && !(p.nomPack || '').toLowerCase().includes(searchLower)
+          && !(p.description || '').toLowerCase().includes(searchLower)
+          && !(p.nomCommercial || '').toLowerCase().includes(searchLower)) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  resetFilters(): void {
+    this.selectedNiveau = null;
+    this.globalFilterValue = '';
+    this.applyFilters();
+  }
+
+  hasActiveFilters(): boolean {
+    return !!this.selectedNiveau || !!this.globalFilterValue;
+  }
+
+  clearNiveauFilter(): void {
+    this.selectedNiveau = null;
+    this.applyFilters();
+  }
+
+  clearSearchFilter(): void {
+    this.globalFilterValue = '';
+    this.applyFilters();
   }
 
   viewPack(packId: string): void {

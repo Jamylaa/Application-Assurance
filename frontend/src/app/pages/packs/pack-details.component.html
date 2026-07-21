@@ -11,6 +11,7 @@
     </div>
     <div class="page-header-actions">
       <p-button label="Retour" icon="pi pi-arrow-left" styleClass="p-button-outlined" (click)="back()"></p-button>
+      <p-button *ngIf="canPublier()" label="Publier" icon="pi pi-send" styleClass="p-button-success" (click)="publier()"></p-button>
       <p-button label="Modifier" icon="pi pi-pencil" [disabled]="!packId" (click)="edit()"></p-button>
     </div>
   </div>
@@ -126,6 +127,14 @@
                 <span class="info-label">Catégorie</span>
                 <span class="info-value pricing-category">{{ getPricingCategory() }}</span>
               </div>
+              <div class="info-item" *ngIf="p.prixAnnuel != null">
+                <span class="info-label">Prix annuel</span>
+                <span class="info-value">{{ p.prixAnnuel }} {{ p.devisePrix || 'TND' }}</span>
+              </div>
+              <div class="info-item" *ngIf="p.tauxRemiseAnnuelle != null">
+                <span class="info-label">Taux de remise annuelle</span>
+                <span class="info-value">{{ p.tauxRemiseAnnuelle }}%</span>
+              </div>
             </div>
           </div>
 
@@ -181,7 +190,14 @@
               <span>Aucune garantie associée à ce pack</span>
             </div>
             <div *ngIf="!loadingGaranties && packGaranties.length > 0" class="garanties-list">
-              <div class="garantie-item" *ngFor="let pg of packGaranties">
+              <div
+                class="garantie-item"
+                *ngFor="let pg of packGaranties"
+                tabindex="0"
+                role="button"
+                [attr.aria-label]="'Voir la garantie ' + pg.nomGarantie"
+                (click)="goToGarantie(pg.garantieId)"
+                (keydown.enter)="goToGarantie(pg.garantieId)">
                 <div class="garantie-header">
                   <div class="garantie-name">
                     <i class="bi bi-shield-fill"></i>
@@ -201,10 +217,12 @@
                     <span class="detail-label">Plafond:</span>
                     <span class="detail-value">{{ pg.plafondSpecifique?.plafondAnnuel }} TND</span>
                   </div>
+                  <!-- TODO: réactiver après correction du calcul de franchise
                   <div class="garantie-detail" *ngIf="pg.franchiseSpecifique?.montantFixe">
                     <span class="detail-label">Franchise:</span>
                     <span class="detail-value">{{ pg.franchiseSpecifique?.montantFixe }} TND</span>
                   </div>
+                  -->
                   <div class="garantie-detail">
                     <span class="detail-label">Supplément:</span>
                     <span class="detail-value">{{ pg.supplementPrix }} TND</span>

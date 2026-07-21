@@ -30,6 +30,6 @@
 
 .kv-empty {
   font-size: 0.85rem;
-  color: var(--text-color-secondary, #6b7280);
+  color: var(--text-color-secondary, #64748B);
   margin: 0.25rem 0;
 }

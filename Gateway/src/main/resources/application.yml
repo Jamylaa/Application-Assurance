@@ -27,11 +27,6 @@ spring:
           predicates:
             - Path=/api/chatbot/**
 
-        - id: api-recommendation-service
-          uri: lb://GESTIONRECOMMENDATION
-          predicates:
-            - Path=/api/recommendations/**
-
       globalcors:
         cors-configurations:
           "[/**]":
@@ -40,26 +35,29 @@ spring:
             allowed-headers: "*"
             allow-credentials: true
 
-  # Actuator Configuration
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: "*"
-    endpoint:
-      health:
-        show-details: always
-      metrics:
-        enabled: true
+# Actuator Configuration — clé de premier niveau (pas sous spring:), sinon Spring Boot
+# ne la lie pas et retombe sur ses valeurs par défaut. Exposition restreinte : le
+# Gateway est exposé publiquement (Service LoadBalancer), "*" exposerait /env,
+# /heapdump, /threaddump, /beans au trafic externe.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,prometheus"
+  endpoint:
+    health:
+      show-details: when-authorized
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
       prometheus:
         enabled: true
-    metrics:
-      export:
-        prometheus:
-          enabled: true
-      tags:
-        application: ${spring.application.name}
-        environment: ${spring.profiles.active:local}
+    tags:
+      application: ${spring.application.name}
+      environment: ${spring.profiles.active:local}
 
 server:
   port: 9091

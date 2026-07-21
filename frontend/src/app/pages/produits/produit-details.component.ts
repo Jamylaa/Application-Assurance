@@ -5,7 +5,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
-import { GestionProduitService, Produit } from '../../services/gestion-produit.service';
+import { GestionProduitService, Produit, Pack } from '../../services/gestion-produit.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
 import { UiBadgeComponent } from '../../shared/components/ui-badge/ui-badge.component';
@@ -31,7 +31,8 @@ export class ProduitDetailsComponent implements OnInit {
   produit?: Produit;
   produitId?: string;
   packsCount: number = 0;
-  productRating: number = 0;
+  packs: Pack[] = [];
+  loadingPacks = false;
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -64,8 +65,8 @@ export class ProduitDetailsComponent implements OnInit {
     this.produitService.getProduitById(idProduit).subscribe({
       next: (p) => {
         this.produit = p;
-        this.calculateMetrics();
         this.loading = false;
+        this.loadPacks(idProduit);
       },
       error: () => {
         this.loading = false;
@@ -74,17 +75,24 @@ export class ProduitDetailsComponent implements OnInit {
     });
   }
 
-  private calculateMetrics(): void {
-    if (!this.produit) return;
+  private loadPacks(idProduit: string): void {
+    this.loadingPacks = true;
+    this.produitService.getPacksByProduit(idProduit).subscribe({
+      next: (packs) => {
+        this.packs = packs;
+        this.packsCount = packs.length;
+        this.loadingPacks = false;
+      },
+      error: () => {
+        this.packs = [];
+        this.packsCount = 0;
+        this.loadingPacks = false;
+      }
+    });
+  }
 
-    // Calculer le nombre de packs (simulé pour l'instant)
-    this.packsCount = this.produit.idProduit ? Math.floor(Math.random() * 8) + 2 : 0;
-
-    // Calculer une note basée sur le type de produit
-    const typeScore = this.produit.typeProduit === 'SANTE' ? 100 :
-                     this.produit.typeProduit === 'VIE' ? 90 :
-                     this.produit.typeProduit === 'HABITATION' ? 85 : 70;
-    this.productRating = typeScore;
+  goToPack(idPack: string): void {
+    this.router.navigate(['/packs', idPack]);
   }
 
   back(): void {
@@ -94,6 +102,23 @@ export class ProduitDetailsComponent implements OnInit {
   edit(): void {
     if (!this.produitId) return;
     this.router.navigate(['/produits/edit', this.produitId]);
+  }
+
+  publier(): void {
+    if (!this.produitId) return;
+    this.produitService.publierProduit(this.produitId).subscribe({
+      next: (p) => {
+        this.produit = p;
+        this.toastService.showSuccess('Produit publié avec succès');
+      },
+      error: () => {
+        this.toastService.showError('Impossible de publier ce produit (statut actuel incompatible)');
+      }
+    });
+  }
+
+  canPublier(): boolean {
+    return !!this.produit && this.produit.statutWorkflow !== StatutWorkflow.PUBLIE;
   }
 
   getTypeClass(type?: string): string {

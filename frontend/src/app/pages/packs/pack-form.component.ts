@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { GestionProduitService, Pack } from '../../services/gestion-produit.service';
-import { NiveauCouverture, StatutWorkflow, getStatutWorkflowLabel } from '../../models/entities.model';
+import { NiveauCouverture, StatutWorkflow, getStatutWorkflowLabel, Garantie, PackGarantie } from '../../models/entities.model';
+import { GarantieSelectorComponent } from '../../shared/components/garantie-selector/garantie-selector.component';
 import { ToastService } from '../../shared/services/toast.service';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
 import { NotificationService } from '../../services/notification.service';
@@ -41,7 +42,8 @@ import { RouterModule } from '@angular/router';
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
-    RouterModule
+    RouterModule,
+    GarantieSelectorComponent
   ]
 })
 export class PackFormComponent implements OnInit {
@@ -51,6 +53,7 @@ export class PackFormComponent implements OnInit {
   allPacks: { label: string; value: string }[] = [];
   isEdit = false;
   packId?: string;
+  selectedGaranties: Garantie[] = [];
 
   niveauCouvertureOptions = [
     { label: 'Basic', value: NiveauCouverture.BASIC },
@@ -224,16 +227,20 @@ export class PackFormComponent implements OnInit {
           this.isEdit ? 'Pack modifié' : 'Pack créé',
           this.isEdit ? 'Le pack a été modifié avec succès' : 'Le pack a été créé avec succès'
         );
-        
+
+        const packId = (response as any).idPack || this.packId;
+        if (packId) {
+          this.associerGarantiesSelectionnees(packId);
+        }
+
         // Add notification for new pack creation
         if (!this.isEdit) {
-          const packId = (response as any).idPack || this.packForm.value.nomPack;
           this.notificationService.addPackCreatedNotification(
             this.packForm.value.nomPack,
-            packId
+            packId || this.packForm.value.nomPack
           );
         }
-        
+
         this.router.navigate(['/packs']);
       },
       error: (error) => {
@@ -241,6 +248,28 @@ export class PackFormComponent implements OnInit {
         this.toastService.showError('Erreur', this.isEdit ? 'Impossible de modifier le pack' : 'Impossible de créer le pack');
         console.error('Error saving pack:', error);
       }
+    });
+  }
+
+  onGarantiesChange(garanties: Garantie[]): void {
+    this.selectedGaranties = garanties;
+  }
+
+  /** Associe les garanties sélectionnées au pack nouvellement créé/modifié. Chaque échec
+   * individuel est signalé sans bloquer les autres associations (le pack existe déjà). */
+  private associerGarantiesSelectionnees(idPack: string): void {
+    if (!this.selectedGaranties.length) {
+      return;
+    }
+    this.selectedGaranties.forEach(garantie => {
+      this.packService.ajouterGarantieAuPack(idPack, garantie.idGarantie, {} as PackGarantie).subscribe({
+        error: () => {
+          this.toastService.showError(
+            'Association impossible',
+            `La garantie "${garantie.nomGarantie}" n'a pas pu être associée au pack`
+          );
+        }
+      });
     });
   }
 

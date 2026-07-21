@@ -1,7 +1,7 @@
 <div class="page-container">
   <p-toast position="top-right"></p-toast>
 
-  <form [formGroup]="garantieForm" (ngSubmit)="onSubmit()" class="form-container">
+  <form [formGroup]="garantieForm" (ngSubmit)="onSubmit()" class="auth-form">
 
   <!-- Page Header -->
   <div class="page-header garanties-header animate-fade-in-down">
@@ -36,68 +36,68 @@
   <div class="form-card animate-fade-in-up">
       <div class="form-grid">
         <!-- Nom de la garantie -->
-        <div class="form-group">
-          <label class="form-label" for="nomGarantie">
+        <div class="form-field">
+          <label class="field-label" for="nomGarantie">
             <i class="bi bi-tag"></i> Nom de la garantie *
           </label>
-          <div class="form-control-wrap" [class.has-error]="isFieldInvalid('nomGarantie')">
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('nomGarantie')">
             <input
               pInputText
               id="nomGarantie"
               formControlName="nomGarantie"
               placeholder="Entrez le nom de la garantie"
-              class="form-control" />
+              class="auth-input" />
           </div>
-          <div class="form-error" *ngIf="isFieldInvalid('nomGarantie')">
+          <div class="field-error" *ngIf="isFieldInvalid('nomGarantie')">
             <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('nomGarantie') }}
           </div>
         </div>
 
         <!-- Code -->
-        <div class="form-group">
-          <label class="form-label" for="codeGarantie">
+        <div class="form-field">
+          <label class="field-label" for="codeGarantie">
             <i class="bi bi-upc"></i> Code *
           </label>
-          <div class="form-control-wrap" [class.has-error]="isFieldInvalid('codeGarantie')">
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('codeGarantie')">
             <input
               pInputText
               id="codeGarantie"
               formControlName="codeGarantie"
               placeholder="Ex. GAR-HOSP-001"
-              class="form-control" />
+              class="auth-input" />
           </div>
-          <div class="form-help">Identifiant métier unique</div>
-          <div class="form-error" *ngIf="isFieldInvalid('codeGarantie')">
+          <div class="field-help">Identifiant métier unique</div>
+          <div class="field-error" *ngIf="isFieldInvalid('codeGarantie')">
             <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('codeGarantie') }}
           </div>
         </div>
 
         <!-- Nom court -->
-        <div class="form-group">
-          <label class="form-label" for="nomCourt">
+        <div class="form-field">
+          <label class="field-label" for="nomCourt">
             <i class="bi bi-tag"></i> Nom court
           </label>
-          <div class="form-control-wrap" [class.has-error]="isFieldInvalid('nomCourt')">
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('nomCourt')">
             <input
               pInputText
               id="nomCourt"
               formControlName="nomCourt"
               maxlength="30"
               placeholder="Ex. Hospitalisation"
-              class="form-control" />
+              class="auth-input" />
           </div>
-          <div class="form-help">{{ garantieForm.get('nomCourt')?.value?.length || 0 }}/30 caractères — pour les tableaux comparatifs</div>
-          <div class="form-error" *ngIf="isFieldInvalid('nomCourt')">
+          <div class="field-help">{{ garantieForm.get('nomCourt')?.value?.length || 0 }}/30 caractères — pour les tableaux comparatifs</div>
+          <div class="field-error" *ngIf="isFieldInvalid('nomCourt')">
             <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('nomCourt') }}
           </div>
         </div>
 
         <!-- Domaine médical -->
-        <div class="form-group">
-          <label class="form-label" for="domaine">
+        <div class="form-field">
+          <label class="field-label" for="domaine">
             <i class="bi bi-shield"></i> Domaine médical *
           </label>
-          <div class="form-control-wrap" [class.has-error]="isFieldInvalid('domaine')">
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('domaine')">
             <p-dropdown
               id="domaine"
               formControlName="domaine"
@@ -105,20 +105,20 @@
               optionLabel="label"
               optionValue="value"
               placeholder="Sélectionnez un domaine médical"
-              styleClass="form-control">
+              styleClass="auth-dropdown">
             </p-dropdown>
           </div>
-          <div class="form-error" *ngIf="isFieldInvalid('domaine')">
+          <div class="field-error" *ngIf="isFieldInvalid('domaine')">
             <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('domaine') }}
           </div>
         </div>
 
         <!-- Statut de workflow -->
-        <div class="form-group">
-          <label class="form-label" for="statutWorkflow">
+        <div class="form-field">
+          <label class="field-label" for="statutWorkflow">
             <i class="bi bi-signpost-split"></i> Statut
           </label>
-          <div class="form-control-wrap">
+          <div class="input-wrap">
             <p-dropdown
               id="statutWorkflow"
               formControlName="statutWorkflow"
@@ -126,79 +126,79 @@
               optionLabel="label"
               optionValue="value"
               placeholder="Sélectionnez un statut"
-              styleClass="form-control">
+              styleClass="auth-dropdown">
             </p-dropdown>
           </div>
         </div>
 
         <!-- Obligatoire par défaut -->
-        <div class="form-group">
-          <label class="form-label" for="garantieObligatoireParDefaut">
+        <div class="form-field">
+          <label class="field-label" for="garantieObligatoireParDefaut">
             <i class="bi bi-exclamation-diamond"></i> Obligatoire par défaut
           </label>
-          <div class="form-control-wrap switch-wrap">
+          <div class="input-wrap switch-wrap">
             <p-inputSwitch id="garantieObligatoireParDefaut" formControlName="garantieObligatoireParDefaut"></p-inputSwitch>
           </div>
         </div>
 
         <!-- Description -->
-        <div class="form-group full-width">
-          <label class="form-label" for="description">
+        <div class="form-field full-width">
+          <label class="field-label" for="description">
             <i class="bi bi-text-paragraph"></i> Description *
           </label>
-          <div class="form-control-wrap" [class.has-error]="isFieldInvalid('description')">
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('description')">
             <textarea
               pTextarea
               id="description"
               formControlName="description"
               placeholder="Décrivez la garantie"
               rows="4"
-              class="form-control">
+              class="auth-textarea">
             </textarea>
           </div>
-          <div class="form-error" *ngIf="isFieldInvalid('description')">
+          <div class="field-error" *ngIf="isFieldInvalid('description')">
             <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('description') }}
           </div>
         </div>
 
         <!-- Description technique -->
-        <div class="form-group full-width">
-          <label class="form-label" for="descriptionTechnique">
+        <div class="form-field full-width">
+          <label class="field-label" for="descriptionTechnique">
             <i class="bi bi-file-text"></i> Description technique
           </label>
-          <div class="form-control-wrap">
+          <div class="input-wrap">
             <textarea
               pTextarea
               id="descriptionTechnique"
               formControlName="descriptionTechnique"
               placeholder="Destinée aux actuaires et juristes"
               rows="3"
-              class="form-control">
+              class="auth-textarea">
             </textarea>
           </div>
         </div>
 
         <!-- Événements couverts par défaut -->
-        <div class="form-group full-width">
-          <label class="form-label" for="evenementsCouvertsParDefaut">
+        <div class="form-field full-width">
+          <label class="field-label" for="evenementsCouvertsParDefaut">
             <i class="bi bi-list-check"></i> Événements couverts par défaut
           </label>
-          <div class="form-control-wrap">
+          <div class="input-wrap">
             <p-chips
               id="evenementsCouvertsParDefaut"
               formControlName="evenementsCouvertsParDefaut"
               placeholder="Tapez un événement puis Entrée"
-              styleClass="form-control">
+              styleClass="auth-input">
             </p-chips>
           </div>
         </div>
 
         <!-- Taux de remboursement -->
-        <div class="form-group">
-          <label class="form-label" for="tauxRemboursement">
+        <div class="form-field">
+          <label class="field-label" for="tauxRemboursement">
             <i class="bi bi-percent"></i> Taux de remboursement *
           </label>
-          <div class="form-control-wrap" [class.has-error]="isFieldInvalid('tauxRemboursement')">
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('tauxRemboursement')">
             <p-inputNumber
               id="tauxRemboursement"
               formControlName="tauxRemboursement"
@@ -211,18 +211,18 @@
               styleClass="auth-input">
             </p-inputNumber>
           </div>
-          <div class="form-help">Ex: 80 pour 80%</div>
-          <div class="form-error" *ngIf="isFieldInvalid('tauxRemboursement')">
+          <div class="field-help">Ex: 80 pour 80%</div>
+          <div class="field-error" *ngIf="isFieldInvalid('tauxRemboursement')">
             <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('tauxRemboursement') }}
           </div>
         </div>
 
         <!-- Type de montant -->
-        <div class="form-group">
-          <label class="form-label" for="typeMontant">
+        <div class="form-field">
+          <label class="field-label" for="typeMontant">
             <i class="bi bi-cash"></i> Type de montant *
           </label>
-          <div class="form-control-wrap" [class.has-error]="isFieldInvalid('typeMontant')">
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('typeMontant')">
             <p-dropdown
               id="typeMontant"
               formControlName="typeMontant"
@@ -230,20 +230,20 @@
               optionLabel="label"
               optionValue="value"
               placeholder="Sélectionnez un domaine médical"
-              styleClass="form-control">
+              styleClass="auth-dropdown">
             </p-dropdown>
           </div>
-          <div class="form-error" *ngIf="isFieldInvalid('typeMontant')">
+          <div class="field-error" *ngIf="isFieldInvalid('typeMontant')">
             <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('typeMontant') }}
           </div>
         </div>
 
         <!-- Type de plafond -->
-        <div class="form-group">
-          <label class="form-label" for="typePlafond">
+        <div class="form-field">
+          <label class="field-label" for="typePlafond">
             <i class="bi bi-bar-chart"></i> Type de plafond *
           </label>
-          <div class="form-control-wrap" [class.has-error]="isFieldInvalid('typePlafond')">
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('typePlafond')">
             <p-dropdown
               id="typePlafond"
               formControlName="typePlafond"
@@ -251,20 +251,20 @@
               optionLabel="label"
               optionValue="value"
               placeholder="Sélectionnez un domaine médical"
-              styleClass="form-control">
+              styleClass="auth-dropdown">
             </p-dropdown>
           </div>
-          <div class="form-error" *ngIf="isFieldInvalid('typePlafond')">
+          <div class="field-error" *ngIf="isFieldInvalid('typePlafond')">
             <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('typePlafond') }}
           </div>
         </div>
 
         <!-- Plafond annuel -->
-        <div class="form-group">
-          <label class="form-label" for="plafondAnnuel">
+        <div class="form-field">
+          <label class="field-label" for="plafondAnnuel">
             <i class="bi bi-calendar-year"></i> Plafond annuel
           </label>
-          <div class="form-control-wrap" [class.has-error]="isFieldInvalid('plafondAnnuel')">
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('plafondAnnuel')">
             <p-inputNumber
               id="plafondAnnuel"
               formControlName="plafondAnnuel"
@@ -275,17 +275,17 @@
               styleClass="auth-input">
             </p-inputNumber>
           </div>
-          <div class="form-error" *ngIf="isFieldInvalid('plafondAnnuel')">
+          <div class="field-error" *ngIf="isFieldInvalid('plafondAnnuel')">
             <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('plafondAnnuel') }}
           </div>
         </div>
 
         <!-- Plafond mensuel -->
-        <div class="form-group">
-          <label class="form-label" for="plafondMensuel">
+        <div class="form-field">
+          <label class="field-label" for="plafondMensuel">
             <i class="bi bi-calendar-month"></i> Plafond mensuel
           </label>
-          <div class="form-control-wrap" [class.has-error]="isFieldInvalid('plafondMensuel')">
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('plafondMensuel')">
             <p-inputNumber
               id="plafondMensuel"
               formControlName="plafondMensuel"
@@ -296,17 +296,17 @@
               styleClass="auth-input">
             </p-inputNumber>
           </div>
-          <div class="form-error" *ngIf="isFieldInvalid('plafondMensuel')">
+          <div class="field-error" *ngIf="isFieldInvalid('plafondMensuel')">
             <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('plafondMensuel') }}
           </div>
         </div>
 
-        <!-- Franchise -->
-        <div class="form-group">
-          <label class="form-label" for="franchise">
+        <!-- TODO: réactiver après correction du calcul de franchise
+        <div class="form-field">
+          <label class="field-label" for="franchise">
             <i class="bi bi-shield-exclamation"></i> Franchise
           </label>
-          <div class="form-control-wrap" [class.has-error]="isFieldInvalid('franchise')">
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('franchise')">
             <p-inputNumber
               id="franchise"
               formControlName="franchise"
@@ -317,17 +317,18 @@
               styleClass="auth-input">
             </p-inputNumber>
           </div>
-          <div class="form-error" *ngIf="isFieldInvalid('franchise')">
+          <div class="field-error" *ngIf="isFieldInvalid('franchise')">
             <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('franchise') }}
           </div>
         </div>
+        -->
 
         <!-- Prime pure de base -->
-        <div class="form-group">
-          <label class="form-label" for="primePureBase">
+        <div class="form-field">
+          <label class="field-label" for="primePureBase">
             <i class="bi bi-graph-up"></i> Prime pure de base
           </label>
-          <div class="form-control-wrap" [class.has-error]="isFieldInvalid('primePureBase')">
+          <div class="input-wrap" [class.has-error]="isFieldInvalid('primePureBase')">
             <p-inputNumber
               id="primePureBase"
               formControlName="primePureBase"
@@ -338,18 +339,18 @@
               styleClass="auth-input">
             </p-inputNumber>
           </div>
-          <div class="form-help">TND/mois — contribution actuarielle à la prime totale</div>
-          <div class="form-error" *ngIf="isFieldInvalid('primePureBase')">
+          <div class="field-help">TND/mois — contribution actuarielle à la prime totale</div>
+          <div class="field-error" *ngIf="isFieldInvalid('primePureBase')">
             <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('primePureBase') }}
           </div>
         </div>
 
         <!-- Garanties prérequises -->
-        <div class="form-group full-width">
-          <label class="form-label" for="prerequisGarantieIds">
+        <div class="form-field full-width">
+          <label class="field-label" for="prerequisGarantieIds">
             <i class="bi bi-link-45deg"></i> Garanties prérequises
           </label>
-          <div class="form-control-wrap">
+          <div class="input-wrap">
             <p-multiSelect
               id="prerequisGarantieIds"
               formControlName="prerequisGarantieIds"
@@ -359,80 +360,80 @@
               placeholder="Sélectionnez des garanties"
               display="chip"
               [filter]="true"
-              styleClass="form-control">
+              styleClass="auth-dropdown">
             </p-multiSelect>
           </div>
-          <div class="form-help">Garanties devant être activées avant celle-ci</div>
+          <div class="field-help">Garanties devant être activées avant celle-ci</div>
         </div>
 
         <!-- Paramètres dynamiques -->
-        <div class="form-group full-width">
-          <label class="form-label">
+        <div class="form-field full-width">
+          <label class="field-label">
             <i class="bi bi-sliders"></i> Paramètres dynamiques
           </label>
-          <div class="form-control-wrap">
+          <div class="input-wrap">
             <app-key-value-editor
               formControlName="parametresDynamiques"
               keyPlaceholder="Paramètre"
               valuePlaceholder="Valeur">
             </app-key-value-editor>
           </div>
-          <div class="form-help">Variables utilisées dans la formule de calcul, ex. tauxSpecialiste</div>
+          <div class="field-help">Variables utilisées dans la formule de calcul, ex. tauxSpecialiste</div>
         </div>
 
         <!-- Règle de calcul avancée -->
-        <div class="form-group full-width">
+        <div class="form-field full-width">
           <p-fieldset legend="Règle de calcul avancée" [toggleable]="true" [collapsed]="true">
             <div class="form-grid" formGroupName="regleCalcul">
-              <div class="form-group full-width">
-                <label class="form-label" for="rcFormule">
+              <div class="form-field full-width">
+                <label class="field-label" for="rcFormule">
                   <i class="bi bi-calculator"></i> Formule
                 </label>
-                <div class="form-control-wrap">
+                <div class="input-wrap">
                   <input
                     pInputText
                     id="rcFormule"
                     formControlName="formule"
                     placeholder="Ex. montant * taux / 100 - franchise"
-                    class="form-control" />
+                    class="auth-input" />
                 </div>
               </div>
 
-              <div class="form-group full-width">
-                <label class="form-label" for="rcDescriptionFormule">
+              <div class="form-field full-width">
+                <label class="field-label" for="rcDescriptionFormule">
                   <i class="bi bi-text-paragraph"></i> Explication de la formule
                 </label>
-                <div class="form-control-wrap">
+                <div class="input-wrap">
                   <textarea
                     pTextarea
                     id="rcDescriptionFormule"
                     formControlName="descriptionFormule"
                     placeholder="Explication humaine pour le juriste / l'assureur"
                     rows="2"
-                    class="form-control">
+                    class="auth-textarea">
                   </textarea>
                 </div>
               </div>
 
-              <div class="form-group full-width">
-                <label class="form-label" for="rcParametresFormule">
+              <div class="form-field full-width">
+                <label class="field-label" for="rcParametresFormule">
                   <i class="bi bi-braces"></i> Paramètres de la formule
                 </label>
-                <div class="form-control-wrap">
+                <div class="input-wrap">
                   <p-chips
                     id="rcParametresFormule"
                     formControlName="parametresFormule"
                     placeholder="Nom d'un paramètre puis Entrée"
-                    styleClass="form-control">
+                    styleClass="auth-input">
                   </p-chips>
                 </div>
               </div>
 
-              <div class="form-group full-width">
-                <label class="form-label">
+              <div class="form-field full-width">
+                <label class="field-label">
                   <i class="bi bi-sliders"></i> Valeurs par défaut des paramètres
                 </label>
-                <div class="form-control-wrap">
+                <div class="input-wrap">
                   <app-key-value-editor
                     formControlName="valeursDefaut"
                     keyPlaceholder="Paramètre"
@@ -441,11 +442,11 @@
                 </div>
               </div>
 
-              <div class="form-group">
-                <label class="form-label" for="rcPrioriteCalcul">
+              <div class="form-field">
+                <label class="field-label" for="rcPrioriteCalcul">
                   <i class="bi bi-sort-numeric-down"></i> Priorité de calcul
                 </label>
-                <div class="form-control-wrap">
+                <div class="input-wrap">
                   <p-inputNumber
                     id="rcPrioriteCalcul"
                     formControlName="prioriteCalcul"
@@ -457,29 +458,31 @@
                 </div>
               </div>
 
-              <div class="form-group">
-                <label class="form-label" for="rcAppliquerPlafondApresCalcul">
+              <div class="form-field">
+                <label class="field-label" for="rcAppliquerPlafondApresCalcul">
                   Plafond appliqué après calcul
                 </label>
-                <div class="form-control-wrap switch-wrap">
+                <div class="input-wrap switch-wrap">
                   <p-inputSwitch id="rcAppliquerPlafondApresCalcul" formControlName="appliquerPlafondApresCalcul"></p-inputSwitch>
                 </div>
               </div>
 
-              <div class="form-group">
-                <label class="form-label" for="rcDeduireFranchiseAvantPlafond">
+              <!-- TODO: réactiver après correction du calcul de franchise
+              <div class="form-field">
+                <label class="field-label" for="rcDeduireFranchiseAvantPlafond">
                   Franchise déduite avant plafond
                 </label>
-                <div class="form-control-wrap switch-wrap">
+                <div class="input-wrap switch-wrap">
                   <p-inputSwitch id="rcDeduireFranchiseAvantPlafond" formControlName="deduireFranchiseAvantPlafond"></p-inputSwitch>
                 </div>
               </div>
+              -->
 
-              <div class="form-group">
-                <label class="form-label" for="rcBaseConventionnee">
+              <div class="form-field">
+                <label class="field-label" for="rcBaseConventionnee">
                   Base tarif conventionné
                 </label>
-                <div class="form-control-wrap switch-wrap">
+                <div class="input-wrap switch-wrap">
                   <p-inputSwitch id="rcBaseConventionnee" formControlName="baseConventionnee"></p-inputSwitch>
                 </div>
               </div>

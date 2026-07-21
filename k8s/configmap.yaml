@@ -23,3 +23,8 @@ data:
   
   # Spring Profiles
   SPRING_PROFILES_ACTIVE: "k8s"
+
+  # chatbot-service Configuration
+  SPRING_BOOT_BASE_URL: "http://gestionproduit:9093/api"
+  GITHUB_MODEL: "gpt-4o-mini"
+  GITHUB_URL: "https://models.inference.ai.azure.com"

@@ -174,6 +174,26 @@ class PackUnifiedServiceTest {
     }
 
     @Test
+    void testUpdatePack_PartialUpdate_PreservesUnmentionedFields() {
+        // Given: seul le nom commercial est fourni, comme le ferait un appel partiel du chatbot
+        Pack partialDetails = new Pack();
+        partialDetails.setNomCommercial("Formule Premium+");
+
+        when(packRepository.findById("1")).thenReturn(Optional.of(packTest));
+        when(packRepository.save(any(Pack.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        Pack result = packUnifiedService.updatePack("1", partialDetails);
+
+        // Then: le champ fourni est appliqué, les champs non mentionnés restent inchangés
+        assertEquals("Formule Premium+", result.getNomCommercial());
+        assertEquals("Pack Santé Premium", result.getNomPack());
+        assertEquals("Pack santé complet avec garanties étendues", result.getDescription());
+        assertEquals(150.0, result.getPrixMensuel());
+        assertEquals(NiveauCouverture.PREMIUM, result.getNiveauCouverture());
+    }
+
+    @Test
     void testDeletePack_Success() {
         // Given
         when(packRepository.findById("1")).thenReturn(Optional.of(packTest));

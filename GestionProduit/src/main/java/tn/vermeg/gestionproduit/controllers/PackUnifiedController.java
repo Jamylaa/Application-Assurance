@@ -13,12 +13,8 @@ import tn.vermeg.gestionproduit.dto.PackDetailDTO;
 import tn.vermeg.gestionproduit.entities.Garantie;
 import tn.vermeg.gestionproduit.entities.Pack;
 import tn.vermeg.gestionproduit.entities.PackGarantie;
-import tn.vermeg.gestionproduit.entities.Produit;
 import tn.vermeg.gestionproduit.exceptions.ResourceNotFoundException;
 import tn.vermeg.gestionproduit.enums.NiveauCouverture;
-import tn.vermeg.gestionproduit.enums.TypeMontant;
-import tn.vermeg.gestionproduit.enums.TypePlafond;
-import tn.vermeg.gestionproduit.enums.TypeProduit;
 import tn.vermeg.gestionproduit.services.HierarchicalService;
 import tn.vermeg.gestionproduit.services.PackUnifiedService;
 import java.util.HashMap;
@@ -287,11 +283,13 @@ public class PackUnifiedController {
         @ApiResponse(responseCode = "400", description = "Données invalides ou conflit"),
         @ApiResponse(responseCode = "404", description = "Pack non trouvé")
     })
+    // @Valid retiré volontairement : un update n'envoie que les champs à modifier,
+    // la validation de l'entité complète est faite après fusion dans le service.
     public ResponseEntity<Pack> updatePack(
             @Parameter(description = "ID du pack à mettre à jour", required = true)
             @PathVariable String idPack,
             @Parameter(description = "Nouvelles informations du pack", required = true)
-            @Valid @RequestBody Pack pack) {
+            @RequestBody Pack pack) {
         return ResponseEntity.ok(packUnifiedService.updatePack(idPack, pack));
     }
 
@@ -307,6 +305,21 @@ public class PackUnifiedController {
             @PathVariable String idPack) {
         packUnifiedService.deletePack(idPack);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{idPack}/publier")
+    @Operation(summary = "Publier un pack", description = "Rend le pack actif et commercialisable : éligible aux associations de garanties")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Pack publié avec succès"),
+        @ApiResponse(responseCode = "404", description = "Pack non trouvé"),
+        @ApiResponse(responseCode = "400", description = "Statut actuel incompatible avec une publication directe")
+    })
+    public ResponseEntity<Pack> publierPack(
+            @Parameter(description = "ID du pack à publier", required = true)
+            @PathVariable String idPack,
+            @Parameter(description = "Utilisateur à l'origine de la publication")
+            @RequestParam(defaultValue = "system") String utilisateur) {
+        return ResponseEntity.ok(packUnifiedService.publierPack(idPack, utilisateur));
     }
 
     @PutMapping("/associations/{id}")

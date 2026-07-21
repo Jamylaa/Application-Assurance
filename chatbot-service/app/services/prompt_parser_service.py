@@ -3,11 +3,13 @@ import logging
 from typing import Dict, Any, Optional, List
 from app.models.enums import (
     TypeProduit, TypeMontant, DomaineMedical, NiveauCouverture,
-    TypePlafond, TypeRemboursement, TypeFranchise
+    TypePlafond, TypeRemboursement, StatutWorkflow
+    # TypeFranchise,  # TODO: réactiver après correction du calcul de franchise
 )
 from app.models.schemas import (
     GarantieDTO, PackDTO, ProduitDTO, PackGarantieDTO,
-    PlafondGarantieDTO, FranchiseGarantieDTO
+    PlafondGarantieDTO,
+    # FranchiseGarantieDTO,  # TODO: réactiver après correction du calcul de franchise
 )
 
 logger = logging.getLogger(__name__)
@@ -21,13 +23,18 @@ class PromptParserService:
     def parse_produit_prompt(self, prompt: str) -> Optional[ProduitDTO]:
         """Parse a product creation prompt using rule-based patterns."""
         try:
-            # Extract product name
-            name_pattern = r'créer un produit nommé\s+["\']?([^"\',.]+)["\']?|créer un produit\s+["\']?([^"\',.]+)["\']?'
-            name_match = re.search(name_pattern, prompt, re.IGNORECASE)
+            # Extract product name — priorité au motif explicite "le nom produit X", plus fiable
+            # que "créer un produit X" qui capture tout ce qui précède la première virgule (y compris
+            # d'autres clauses comme "avec le code produit ..." quand elles viennent en premier).
+            name_pattern_explicit = r'\ble nom(?:\s+du)?\s+produit\s+["\']?([^"\',.]+)["\']?'
+            name_match = re.search(name_pattern_explicit, prompt, re.IGNORECASE)
+            if not name_match:
+                name_pattern = r'créer un produit nommé\s+["\']?([^"\',.]+)["\']?|créer un produit\s+["\']?([^"\',.]+)["\']?'
+                name_match = re.search(name_pattern, prompt, re.IGNORECASE)
             if not name_match:
                 return None
-            
-            nom_produit = name_match.group(1) or name_match.group(2)
+
+            nom_produit = next(g for g in name_match.groups() if g is not None)
             nom_produit = nom_produit.strip()
             
             # Extract description
@@ -42,25 +49,32 @@ class PromptParserService:
                 nom_produit=nom_produit,
                 description=description,
                 type_produit=type_produit,
+                nom_commercial=self._extract_nom_commercial(prompt),
+                statut_workflow=self._extract_statut_workflow(prompt),
+                prix_base=self._extract_number(prompt, r'prix de base\s+(?:de\s+)?(\d+(?:[.,]\d+)?)'),
             )
 
-            logger.info(f"✅ Parsed product: {nom_produit}, type: {type_produit}")
+            logger.info(f"Parsed product: {nom_produit}, type: {type_produit}")
             return produit_dto
-            
+
         except Exception as e:
-            logger.error(f"❌ Error parsing product prompt: {e}")
+            logger.error(f"Error parsing product prompt: {e}")
             return None
     
     def parse_pack_prompt(self, prompt: str) -> Optional[PackDTO]:
         """Parse a pack creation prompt using rule-based patterns."""
         try:
-            # Extract pack name
-            name_pattern = r'créer un pack nommé\s+["\']?([^"\',.]+)["\']?|créer un pack\s+["\']?([^"\',.]+)["\']?'
-            name_match = re.search(name_pattern, prompt, re.IGNORECASE)
+            # Extract pack name — priorité au motif explicite "le nom pack X" (même raison que pour
+            # le produit : "créer un pack X" est trop gourmand si une autre clause le précède).
+            name_pattern_explicit = r'\ble nom(?:\s+du)?\s+pack\s+["\']?([^"\',.]+)["\']?'
+            name_match = re.search(name_pattern_explicit, prompt, re.IGNORECASE)
+            if not name_match:
+                name_pattern = r'créer un pack nommé\s+["\']?([^"\',.]+)["\']?|créer un pack\s+["\']?([^"\',.]+)["\']?'
+                name_match = re.search(name_pattern, prompt, re.IGNORECASE)
             if not name_match:
                 return None
-            
-            nom_pack = name_match.group(1) or name_match.group(2)
+
+            nom_pack = next(g for g in name_match.groups() if g is not None)
             nom_pack = nom_pack.strip()
             
             # Extract product name
@@ -85,25 +99,32 @@ class PromptParserService:
                 description=description,
                 prix_mensuel=prix,
                 niveau_couverture=niveau,
+                nom_commercial=self._extract_nom_commercial(prompt),
+                statut_workflow=self._extract_statut_workflow(prompt),
+                pack_recommande=self._extract_bool_flag(prompt, "pack recommandé", "recommandé"),
+                options_disponibles=self._extract_bool_flag(prompt, "options disponibles"),
             )
 
-            logger.info(f"✅ Parsed pack: {nom_pack}, product: {nom_produit}, price: {prix}")
+            logger.info(f"Parsed pack: {nom_pack}, product: {nom_produit}, price: {prix}")
             return pack_dto
-            
+
         except Exception as e:
-            logger.error(f"❌ Error parsing pack prompt: {e}")
+            logger.error(f"Error parsing pack prompt: {e}")
             return None
     
     def parse_garantie_prompt(self, prompt: str) -> Optional[GarantieDTO]:
         """Parse a guarantee creation prompt using rule-based patterns."""
         try:
-            # Extract guarantee name
-            name_pattern = r'créer une garantie nommée\s+["\']?([^"\',.]+)["\']?|créer une garantie\s+["\']?([^"\',.]+)["\']?'
-            name_match = re.search(name_pattern, prompt, re.IGNORECASE)
+            # Extract guarantee name — priorité au motif explicite "le nom garantie X".
+            name_pattern_explicit = r'\ble nom(?:\s+de\s+la|\s+du)?\s+garantie\s+["\']?([^"\',.]+)["\']?'
+            name_match = re.search(name_pattern_explicit, prompt, re.IGNORECASE)
+            if not name_match:
+                name_pattern = r'créer une garantie nommée\s+["\']?([^"\',.]+)["\']?|créer une garantie\s+["\']?([^"\',.]+)["\']?'
+                name_match = re.search(name_pattern, prompt, re.IGNORECASE)
             if not name_match:
                 return None
-            
-            nom_garantie = name_match.group(1) or name_match.group(2)
+
+            nom_garantie = next(g for g in name_match.groups() if g is not None)
             nom_garantie = nom_garantie.strip()
             
             # Extract domain
@@ -122,8 +143,8 @@ class PromptParserService:
             plafond_mensuel = self._extract_number(prompt, r'plafond mensuel de\s+(\d+(?:\.\d+)?)')
             plafond_par_acte = self._extract_number(prompt, r'plafond par acte de\s+(\d+(?:\.\d+)?)')
 
-            # Extract franchise
-            franchise_montant = self._extract_number(prompt, r'franchise de\s+(\d+(?:\.\d+)?)')
+            # TODO: réactiver après correction du calcul de franchise
+            # franchise_montant = self._extract_number(prompt, r'franchise de\s+(\d+(?:\.\d+)?)')
 
             plafond = PlafondGarantieDTO(
                 plafond_annuel=plafond_annuel,
@@ -131,10 +152,12 @@ class PromptParserService:
                 plafond_par_acte=plafond_par_acte,
             ) if any([plafond_annuel, plafond_mensuel, plafond_par_acte]) else None
 
-            franchise = FranchiseGarantieDTO(
-                type=TypeFranchise.FIXE,
-                montant_fixe=franchise_montant,
-            ) if franchise_montant is not None else None
+            # TODO: réactiver après correction du calcul de franchise
+            # franchise = FranchiseGarantieDTO(
+            #     type=TypeFranchise.FIXE,
+            #     montant_fixe=franchise_montant,
+            # ) if franchise_montant is not None else None
+            franchise = None  # Valeur par défaut temporaire (calcul de franchise désactivé)
 
             garantie_dto = GarantieDTO(
                 nom_garantie=nom_garantie,
@@ -145,11 +168,11 @@ class PromptParserService:
                 franchise=franchise,
             )
             
-            logger.info(f"✅ Parsed guarantee: {nom_garantie}, domain: {domaine}, rate: {taux}")
+            logger.info(f"Parsed guarantee: {nom_garantie}, domain: {domaine}, rate: {taux}")
             return garantie_dto
-            
+
         except Exception as e:
-            logger.error(f"❌ Error parsing guarantee prompt: {e}")
+            logger.error(f"Error parsing guarantee prompt: {e}")
             return None
     
     def parse_recommendation_prompt(self, prompt: str) -> Optional[Dict[str, Any]]:
@@ -200,11 +223,11 @@ class PromptParserService:
             if 'senior' in prompt.lower():
                 profile['client_type'] = 'SENIOR'
             
-            logger.info(f"✅ Parsed recommendation profile: {profile}")
+            logger.info(f"Parsed recommendation profile: {profile}")
             return profile
-            
+
         except Exception as e:
-            logger.error(f"❌ Error parsing recommendation prompt: {e}")
+            logger.error(f"Error parsing recommendation prompt: {e}")
             return None
     
     def _map_type_montant_to_remboursement(self, type_montant: Optional[TypeMontant]) -> TypeRemboursement:
@@ -229,6 +252,33 @@ class PromptParserService:
                         continue
         return None
     
+    def _extract_nom_commercial(self, text: str) -> Optional[str]:
+        """Extract the commercial name, e.g. 'le nom commercial Sport Vitalite'."""
+        pattern = r'nom commercial\s+["\']?([^"\',.]+)["\']?'
+        match = re.search(pattern, text, re.IGNORECASE)
+        return match.group(1).strip() if match else None
+
+    def _extract_statut_workflow(self, text: str) -> Optional[StatutWorkflow]:
+        """Extract the workflow status, e.g. 'le statut workflow PUBLIE' or 'publié'."""
+        text_lower = text.lower()
+        for statut in StatutWorkflow:
+            if statut.value.lower() in text_lower or statut.value.lower().replace('_', ' ') in text_lower:
+                return statut
+        if re.search(r'\bpubli[ée]e?\b', text_lower):
+            return StatutWorkflow.PUBLIE
+        return None
+
+    def _extract_bool_flag(self, text: str, *labels: str) -> Optional[bool]:
+        """Extract a boolean stated right after a label, e.g. 'options disponibles vraies'
+        or 'pack recommandé faux'. Returns None (not False) if the label isn't mentioned at all,
+        so callers can distinguish 'not mentioned' from 'explicitly false'."""
+        text_lower = text.lower()
+        for label in labels:
+            match = re.search(rf'{re.escape(label.lower())}\s+(vrai[e]?s?|faux|oui|non)\b', text_lower)
+            if match:
+                return match.group(1) in ("vrai", "vraie", "vrais", "vraies", "oui")
+        return None
+
     def _extract_type_produit(self, text: str) -> Optional[TypeProduit]:
         """Extract product type from text."""
         text_lower = text.lower()
@@ -318,10 +368,10 @@ class PromptParserService:
             plafond_match = re.search(plafond_pattern, prompt, re.IGNORECASE)
             result['plafond'] = float(plafond_match.group(1)) if plafond_match else None
             
-            # Extract franchise
-            franchise_pattern = r'franchise de\s+(\d+(?:\.\d+)?)'
-            franchise_match = re.search(franchise_pattern, prompt, re.IGNORECASE)
-            result['franchise'] = float(franchise_match.group(1)) if franchise_match else 0.0
+            # TODO: réactiver après correction du calcul de franchise
+            # franchise_pattern = r'franchise de\s+(\d+(?:\.\d+)?)'
+            # franchise_match = re.search(franchise_pattern, prompt, re.IGNORECASE)
+            # result['franchise'] = float(franchise_match.group(1)) if franchise_match else 0.0
             
             # Extract amount type
             result['type_montant'] = self._extract_type_montant(prompt)
@@ -337,9 +387,9 @@ class PromptParserService:
             supplement_match = re.search(supplement_pattern, prompt, re.IGNORECASE)
             result['supplement_prix'] = float(supplement_match.group(1)) if supplement_match else 0.0
             
-            logger.info(f"✅ Parsed pack-garantie association: {result}")
+            logger.info(f"Parsed pack-garantie association: {result}")
             return result
-            
+
         except Exception as e:
-            logger.error(f"❌ Error parsing pack-garantie association: {e}")
+            logger.error(f"Error parsing pack-garantie association: {e}")
             return None

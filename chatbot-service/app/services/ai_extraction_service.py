@@ -5,6 +5,11 @@ import unicodedata
 from typing import Dict, Any, Optional
 import httpx
 from app.config import settings
+from app.models.enums import DomaineMedical
+
+# Liste complète (générée depuis l'enum, jamais tronquée) pour que le LLM ne puisse
+# proposer que des valeurs réellement acceptées par le backend.
+_DOMAINE_MEDICAL_VALUES = ", ".join(d.value for d in DomaineMedical)
 
 
 def _strip_accents(text: str) -> str:
@@ -38,16 +43,16 @@ class AIExtractionService:
         self.ai_extraction_enabled = settings.ai_extraction_enabled
         self.fallback_on_error = settings.fallback_on_ai_error
 
-        logger.info("🤖 AIExtractionService initialized")
-        logger.info(f"🔑 API Key configured: {bool(self.api_key and self.api_key.strip())}")
-        logger.info(f"🔑 API Key length: {len(self.api_key) if self.api_key else 0}")
-        logger.info(f"🔧 GitHub enabled: {self.github_enabled}")
-        logger.info(f"🔧 AI extraction enabled: {self.ai_extraction_enabled}")
-        logger.info(f"🔧 Fallback on error: {self.fallback_on_error}")
-        logger.info(f"🔧 Model: {self.model_name}")
-        logger.info(f"🔧 API URL: {self.api_url}")
-        logger.info(f"🔧 Timeout: {self.timeout_seconds}s")
-        logger.info(f"🔧 Max retries: {self.max_retries}")
+        logger.info("AIExtractionService initialized")
+        logger.info(f"API Key configured: {bool(self.api_key and self.api_key.strip())}")
+        logger.info(f"API Key length: {len(self.api_key) if self.api_key else 0}")
+        logger.info(f"GitHub enabled: {self.github_enabled}")
+        logger.info(f"AI extraction enabled: {self.ai_extraction_enabled}")
+        logger.info(f"Fallback on error: {self.fallback_on_error}")
+        logger.info(f"Model: {self.model_name}")
+        logger.info(f"API URL: {self.api_url}")
+        logger.info(f"Timeout: {self.timeout_seconds}s")
+        logger.info(f"Max retries: {self.max_retries}")
 
     def is_ai_available(self) -> bool:
         return (
@@ -69,14 +74,30 @@ class AIExtractionService:
 
             enhanced_prompt = prompt + """
 
-Extrais les informations pour créer une garantie d'assurance. IMPORTANT:
-- Retourne un JSON avec: nom, description, domaine (domaine médical parmi: CONSULTATION_GENERALE, CARDIOLOGIE, DENTAIRE, OPHTALMOLOGIE, HOSPITALISATION, ORL, PHARMACIE, MATERNITE, GYNECOLOGIE, PEDIATRIE, KINESITHERAPIE, RADIOLOGIE, URGENCES_MEDICALES, etc.)
-- tauxRemboursement (en pourcentage, ex: 80 pour 80%)
+Extrais TOUTES les informations mentionnées pour créer une garantie d'assurance. Retourne UNIQUEMENT
+un objet JSON (pas de texte avant ou après). IMPORTANT : chaque champ ci-dessous doit être une valeur
+A PLAT au premier niveau du JSON (nombre, chaîne, booléen ou liste) — JAMAIS un objet imbriqué, même si
+le texte décrit plusieurs sous-propriétés ensemble (ex: "franchise de type FIXE avec montant de 5" doit
+donner deux champs plats franchiseType="FIXE" et franchiseMontantFixe=5, pas un objet {"type":...,"montant":...}).
+
+Champs à extraire :
+- nom, nomCourt, description, descriptionTechnique
+- domaine (domaine médical — UNIQUEMENT une valeur EXACTE parmi cette liste, choisis la plus proche du texte, n'invente jamais un nom absent de la liste: {domaines})
+- garantieObligatoireParDefaut (booléen)
+- statutWorkflow (BROUILLON/SOUMIS_VALIDATION/EN_COURS_VALIDATION/APPROUVE/REJETE/PUBLIE/ARCHIVE/SUSPENDU)
+- evenementsCouvertsParDefaut (liste de chaînes)
 - typeMontant (TARIF_CONVENTIONNE/FRAIS_REELS/FORFAIT - EXACTEMENT ces valeurs)
-- plafondAnnuel, plafondMensuel, plafondParActe
-- franchise
-- Utilise null si vraiment absent.
-"""
+- tauxRemboursement, tauxRemboursementMinimum, tauxRemboursementMaximum (en pourcentage, ex: 80 pour 80%)
+- plafondAnnuel, plafondMensuel, plafondParActe, plafondGlobal (NOMBRES, jamais un objet "plafond")
+- plafondTypePrincipal (PAR_ACTE/ANNUEL/MENSUEL/GLOBAL/PAR_SOINS)
+- franchiseType (AUCUNE/FIXE/POURCENTAGE/RELATIVE/ABSOLUE)
+- franchiseMontantFixe (NOMBRE — montant fixe de la franchise, jamais un objet "franchise")
+- primePureBase (nombre)
+- prerequisGarantieIds (liste de chaînes, [] si aucun)
+- codeGarantie (code métier s'il est mentionné, ex: "GAR-HOSP-001")
+- creePar (nom/identifiant du créateur)
+Utilise null pour tout champ vraiment absent du texte — n'invente aucune valeur.
+""".replace("{domaines}", _DOMAINE_MEDICAL_VALUES)
 
             result = self._call_github_ai_with_retry(enhanced_prompt)
             logger.info(f"Résultat IA brut: {result}")
@@ -99,10 +120,21 @@ Extrais les informations pour créer une garantie d'assurance. IMPORTANT:
         try:
             enhanced_prompt = prompt + """
 
-Extrais les informations pour créer un produit d'assurance. Retourne un JSON avec:
-- nom, description
-- typeProduit (SANTE/AUTO/HABITATION/VIE)
-Utilise null si absent.
+Extrais TOUTES les informations mentionnées pour créer un produit d'assurance. Retourne UNIQUEMENT
+un objet JSON (pas de texte avant ou après) avec:
+- nom, nomCommercial, description
+- typeProduit (SANTE/AUTO/HABITATION/VIE/EPARGNE)
+- codeProduit (code métier s'il est mentionné, ex: "SANTE-COMP-001")
+- prixBase (nombre décimal, prime de référence)
+- devisePrix (ex: "TND")
+- couvertureGeographique (LOCAL/NATIONAL/INTERNATIONAL/UE/MAGHREB)
+- version (ex: "1.0")
+- dateEffet, dateExpiration (format ISO "AAAA-MM-JJ")
+- statutWorkflow (BROUILLON/SOUMIS_VALIDATION/EN_COURS_VALIDATION/APPROUVE/REJETE/PUBLIE/ARCHIVE/SUSPENDU)
+- validePar (nom/identifiant de la personne ayant validé)
+- dateValidation (format ISO "AAAA-MM-JJ")
+- creePar (nom/identifiant du créateur)
+Utilise null pour tout champ vraiment absent du texte — n'invente aucune valeur.
 """
             return self._call_github_ai_with_retry(enhanced_prompt)
         except Exception as e:
@@ -114,12 +146,23 @@ Utilise null si absent.
         try:
             enhanced_prompt = prompt + """
 
-Extrais les informations pour créer un pack d'assurance. Retourne UNIQUEMENT un objet JSON (pas de texte avant ou après).
+Extrais TOUTES les informations mentionnées pour créer un pack d'assurance. Retourne UNIQUEMENT un objet JSON (pas de texte avant ou après).
 
 Champs du pack:
-- nom, description
+- nom, nomCommercial, description, descriptionCourte
+- codePack (code métier s'il est mentionné, ex: "SANTE-COMP-BASIC-001")
+- colorTheme (couleur hexadécimale du badge si mentionnée, ex: "1b5e20" — sans le caractère #)
 - prixMensuel (nombre décimal, ex: 95.0)
+- prixAnnuel (nombre décimal, si mentionné)
+- tauxRemiseAnnuelle (pourcentage, ex: 8 pour 8%, si mentionné)
+- devisePrix (ex: "TND")
+- versionPack (ex: "1.0")
 - niveauCouverture: "BASIC", "PREMIUM" ou "GOLD"
+- statutWorkflow (BROUILLON/SOUMIS_VALIDATION/EN_COURS_VALIDATION/APPROUVE/REJETE/PUBLIE/ARCHIVE/SUSPENDU)
+- packRecommande (booléen, true si "pack recommandé" ou "recommandé" est mentionné comme vrai)
+- optionsDisponibles (booléen)
+- dateEffet, dateExpiration (format ISO "AAAA-MM-JJ")
+- creePar (nom/identifiant du créateur)
 - nomProduit: nom exact du produit associé
 - garanties: liste de TOUTES les garanties mentionnées dans le prompt, chacune avec:
   {
@@ -134,8 +177,8 @@ Champs du pack:
 
 Règles importantes:
 - niveauCouverture GOLD si "gold" dans le nom/description, PREMIUM si "premium", BASIC sinon
-- garanties: [] si aucune garantie mentionnée
-- Utilise null pour les champs vraiment absents du texte
+- garanties: [] si aucune garantie mentionnée — n'omets JAMAIS une garantie citée dans le texte
+- Utilise null pour les champs vraiment absents du texte — n'invente aucune valeur
 """
             result = self._call_github_ai_with_retry(enhanced_prompt, max_tokens=2000)
             return self._apply_pack_fallback_logic(result, prompt)
@@ -238,9 +281,18 @@ Utilise null si vraiment absent.
         elif "sans enfant" in prompt_lower:
             result["numberOfChildren"] = 0
 
-        budget_match = re.search(r'budget\s+(?:mensuel\s+)?(?:de\s+)?(\d+(?:[.,]\d+)?)', prompt_lower)
+        # Recherche du budget mensuel : d'abord un motif proche du mot "budget", tolérant
+        # aux mots intercalés (ex: "budget assurance de 100", "budget mensuel assurance : 220"),
+        # puis un repli générique qui ignore les montants associés à un revenu/salaire pour ne
+        # pas les confondre avec le budget (bug corrigé : "revenu ... 1800 TND ... budget ... 90 TND"
+        # captait à tort le revenu au lieu du budget).
+        budget_match = re.search(r'budget[^\d]{0,30}?(\d+(?:[.,]\d+)?)', prompt_lower)
         if not budget_match:
-            budget_match = re.search(r'(\d+(?:[.,]\d+)?)\s*(?:tnd|dt|dinars?)\s*(?:par\s+mois|/mois|mensuel)?', prompt_lower)
+            for candidate in re.finditer(r'(\d+(?:[.,]\d+)?)\s*(?:tnd|dt|dinars?)\s*(?:par\s+mois|/mois|mensuel)?', prompt_lower):
+                fenetre_precedente = prompt_lower[max(0, candidate.start() - 25):candidate.start()]
+                if not re.search(r'revenu|salaire|gagne|touche|perçoit', fenetre_precedente):
+                    budget_match = candidate
+                    break
         if budget_match:
             result["monthlyBudget"] = float(budget_match.group(1).replace(",", "."))
 
@@ -249,7 +301,10 @@ Utilise null si vraiment absent.
         if needs:
             result["medicalNeeds"] = needs
 
-        if re.search(r'non[\s-]fumeur|ne fume pas|non[\s-]fumeuse', prompt_lower):
+        # La 1ère alternative couvre "non fumeur"/"non-fumeuse"/"ne fume pas" (négation avant le mot) ;
+        # la 2e couvre le style "Fumeuse : non" (négation après, séparée par ":", "-", etc.) — bug
+        # corrigé : ce style faisait auparavant matcher \bfumeuse\b seul et donnait smoker=True à tort.
+        if re.search(r'non[\s-]fumeur|ne fume pas|non[\s-]fumeuse|fumeu(?:r|se)[^a-z]{0,10}non\b', prompt_lower):
             result["smoker"] = False
         elif re.search(r'\bfumeur\b|\bfumeuse\b|\bfume\b', prompt_lower):
             result["smoker"] = True
@@ -278,7 +333,7 @@ Utilise null si vraiment absent.
             return {}
 
         try:
-            logger.info(f"🤖 Calling GitHub Models API with model: {self.model_name}")
+            logger.info(f"Calling GitHub Models API with model: {self.model_name}")
 
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
@@ -312,37 +367,37 @@ Utilise null si vraiment absent.
                 timeout=self.timeout_seconds
             )
 
-            logger.debug(f"🔵 Response status: {response.status_code}")
+            logger.debug(f"Response status: {response.status_code}")
 
             if response.status_code == 200:
                 result = response.json()
                 if "choices" in result and len(result["choices"]) > 0:
                     content = result["choices"][0]["message"]["content"]
-                    logger.info(f"✅ AI response received: {content[:300]}...")
+                    logger.info(f"AI response received: {content[:300]}...")
                     parsed = self._parse_ai_response(content)
                     if parsed:
-                        logger.info(f"✅ Parsed AI response keys: {list(parsed.keys())}")
+                        logger.info(f"Parsed AI response keys: {list(parsed.keys())}")
                         if "garanties" in parsed:
-                            logger.info(f"✅ Garanties extraites: {len(parsed['garanties'])}")
+                            logger.info(f"Garanties extraites: {len(parsed['garanties'])}")
                         return parsed
                     else:
-                        logger.warning("⚠️ Could not parse AI response as JSON")
+                        logger.warning("Could not parse AI response as JSON")
                         return {}
                 else:
-                    logger.warning("⚠️ No choices in AI response")
+                    logger.warning("No choices in AI response")
                     return {}
             else:
-                logger.error(f"❌ AI API error: {response.status_code} - {response.text}")
+                logger.error(f"AI API error: {response.status_code} - {response.text}")
                 return {}
 
         except httpx.TimeoutException:
-            logger.error("❌ AI API timeout")
+            logger.error("AI API timeout")
             return {}
         except httpx.ConnectError:
-            logger.error("❌ AI API connection error")
+            logger.error("AI API connection error")
             return {}
         except Exception as e:
-            logger.error(f"❌ AI API error: {e}", exc_info=True)
+            logger.error(f"AI API error: {e}", exc_info=True)
             return {}
 
     def _call_github_ai_with_retry(self, prompt: str, max_tokens: int = 1000) -> Dict[str, Any]:
@@ -538,13 +593,14 @@ Utilise null si vraiment absent.
             except ValueError:
                 pass
 
-        franchise_pattern = re.compile(r'franchise\s*(?:de\s+)?(\d+)', re.IGNORECASE)
-        m = franchise_pattern.search(prompt)
-        if m:
-            try:
-                result["franchise"] = float(m.group(1))
-            except ValueError:
-                pass
+        # TODO: réactiver après correction du calcul de franchise
+        # franchise_pattern = re.compile(r'franchise\s*(?:de\s+)?(\d+)', re.IGNORECASE)
+        # m = franchise_pattern.search(prompt)
+        # if m:
+        #     try:
+        #         result["franchise"] = float(m.group(1))
+        #     except ValueError:
+        #         pass
 
         if "optionnelle" in prompt_lower or "optionnel" in prompt_lower:
             result["optionnelle"] = True

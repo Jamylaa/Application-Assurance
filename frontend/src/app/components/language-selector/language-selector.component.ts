@@ -18,14 +18,14 @@ import { TranslationService } from '../../services/translation.service';
   styles: [`
     .language-selector select {
       padding: 8px 12px;
-      border: 1px solid #ddd;
+      border: 1px solid #E2E8F0;
       border-radius: 4px;
       background-color: white;
       cursor: pointer;
       font-size: 14px;
     }
     .language-selector select:hover {
-      border-color: #007bff;
+      border-color: #0F4C81;
     }
   `]
 })

@@ -7,7 +7,7 @@
   top: 0; left: 0;
   height: 100vh;
   width: 280px;
-  background: linear-gradient(180deg, #0F4C81 0%, #083b6b 50%, #0A2A40 100%);
+  background: linear-gradient(180deg, #0F4C81 0%, #083b6b 50%, #062D52 100%);
   z-index: 1000;
   transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
@@ -240,23 +240,23 @@
 }
 
 .nav-icon-wrap--ai {
-  background: rgba(124,58,237,0.2) !important;
-  color: #c4b5fd !important;
+  background: rgba(13,115,119,0.25) !important;
+  color: #2DD4BF !important;
 }
 
 .nav-link--ai:hover .nav-icon-wrap--ai {
-  background: rgba(124,58,237,0.35) !important;
+  background: rgba(13,115,119,0.4) !important;
 }
 
 .nav-link--ai.active .nav-icon-wrap--ai {
-  background: rgba(124,58,237,0.3) !important;
+  background: rgba(13,115,119,0.35) !important;
 }
 
 .ai-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #7c3aed, #4c1d95);
+  background: linear-gradient(135deg, #0D7377, #0C5C5F);
   color: #fff;
   font-size: 0.6rem;
   font-weight: 700;
@@ -264,7 +264,7 @@
   border-radius: 6px;
   letter-spacing: 0.05em;
   line-height: 1.4;
-  box-shadow: 0 2px 6px rgba(124,58,237,0.4);
+  box-shadow: 0 2px 6px rgba(13,115,119,0.4);
 }
 
 /* ── User Section ── */

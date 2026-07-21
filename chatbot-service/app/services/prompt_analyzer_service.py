@@ -58,7 +58,15 @@ class PromptAnalyzerService:
         if not prompt:
             return None
         prompt_lower = prompt.lower()
-        
+
+        # Priority 0: Undo. Restricted to short, near-standalone commands — a genuine undo
+        # request is always phrased that way ("annule", "annule la dernière action", "undo").
+        # Without the word-count guard, "undo"/"annule" would also match as a false positive
+        # whenever it happens to appear inside a much longer, differently-intentioned prompt
+        # (e.g. a CREATE prompt naming an entity "... Undo Test ...").
+        if len(prompt_lower.split()) <= 6 and re.search(r'\bannul(e|er|é)\b|\bundo\b', prompt_lower):
+            return ChatbotAction.UNDO
+
         # Priority 1: Check for DELETE actions (highest priority for safety)
         if re.search(r'supprimer|effacer|désactiver|delete', prompt_lower):
             if 'garantie' in prompt_lower:
@@ -78,7 +86,13 @@ class PromptAnalyzerService:
                 return ChatbotAction.UPDATE_PACK
         
         # Priority 3: Check for creation actions (highest priority)
-        # Prioritize "créer un pack" before "produit" to avoid false positives
+        # Un prompt qui mentionne produit ET pack ensemble (ex: "créer un produit X avec un
+        # pack Y et les garanties Z") doit passer par le cascade CREATE_PACK, seul capable de
+        # créer les 3 niveaux (produit parent, pack, garanties) en une seule requête.
+        mentions_creation = bool(re.search(r'créer|nouveau|nouvelle|ajouter|ajoute', prompt_lower))
+        if mentions_creation and 'produit' in prompt_lower and 'pack' in prompt_lower:
+            return ChatbotAction.CREATE_PACK
+        # Sinon, prioritize "créer un pack" before "produit" to avoid false positives
         if re.search(r'créer\s+un\s+pack|pack\s+nommé|nouveau\s+pack', prompt_lower):
             return ChatbotAction.CREATE_PACK
         if re.search(r'créer\s+un\s+produit|produit\s+nommé', prompt_lower):

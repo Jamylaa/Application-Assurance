@@ -15,37 +15,27 @@ import tn.vermeg.gestionproduit.enums.TypePlafond;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PlafondGarantie {
-
     /** Plafond remboursable par acte médical (0 = illimité). */
     private double plafondParActe;
-
     /** Plafond remboursable par mois (0 = illimité). */
     private double plafondMensuel;
-
     /** Plafond remboursable sur l'année de contrat (0 = illimité). */
     private double plafondAnnuel;
-
     /** Plafond global sur la durée totale du contrat (0 = illimité). */
     private double plafondGlobal;
-
     /** Plafond par soins (regroupement de plusieurs actes pour un même épisode). */
     private double plafondParSoins;
-
     /** Type de plafond dominant utilisé dans les calculs de remboursement. */
     private TypePlafond typePrincipal;
-
     /** Description lisible par l'assuré, ex: "3 000 TND/an — 500 TND/acte". */
     private String description;
-
     /** Devise des montants (TND, EUR…). */
     @Builder.Default
     private String devise = "TND";
-
     public boolean estIllimite() {
         return plafondParActe == 0 && plafondMensuel == 0 && plafondAnnuel == 0
                 && plafondGlobal == 0 && plafondParSoins == 0;
     }
-
     public double appliquerPlafond(double montantCalcule) {
         if (typePrincipal == null) return montantCalcule;
         return switch (typePrincipal) {

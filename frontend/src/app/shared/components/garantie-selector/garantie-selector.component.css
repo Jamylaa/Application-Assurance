@@ -1,0 +1,144 @@
+.garantie-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.selector-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+::ng-deep .garantie-autocomplete {
+  width: 100%;
+}
+
+::ng-deep .garantie-autocomplete .p-autocomplete-multiple-container {
+  width: 100%;
+  background: white;
+  border: 1.5px solid #E2E8F0;
+}
+
+.garantie-suggestion {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.garantie-suggestion-domaine {
+  font-size: 0.75rem;
+  color: #64748B;
+}
+
+.garantie-not-found {
+  padding: 0.75rem;
+}
+
+.garantie-not-found-text {
+  color: #B91C1C;
+  font-size: 0.9rem;
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.garantie-not-found-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-resolve {
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btn-resolve-secondary {
+  background: #E2E8F0;
+  color: #334155;
+}
+
+.btn-resolve-secondary:hover {
+  background: #CBD5E1;
+}
+
+.btn-resolve-primary {
+  background: #0F4C81;
+  color: white;
+}
+
+.btn-resolve-primary:hover {
+  background: #0C3D68;
+}
+
+.selected-garanties-hint {
+  font-size: 0.8rem;
+  color: #64748B;
+}
+
+.garantie-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.garantie-create-form .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.garantie-create-form label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.garantie-create-form input,
+.garantie-create-form textarea {
+  border: 1.5px solid #E2E8F0;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+/* Dark Mode */
+:host-context(.my-app-dark) .selector-label,
+:host-context(.my-app-dark) .garantie-create-form label {
+  color: #E2E8F0;
+}
+
+:host-context(.my-app-dark) ::ng-deep .garantie-autocomplete .p-autocomplete-multiple-container {
+  background: #1E293B;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #F1F5F9;
+}
+
+:host-context(.my-app-dark) .garantie-suggestion-domaine,
+:host-context(.my-app-dark) .selected-garanties-hint {
+  color: #94A3B8;
+}
+
+:host-context(.my-app-dark) .garantie-not-found-text {
+  color: #F87171;
+}
+
+:host-context(.my-app-dark) .btn-resolve-secondary {
+  background: #334155;
+  color: #E2E8F0;
+}
+
+:host-context(.my-app-dark) .btn-resolve-secondary:hover {
+  background: #475569;
+}
+
+:host-context(.my-app-dark) .garantie-create-form input,
+:host-context(.my-app-dark) .garantie-create-form textarea {
+  background: #0F172A;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #F1F5F9;
+}

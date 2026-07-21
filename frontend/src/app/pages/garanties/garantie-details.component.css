@@ -45,23 +45,23 @@
 }
 
 .metric-card.rating {
-  background: linear-gradient(135deg, rgba(240, 147, 251, 0.9) 0%, rgba(245, 87, 108, 0.9) 100%);
-  border-color: rgba(240, 147, 251, 0.3);
+  background: linear-gradient(135deg, rgba(15, 76, 129, 0.9) 0%, rgba(96, 165, 250, 0.9) 100%);
+  border-color: rgba(15, 76, 129, 0.3);
 }
 
 .metric-card.packs {
-  background: linear-gradient(135deg, rgba(79, 172, 254, 0.9) 0%, rgba(0, 242, 254, 0.9) 100%);
-  border-color: rgba(79, 172, 254, 0.3);
+  background: linear-gradient(135deg, rgba(13, 115, 119, 0.9) 0%, rgba(45, 212, 191, 0.9) 100%);
+  border-color: rgba(13, 115, 119, 0.3);
 }
 
 .metric-card.taux {
-  background: linear-gradient(135deg, rgba(67, 233, 123, 0.9) 0%, rgba(56, 249, 215, 0.9) 100%);
-  border-color: rgba(67, 233, 123, 0.3);
+  background: linear-gradient(135deg, rgba(12, 61, 104, 0.9) 0%, rgba(15, 76, 129, 0.9) 100%);
+  border-color: rgba(12, 61, 104, 0.3);
 }
 
 .metric-card.plafond {
-  background: linear-gradient(135deg, rgba(250, 112, 154, 0.9) 0%, rgba(254, 225, 64, 0.9) 100%);
-  border-color: rgba(250, 112, 154, 0.3);
+  background: linear-gradient(135deg, rgba(12, 92, 95, 0.9) 0%, rgba(13, 115, 119, 0.9) 100%);
+  border-color: rgba(12, 92, 95, 0.3);
 }
 
 .metric-icon {
@@ -121,7 +121,7 @@
 .details-section h3 {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--text-color, #212529);
+  color: var(--text-color, #0F172A);
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
@@ -130,7 +130,7 @@
 }
 
 .details-section h3 i {
-  color: var(--primary-color, #667eea);
+  color: var(--primary-color, #0F4C81);
   font-size: 1.25rem;
 }
 
@@ -154,27 +154,27 @@
 
 .info-item:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  border-color: rgba(102, 126, 234, 0.3);
+  border-color: rgba(15, 76, 129, 0.3);
   transform: translateY(-4px);
   background: rgba(255, 255, 255, 0.9);
 }
 
 .info-label {
   font-size: 0.875rem;
-  color: var(--text-color-secondary, #6c757d);
+  color: var(--text-color-secondary, #64748B);
   font-weight: 500;
 }
 
 .info-value {
   font-size: 1rem;
-  color: var(--text-color, #212529);
+  color: var(--text-color, #0F172A);
   font-weight: 500;
 }
 
 .info-value.primary {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--primary-color, #667eea);
+  color: var(--primary-color, #0F4C81);
 }
 
 .info-value.taux {
@@ -185,10 +185,10 @@
 
 .info-item.highlight {
   padding: 1.5rem;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(15, 76, 129, 0.1) 0%, rgba(13, 115, 119, 0.1) 100%);
   border-radius: 16px;
-  border-left: 4px solid var(--primary-color, #667eea);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+  border-left: 4px solid var(--primary-color, #0F4C81);
+  box-shadow: 0 4px 12px rgba(15, 76, 129, 0.1);
 }
 
 /* Taux Indicator */
@@ -216,18 +216,18 @@
 }
 
 .label {
-  color: var(--text-color-secondary, #6c757d);
+  color: var(--text-color-secondary, #64748B);
   font-weight: 600;
 }
 
 .value {
-  color: var(--text-color, #212529);
+  color: var(--text-color, #0F172A);
   word-break: break-word;
 }
 
 .empty {
   padding: 1rem 0;
-  color: var(--text-color-secondary, #6c757d);
+  color: var(--text-color-secondary, #64748B);
 }
 
 .tags-wrap {
@@ -253,7 +253,7 @@
 }
 
 .kv-list-key {
-  color: var(--text-color-secondary, #6c757d);
+  color: var(--text-color-secondary, #64748B);
   font-weight: 500;
 }
 
@@ -307,21 +307,21 @@
 }
 
 /* Dark Mode Overrides */
-.my-app-dark .page-container {
+:host-context(.my-app-dark) .page-container {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
 }
 
-.my-app-dark .metric-card {
+:host-context(.my-app-dark) .metric-card {
   background: rgba(30, 30, 50, 0.95);
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-.my-app-dark .info-item {
+:host-context(.my-app-dark) .info-item {
   background: rgba(40, 40, 60, 0.8);
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-.my-app-dark .info-item.highlight {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+:host-context(.my-app-dark) .info-item.highlight {
+  background: linear-gradient(135deg, rgba(15, 76, 129, 0.2) 0%, rgba(13, 115, 119, 0.2) 100%);
 }
 

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
 import { GestionProduitService, Garantie } from '../../services/gestion-produit.service';
 import { TableModule } from 'primeng/table';
@@ -51,16 +51,22 @@ export class GarantiesComponent implements OnInit {
   selectedDomaine: DomaineMedical | null = null;
   globalFilterValue = '';
 
+  readonly tableRows = 10;
+  highlightedGarantieId: string | null = null;
+  tableFirst = 0;
+
   constructor(
     private readonly garantieService: GestionProduitService,
     private toastService: ToastService,
     private breadcrumbService: BreadcrumbService,
     private confirmationService: ConfirmationService,
-    private router: Router
+    private router: Router,
+    private readonly route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.breadcrumbService.setGarantiesBreadcrumb();
+    this.highlightedGarantieId = this.route.snapshot.queryParamMap.get('highlight');
     this.loadGaranties();
   }
 
@@ -75,6 +81,9 @@ export class GarantiesComponent implements OnInit {
         }));
         this.applyFilters();
         this.loading = false;
+        if (this.highlightedGarantieId) {
+          this.revealHighlightedGarantie();
+        }
       },
       error: (err) => {
         // Erreur chargement garanties handled
@@ -82,6 +91,21 @@ export class GarantiesComponent implements OnInit {
         this.toastService.showLoadError('garanties');
       }
     });
+  }
+
+  // Navigue vers la page du tableau contenant la garantie ciblée (queryParam highlight),
+  // puis scrolle jusqu'à sa ligne et lui applique une classe .highlighted — sans filtrer
+  // la liste, la garantie reste visible dans son contexte complet.
+  private revealHighlightedGarantie(): void {
+    const index = this.filteredGaranties.findIndex(g => g.idGarantie === this.highlightedGarantieId);
+    if (index === -1) {
+      return;
+    }
+    this.tableFirst = Math.floor(index / this.tableRows) * this.tableRows;
+    setTimeout(() => {
+      const row = document.querySelector(`[data-garantie-id="${CSS.escape(this.highlightedGarantieId!)}"]`);
+      row?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 150);
   }
 
   private cleanGarantieName(nom: string): string {

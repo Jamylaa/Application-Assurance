@@ -53,6 +53,9 @@ export class GestionProduitService {
   deleteProduit(idProduit: string): Observable<void> {
     return this.http.delete<void>(`${this.produitsUrl}/${idProduit}`);}
 
+  publierProduit(idProduit: string): Observable<Produit> {
+    return this.http.post<Produit>(`${this.produitsUrl}/${idProduit}/publier`, {});}
+
   // Gestion des packs
   getAllPacks(): Observable<Pack[]> {
     return this.http.get<Pack[]>(this.packsUrl);}
@@ -84,6 +87,9 @@ export class GestionProduitService {
   deletePack(idPack: string): Observable<void> {
     return this.http.delete<void>(`${this.packsUrl}/${idPack}`);}
 
+  publierPack(idPack: string): Observable<Pack> {
+    return this.http.post<Pack>(`${this.packsUrl}/${idPack}/publier`, {});}
+
   // Gestion des garanties
   getAllGaranties(): Observable<Garantie[]> {
     return this.http.get<Garantie[]>(this.garantiesUrl);}
@@ -99,6 +105,9 @@ export class GestionProduitService {
 
   getGarantiesByTauxMin(tauxMin: number): Observable<Garantie[]> {
     return this.http.get<Garantie[]>(`${this.garantiesUrl}/taux-min/${tauxMin}`);}
+
+  getPacksByGarantieId(idGarantie: string): Observable<PackGarantie[]> {
+    return this.http.get<PackGarantie[]>(`${this.garantiesUrl}/${idGarantie}/packs`);}
 
   getGarantiesByPlafondMin(plafondMin: number): Observable<Garantie[]> {
     return this.http.get<Garantie[]>(`${this.garantiesUrl}/plafond-min/${plafondMin}`);}

@@ -126,10 +126,12 @@
                 <span class="info-label">Type de remboursement</span>
                 <span class="info-value">{{ g.typeRemboursement || '—' }}</span>
               </div>
+              <!-- TODO: réactiver après correction du calcul de franchise
               <div class="info-item">
                 <span class="info-label">Franchise</span>
                 <span class="info-value">{{ g.franchise?.montantFixe ?? '—' }} TND</span>
               </div>
+              -->
               <div class="info-item">
                 <span class="info-label">Type plafond principal</span>
                 <span class="info-value">{{ g.plafond?.typePrincipal || '—' }}</span>
@@ -195,10 +197,12 @@
                 <span class="info-label">Plafond appliqué après calcul</span>
                 <span class="info-value">{{ g.regleCalcul.appliquerPlafondApresCalcul ? 'Oui' : 'Non' }}</span>
               </div>
+              <!-- TODO: réactiver après correction du calcul de franchise
               <div class="info-item">
                 <span class="info-label">Franchise déduite avant plafond</span>
                 <span class="info-value">{{ g.regleCalcul.deduireFranchiseAvantPlafond ? 'Oui' : 'Non' }}</span>
               </div>
+              -->
               <div class="info-item">
                 <span class="info-label">Base tarif conventionné</span>
                 <span class="info-value">{{ g.regleCalcul.baseConventionnee ? 'Oui' : 'Non' }}</span>

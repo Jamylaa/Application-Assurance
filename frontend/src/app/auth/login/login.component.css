@@ -13,7 +13,7 @@
    ======================================================================== */
 .auth-left {
   flex: 1;
-  background: linear-gradient(145deg, #0F172A 0%, #1E1B4B 40%, #312E81 70%, #4C1D95 100%);
+  background: linear-gradient(145deg, #0F172A 0%, #0C3D68 40%, #0F4C81 70%, #0C5C5F 100%);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -516,7 +516,7 @@
   .auth-right {
     width: 100%;
     min-width: unset;
-    background: linear-gradient(145deg, #0F172A 0%, #1E1B4B 60%, #312E81 100%);
+    background: linear-gradient(145deg, #0F172A 0%, #0C3D68 60%, #0F4C81 100%);
     padding: 2rem 1.5rem;
   }
   .auth-form-wrapper {

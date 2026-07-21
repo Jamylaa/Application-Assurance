@@ -155,9 +155,9 @@ class BusinessValidationService:
         message = []
         
         if not result.is_valid:
-            message.append("⚠️ Validation métier échouée\n\n")
+            message.append("Validation métier échouée\n\n")
         else:
-            message.append("✅ Validation métier réussie\n\n")
+            message.append("Validation métier réussie\n\n")
         
         message.append(f"Score original: {result.original_score:.2f}\n")
         message.append(f"Score ajusté: {result.adjusted_score:.2f}\n\n")

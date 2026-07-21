@@ -8,10 +8,10 @@
   --navy:        #0f4c81;
   --navy-mid:    #083b6b;
   --navy-dark:   #062d52;
-  --navy-light:  #1565a0;
+  --navy-light:  #60A5FA;
   --teal:        #0d7377;
   --teal-dark:   #0c5c5f;
-  --teal-light:  #14a0a0;
+  --teal-light:  #2DD4BF;
   --slate-50:    #f8fafc;
   --slate-100:   #f1f5f9;
   --slate-200:   #e2e8f0;
@@ -457,6 +457,71 @@
   color: var(--teal);
 }
 .msg-action-btn--secondary:hover {
+  background: var(--teal);
+  color: #fff;
+  border-color: var(--teal);
+}
+
+/* Choix structurés dans un message (ex: garantie introuvable → créer/remplacer) */
+.msg-choices {
+  margin-top: 0.875rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.msg-choice-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.msg-choice-group-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--gray-600, #64748b);
+}
+
+.msg-choice-group-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.msg-choice-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  border: 1px solid transparent;
+}
+.msg-choice-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.msg-choice-btn--primary {
+  background: var(--navy);
+  border-color: var(--navy-dark);
+  color: #fff;
+}
+.msg-choice-btn--primary:hover:not(:disabled) {
+  background: var(--navy-mid);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 76, 129, 0.3);
+}
+
+.msg-choice-btn--secondary {
+  background: rgba(13, 115, 119, 0.08);
+  border-color: rgba(13, 115, 119, 0.3);
+  color: var(--teal);
+}
+.msg-choice-btn--secondary:hover:not(:disabled) {
   background: var(--teal);
   color: #fff;
   border-color: var(--teal);
@@ -1024,9 +1089,9 @@
 }
 
 :host-context(.my-app-dark) .sugg-chip:hover:not(:disabled) {
-  background: #2563eb;
+  background: #3B82F6;
   color: #fff;
-  border-color: #2563eb;
+  border-color: #3B82F6;
 }
 
 :host-context(.my-app-dark) .msg-bubble {
@@ -1093,12 +1158,24 @@
 }
 
 :host-context(.my-app-dark) .qa-chip:hover:not(:disabled) {
-  background: #2563eb;
+  background: #3B82F6;
   color: #fff;
-  border-color: #2563eb;
+  border-color: #3B82F6;
 }
 
 :host-context(.my-app-dark) .qa-label { color: #94a3b8; }
+
+:host-context(.my-app-dark) .msg-choice-group-label { color: #94a3b8; }
+:host-context(.my-app-dark) .msg-choice-btn--secondary {
+  background: rgba(45, 212, 191, 0.1);
+  border-color: rgba(45, 212, 191, 0.3);
+  color: #5eead4;
+}
+:host-context(.my-app-dark) .msg-choice-btn--secondary:hover:not(:disabled) {
+  background: #2dd4bf;
+  color: #0f172a;
+  border-color: #2dd4bf;
+}
 
 :host-context(.my-app-dark) .history-panel {
   background: #1e293b;

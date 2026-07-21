@@ -82,7 +82,8 @@
         [value]="filteredGaranties"
         [loading]="loading"
         [paginator]="true"
-        [rows]="10"
+        [rows]="tableRows"
+        [(first)]="tableFirst"
         [rowsPerPageOptions]="[5,10,20,50]"
         [showCurrentPageReport]="true"
         currentPageReportTemplate="Affichage {first} – {last} sur {totalRecords}"
@@ -102,7 +103,10 @@
       </ng-template>
 
       <ng-template pTemplate="body" let-garantie>
-        <tr class="table-row">
+        <tr
+          class="table-row"
+          [attr.data-garantie-id]="garantie.idGarantie"
+          [class.highlighted]="garantie.idGarantie === highlightedGarantieId">
           <td>
             <div class="pack-cell">
               <div class="garantie-icon"><i class="bi bi-shield-fill-check"></i></div>
@@ -139,26 +143,40 @@
                 <i class="bi bi-calendar-month"></i>
                 <span>{{ garantie.plafond?.plafondMensuel | number:'1.0-0' }} TND/mois</span>
               </div>
+              <!-- TODO: réactiver après correction du calcul de franchise
               <div class="plafond-item" *ngIf="garantie.franchise?.montantFixe">
                 <i class="bi bi-shield"></i>
                 <span>Franchise: {{ garantie.franchise?.montantFixe | number:'1.0-0' }} TND</span>
               </div>
-              <div class="plafond-item" *ngIf="!garantie.plafond?.plafondAnnuel && !garantie.plafond?.plafondMensuel && !garantie.franchise?.montantFixe">
+              -->
+              <div class="plafond-item" *ngIf="!garantie.plafond?.plafondAnnuel && !garantie.plafond?.plafondMensuel">
                 <span class="text-muted">—</span>
               </div>
             </div>
           </td>
           <td>
             <div class="table-actions">
-              <button class="action-btn view-btn" pTooltip="Détails" tooltipPosition="top" (click)="viewGarantie(garantie)">
-                <i class="bi bi-eye"></i>
-              </button>
-              <button class="action-btn edit-btn" pTooltip="Modifier" tooltipPosition="top" (click)="editGarantie(garantie)">
-                <i class="bi bi-pencil"></i>
-              </button>
-              <button class="action-btn delete-btn" pTooltip="Supprimer" tooltipPosition="top" (click)="deleteGarantie(garantie.idGarantie || '')">
-                <i class="bi bi-trash"></i>
-              </button>
+              <p-button
+                icon="pi pi-eye"
+                pTooltip="Détails"
+                tooltipPosition="top"
+                styleClass="p-button-rounded p-button-text"
+                (click)="viewGarantie(garantie)">
+              </p-button>
+              <p-button
+                icon="pi pi-pencil"
+                pTooltip="Modifier"
+                tooltipPosition="top"
+                styleClass="p-button-rounded p-button-text p-button-info"
+                (click)="editGarantie(garantie)">
+              </p-button>
+              <p-button
+                icon="pi pi-trash"
+                pTooltip="Supprimer"
+                tooltipPosition="top"
+                styleClass="p-button-rounded p-button-text p-button-danger"
+                (click)="deleteGarantie(garantie.idGarantie || '')">
+              </p-button>
             </div>
           </td>
         </tr>

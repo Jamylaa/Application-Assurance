@@ -6,7 +6,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.vermeg.gestionproduit.entities.Garantie;
+import tn.vermeg.gestionproduit.entities.PackGarantie;
 import tn.vermeg.gestionproduit.enums.DomaineMedical;
+import tn.vermeg.gestionproduit.repositories.PackGarantieRepository;
 import tn.vermeg.gestionproduit.services.GarantieService;
 
 import jakarta.validation.Valid;
@@ -21,6 +23,9 @@ public class GarantieController {
 
     @Autowired
     private GarantieService garantieService;
+
+    @Autowired
+    private PackGarantieRepository packGarantieRepository;
     // READ
     @GetMapping
     public ResponseEntity<List<Garantie>> getAllGaranties() {
@@ -31,6 +36,11 @@ public class GarantieController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {return ResponseEntity.notFound().build();}
+    }
+
+    @GetMapping("/{idGarantie}/packs")
+    public ResponseEntity<List<PackGarantie>> getPacksByGarantieId(@PathVariable String idGarantie) {
+        return ResponseEntity.ok(packGarantieRepository.findByGarantieId(idGarantie));
     }
 
     @GetMapping("/search")
@@ -87,11 +97,12 @@ public class GarantieController {
         }
     }
 
-    // UPDATE avec validation
+    // UPDATE partielle : @Valid retiré volontairement — un update n'envoie que les champs à
+    // modifier, la validation de l'entité complète est faite après fusion dans le service.
     @PutMapping("/{idGarantie}")
     public ResponseEntity<Garantie> updateGarantie(
             @PathVariable String idGarantie,
-            @Valid @RequestBody Garantie garantieDetails) {
+            @RequestBody Garantie garantieDetails) {
         try {
             return ResponseEntity.ok(
                     garantieService.updateGarantie(idGarantie, garantieDetails));

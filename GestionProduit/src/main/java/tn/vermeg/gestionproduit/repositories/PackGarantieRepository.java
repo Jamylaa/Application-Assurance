@@ -8,12 +8,9 @@ import java.util.List;
 
 @Repository
 public interface PackGarantieRepository extends MongoRepository<PackGarantie, String> {
-
     List<PackGarantie> findByPackId(String packId);
     List<PackGarantie> findByPackIdAndActifTrue(String packId);
     List<PackGarantie> findByGarantieId(String garantieId);
     List<PackGarantie> findByPackIdAndOptionnelle(String packId, boolean optionnelle);
     boolean existsByPackIdAndGarantieId(String packId, String garantieId);
-    void deleteByPackId(String packId);
-    void deleteByGarantieId(String garantieId);
 }

@@ -41,5 +41,14 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Exposer le port 80 (standard pour Nginx)
 EXPOSE 80
 
+# Nginx healthcheck (le process maître doit rester root pour bind le port 80 ;
+# les workers nginx tournent déjà en utilisateur non privilégié par défaut).
+# IMPORTANT : 127.0.0.1 explicite, pas "localhost" — sur cette image (musl/Alpine),
+# /etc/hosts résout "localhost" en ::1 (IPv6) alors que nginx n'écoute qu'en IPv4
+# (0.0.0.0:80), ce qui fait échouer le healthcheck ("Connection refused") même
+# quand le serveur répond correctement en pratique.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget -q --spider http://127.0.0.1:80/ || exit 1
+
 # Démarrer Nginx
 CMD ["nginx", "-g", "daemon off;"]

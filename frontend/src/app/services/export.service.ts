@@ -290,16 +290,16 @@ export class ExportService {
         <title>Chatbot Conversations</title>
         <style>
           body { font-family: Arial, sans-serif; padding: 20px; }
-          .header { border-bottom: 2px solid #333; margin-bottom: 20px; }
-          .conversation { margin-bottom: 30px; border: 1px solid #ddd; padding: 15px; }
+          .header { border-bottom: 2px solid #0F172A; margin-bottom: 20px; }
+          .conversation { margin-bottom: 30px; border: 1px solid #E2E8F0; padding: 15px; }
           .conversation-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
-          .conversation-meta { color: #666; font-size: 12px; margin-bottom: 15px; }
+          .conversation-meta { color: #475569; font-size: 12px; margin-bottom: 15px; }
           .message { margin: 10px 0; padding: 10px; border-radius: 5px; }
-          .message.user { background: #e3f2fd; margin-left: 20px; }
-          .message.bot { background: #f5f5f5; margin-right: 20px; }
+          .message.user { background: #DBEAFE; margin-left: 20px; }
+          .message.bot { background: #F1F5F9; margin-right: 20px; }
           .message-sender { font-weight: bold; font-size: 12px; }
           .message-text { margin-top: 5px; }
-          .message-intent { font-size: 11px; color: #666; font-style: italic; }
+          .message-intent { font-size: 11px; color: #475569; font-style: italic; }
         </style>
       </head>
       <body>

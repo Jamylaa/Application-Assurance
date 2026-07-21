@@ -43,40 +43,45 @@ jobs:
         name: frontend-build
         path: frontend/dist/
     
-    - name: Build Docker image
-      if: github.ref == 'refs/heads/main'
-      run: |
-        docker build -t vermeg-assurance-frontend:${{ github.sha }} ./frontend
-        docker tag vermeg-assurance-frontend:${{ github.sha }} vermeg-assurance-frontend:latest
-    
     - name: Login to Docker Hub
       if: github.ref == 'refs/heads/main'
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-    
+
+    # IMPORTANT : le nom d'image DOIT être préfixé par le namespace Docker Hub
+    # (${{ secrets.DOCKER_USERNAME }}/...). Sans préfixe, Docker résout vers le
+    # namespace réservé "library/" (images officielles) et le push est refusé
+    # ("denied: requested access to the resource is denied") pour tout compte
+    # standard, même authentifié.
+    - name: Build Docker image
+      if: github.ref == 'refs/heads/main'
+      run: |
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/vermeg-frontend:${{ github.sha }} ./frontend
+        docker tag ${{ secrets.DOCKER_USERNAME }}/vermeg-frontend:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/vermeg-frontend:latest
+
     - name: Push Docker image
       if: github.ref == 'refs/heads/main'
       run: |
-        docker push vermeg-assurance-frontend:${{ github.sha }}
-        docker push vermeg-assurance-frontend:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/vermeg-frontend:${{ github.sha }}
+        docker push ${{ secrets.DOCKER_USERNAME }}/vermeg-frontend:latest
 
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Configure kubectl
       uses: azure/k8s-set-context@v4
       with:
         kubeconfig: ${{ secrets.KUBE_CONFIG }}
-    
+
     - name: Deploy to Kubernetes
       run: |
-        kubectl set image deployment/frontend frontend=vermeg-assurance-frontend:latest -n vermeg-assurance
+        kubectl set image deployment/frontend frontend=${{ secrets.DOCKER_USERNAME }}/vermeg-frontend:latest -n vermeg-assurance
         kubectl rollout status deployment/frontend -n vermeg-assurance

@@ -1,7 +1,7 @@
 services:
   # MongoDB
   mongodb:
-    image: mongo:6
+    image: mongo:7
     container_name: mongodb
     ports:
       - "27018:27017"
@@ -14,6 +14,12 @@ services:
     networks:
       - vermeg-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   # Keycloak
   keycloak:
@@ -31,6 +37,14 @@ services:
     networks:
       - vermeg-network
     restart: unless-stopped
+    healthcheck:
+      # curl/wget absents de l'image Keycloak : vérification via /dev/tcp (bash),
+      # sur le port 9000 (interface de management, distincte du port 8080 applicatif).
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && timeout 2 cat <&3 | grep -q '\"status\": \"UP\"'"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
 
   # Eureka Server
   eureka:
@@ -45,12 +59,18 @@ services:
     networks:
       - vermeg-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
 
   # API Gateway
   gateway:
     build:
-      context: .
-      dockerfile: ./Gateway/Dockerfile
+      context: ./Gateway
+      dockerfile: Dockerfile
     container_name: gateway
     ports:
       - "9091:9091"
@@ -61,9 +81,17 @@ services:
     networks:
       - vermeg-network
     depends_on:
-      - eureka
-      - keycloak
+      eureka:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O-", "http://localhost:9091/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
 
   # Gestion Produit
   gestionproduit:
@@ -80,9 +108,17 @@ services:
     networks:
       - vermeg-network
     depends_on:
-      - mongodb
-      - keycloak
+      mongodb:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O-", "http://localhost:9093/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 45s
 
   # Chatbot Service (Python FastAPI)
   chatbot-service:
@@ -97,8 +133,10 @@ services:
     networks:
       - vermeg-network
     depends_on:
-      - gestionproduit
+      gestionproduit:
+        condition: service_healthy
     restart: unless-stopped
+    # HEALTHCHECK deja defini dans chatbot-service/Dockerfile — pas de doublon ici.
 
   # Frontend Angular
   frontend:
@@ -113,8 +151,17 @@ services:
     networks:
       - vermeg-network
     depends_on:
-      - gateway
+      gateway:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      # 127.0.0.1 explicite : "localhost" resout en ::1 (IPv6) sur cette image
+      # Alpine/musl, alors que nginx n'ecoute qu'en IPv4.
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:80/"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 10s
 
 # Networks
 networks:

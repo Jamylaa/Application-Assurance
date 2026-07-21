@@ -9,7 +9,6 @@ public enum TypeFranchise {
     ABSOLUE("Franchise absolue — toujours déduite quel que soit le montant");
 
     private final String libelle;
-
     TypeFranchise(String libelle) { this.libelle = libelle; }
     public String getLibelle() { return libelle; }
 }

@@ -220,6 +220,9 @@ export interface Produit {
   version?: string;
   dateEffet?: string;
   dateExpiration?: string;
+  creePar?: string;
+  validePar?: string;
+  dateValidation?: string;
   dateCreation: string;
   dateModification: string;
   packs?: PackSimple[]; // Liste des packs associés

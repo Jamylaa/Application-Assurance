@@ -50,13 +50,13 @@ async def process_prompt(request: ChatbotRequestDTO, http_request: Request):
         logger.info(f"[{correlation_id}] {message}")
     
     try:
-        log_debug(f"📨 START Processing prompt: {request.prompt[:100]}...")
-        log_debug(f"🔍 Request details - session_id: {request.session_id}, enable_debug: {request.enable_debug}")
+        log_debug(f"START Processing prompt: {request.prompt[:100]}...")
+        log_debug(f"Request details - session_id: {request.session_id}, enable_debug: {request.enable_debug}")
         
         # Validate request
         if not request.prompt or not request.prompt.strip():
             error_msg = "Prompt cannot be empty"
-            log_debug(f"❌ Validation error: {error_msg}")
+            log_debug(f"Validation error: {error_msg}")
             return ChatbotResponseDTO(
                 success=False,
                 intent="ERROR",
@@ -68,13 +68,13 @@ async def process_prompt(request: ChatbotRequestDTO, http_request: Request):
         
         # Check AI service availability (but don't block - fallback will handle it)
         ai_available = orchestrator.ai_extraction_service.is_ai_available()
-        log_debug(f"🤖 AI Service Available: {ai_available}")
-        log_debug(f"🔑 API Key configured: {bool(orchestrator.ai_extraction_service.api_key and orchestrator.ai_extraction_service.api_key.strip())}")
-        log_debug(f"🔧 AI enabled: {orchestrator.ai_extraction_service.github_enabled}")
-        log_debug(f"🔧 AI extraction enabled: {orchestrator.ai_extraction_service.ai_extraction_enabled}")
-        
+        log_debug(f"AI Service Available: {ai_available}")
+        log_debug(f"API Key configured: {bool(orchestrator.ai_extraction_service.api_key and orchestrator.ai_extraction_service.api_key.strip())}")
+        log_debug(f"AI enabled: {orchestrator.ai_extraction_service.github_enabled}")
+        log_debug(f"AI extraction enabled: {orchestrator.ai_extraction_service.ai_extraction_enabled}")
+
         if not ai_available:
-            log_debug("ℹ️ AI service unavailable, orchestrator will use fallback parser")
+            log_debug("AI service unavailable, orchestrator will use fallback parser")
         
         # Pass correlation_id and debug flag to orchestrator
         response = orchestrator.process_prompt(request)
@@ -82,17 +82,17 @@ async def process_prompt(request: ChatbotRequestDTO, http_request: Request):
         if request.enable_debug:
             response.debug_trace = debug_trace
         
-        log_debug(f"✅ Response generated successfully - success: {response.success}, intent: {response.intent}")
+        log_debug(f"Response generated successfully - success: {response.success}, intent: {response.intent}")
         return response
     except HTTPException as he:
-        log_debug(f"❌ HTTP error processing prompt: {he.detail}")
-        log_debug(f"❌ HTTP status code: {he.status_code}")
-        log_debug(f"❌ Stacktrace: {traceback.format_exc()}")
+        log_debug(f"HTTP error processing prompt: {he.detail}")
+        log_debug(f"HTTP status code: {he.status_code}")
+        log_debug(f"Stacktrace: {traceback.format_exc()}")
         raise he
     except Exception as e:
         error_msg = f"Internal server error: {str(e)}"
-        log_debug(f"❌ Unexpected error processing prompt: {error_msg}")
-        log_debug(f"❌ Stacktrace: {traceback.format_exc()}")
+        log_debug(f"Unexpected error processing prompt: {error_msg}")
+        log_debug(f"Stacktrace: {traceback.format_exc()}")
         
         # Return error response instead of raising HTTPException to avoid silent 400
         return ChatbotResponseDTO(
@@ -120,8 +120,8 @@ async def generate_recommendations(request: RecommendationRequestDTO):
         logger.info(f"[{correlation_id}] {message}")
     
     try:
-        log_debug(f"📊 START Generating recommendations for session: {request.session_id}")
-        log_debug(f"🔍 Client profile - age: {request.age}, gender: {request.gender}, budget: {request.monthly_budget}")
+        log_debug(f"START Generating recommendations for session: {request.session_id}")
+        log_debug(f"Client profile - age: {request.age}, gender: {request.gender}, budget: {request.monthly_budget}")
         
         response = recommendation_service.generate_recommendations(request)
         response.correlation_id = correlation_id
@@ -131,12 +131,12 @@ async def generate_recommendations(request: RecommendationRequestDTO):
         # Track recommendation generation
         analytics_store["recommendations_generated"] = analytics_store.get("recommendations_generated", 0) + 1
         
-        log_debug(f"✅ Recommendations generated successfully - {len(response.recommended_packs)} packs, {len(response.recommended_products)} products")
+        log_debug(f"Recommendations generated successfully - {len(response.recommended_packs)} packs, {len(response.recommended_products)} products")
         return response
     except Exception as e:
         error_msg = f"Error generating recommendations: {str(e)}"
-        log_debug(f"❌ {error_msg}")
-        log_debug(f"❌ Stacktrace: {traceback.format_exc()}")
+        log_debug(f"{error_msg}")
+        log_debug(f"Stacktrace: {traceback.format_exc()}")
         
         raise HTTPException(status_code=500, detail=error_msg)
 

@@ -120,11 +120,13 @@ export class PackDetailsComponent implements OnInit {
     // Calculer une note basée sur le prix et le niveau de couverture
     const prixMensuel = this.pack.prixMensuel ?? 0;
     const prixScore = prixMensuel <= 50 ? 100 : (prixMensuel <= 100 ? 80 : 60);
-    const niveauCouverture = (this.pack.niveauCouverture || '').toString().toUpperCase();
-    const niveauScore = niveauCouverture === 'PREMIUM' ? 100 :
-                       niveauCouverture === 'GOLD' ? 90 :
-                       niveauCouverture === 'STANDARD' ? 70 : 50;
-    this.packRating = Math.round((prixScore + niveauScore) / 2);
+    this.packRating = Math.round((prixScore + this.getNiveauScore(this.pack.niveauCouverture)) / 2);
+  }
+
+  // Barème unique niveau de couverture -> score, partagé par packRating et getCoverageScore()
+  private getNiveauScore(niveau?: string): number {
+    const niveauMap: Record<string, number> = { GOLD: 100, PREMIUM: 75, BASIC: 50 };
+    return niveauMap[(niveau ?? '').toUpperCase()] ?? 40;
   }
 
   back(): void {
@@ -134,6 +136,27 @@ export class PackDetailsComponent implements OnInit {
   edit(): void {
     if (!this.packId) return;
     this.router.navigate(['/packs/edit', this.packId]);
+  }
+
+  goToGarantie(garantieId: string): void {
+    this.router.navigate(['/garanties'], { queryParams: { highlight: garantieId } });
+  }
+
+  publier(): void {
+    if (!this.packId) return;
+    this.packService.publierPack(this.packId).subscribe({
+      next: (p) => {
+        this.pack = p;
+        this.toastService.showSuccess('Pack publié avec succès');
+      },
+      error: () => {
+        this.toastService.showError('Impossible de publier ce pack (statut actuel incompatible)');
+      }
+    });
+  }
+
+  canPublier(): boolean {
+    return !!this.pack && this.pack.statutWorkflow !== StatutWorkflow.PUBLIE;
   }
 
   getNiveauClass(niveau?: string): string {
@@ -151,8 +174,7 @@ export class PackDetailsComponent implements OnInit {
     if (!this.pack) return 0;
 
     // Score niveau (43%)
-    const niveauMap: Record<string, number> = { GOLD: 100, PREMIUM: 75, BASIC: 50 };
-    const niveauScore = niveauMap[(this.pack.niveauCouverture ?? '').toUpperCase()] ?? 40;
+    const niveauScore = this.getNiveauScore(this.pack.niveauCouverture);
 
     // Score garanties (57%) — plafonné à 10 garanties = 100%
     const garantiesScore = Math.min(this.garantiesCount * 10, 100);

@@ -2,7 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { GestionProduitService, Garantie } from '../../services/gestion-produit.service';
-import { DomaineMedical, TypeMontant, TypePlafond, TypeFranchise, StatutWorkflow, getStatutWorkflowLabel } from '../../models/entities.model';
+import { DomaineMedical, TypeMontant, TypePlafond, StatutWorkflow, getStatutWorkflowLabel } from '../../models/entities.model';
+// TODO: réactiver après correction du calcul de franchise
+// import { TypeFranchise } from '../../models/entities.model';
 import { ToastService } from '../../shared/services/toast.service';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
 import { NotificationService } from '../../services/notification.service';
@@ -102,7 +104,8 @@ export class GarantieFormComponent implements OnInit {
       typePlafond: [null],
       plafondAnnuel: [0, [Validators.min(0)]],
       plafondMensuel: [0, [Validators.min(0)]],
-      franchise: [0, [Validators.min(0)]],
+      // TODO: réactiver après correction du calcul de franchise
+      // franchise: [0, [Validators.min(0)]],
       prerequisGarantieIds: [[] as string[]],
       parametresDynamiques: [{} as Record<string, number>],
       primePureBase: [0, [Validators.min(0)]],
@@ -113,7 +116,8 @@ export class GarantieFormComponent implements OnInit {
         valeursDefaut: [{} as Record<string, number>],
         prioriteCalcul: [1, [Validators.min(1)]],
         appliquerPlafondApresCalcul: [true],
-        deduireFranchiseAvantPlafond: [false],
+        // TODO: réactiver après correction du calcul de franchise
+        // deduireFranchiseAvantPlafond: [false],
         baseConventionnee: [false]
       })
     });
@@ -152,7 +156,8 @@ export class GarantieFormComponent implements OnInit {
             typePlafond: g.plafond?.typePrincipal,
             plafondAnnuel: g.plafond?.plafondAnnuel,
             plafondMensuel: g.plafond?.plafondMensuel,
-            franchise: g.franchise?.montantFixe,
+            // TODO: réactiver après correction du calcul de franchise
+            // franchise: g.franchise?.montantFixe,
             prerequisGarantieIds: g.prerequisGarantieIds ?? [],
             parametresDynamiques: g.parametresDynamiques ?? {},
             primePureBase: g.primePureBase ?? 0,
@@ -163,7 +168,8 @@ export class GarantieFormComponent implements OnInit {
               valeursDefaut: g.regleCalcul?.valeursDefaut ?? {},
               prioriteCalcul: g.regleCalcul?.prioriteCalcul ?? 1,
               appliquerPlafondApresCalcul: g.regleCalcul?.appliquerPlafondApresCalcul ?? true,
-              deduireFranchiseAvantPlafond: g.regleCalcul?.deduireFranchiseAvantPlafond ?? false,
+              // TODO: réactiver après correction du calcul de franchise
+              // deduireFranchiseAvantPlafond: g.regleCalcul?.deduireFranchiseAvantPlafond ?? false,
               baseConventionnee: g.regleCalcul?.baseConventionnee ?? false
             }
           });
@@ -206,7 +212,9 @@ export class GarantieFormComponent implements OnInit {
       && (!rc.parametresFormule || rc.parametresFormule.length === 0)
       && (!rc.valeursDefaut || Object.keys(rc.valeursDefaut).length === 0)
       && rc.prioriteCalcul === 1 && rc.appliquerPlafondApresCalcul === true
-      && rc.deduireFranchiseAvantPlafond === false && rc.baseConventionnee === false;
+      // TODO: réactiver après correction du calcul de franchise
+      // && rc.deduireFranchiseAvantPlafond === false
+      && rc.baseConventionnee === false;
 
     const garantieData: Partial<Garantie> = {
       nomGarantie: formValue.nomGarantie,
@@ -225,9 +233,11 @@ export class GarantieFormComponent implements OnInit {
         plafondAnnuel: formValue.plafondAnnuel || undefined,
         plafondMensuel: formValue.plafondMensuel || undefined
       },
-      franchise: formValue.franchise
-        ? { type: TypeFranchise.FIXE, montantFixe: formValue.franchise }
-        : undefined,
+      // TODO: réactiver après correction du calcul de franchise
+      // franchise: formValue.franchise
+      //   ? { type: TypeFranchise.FIXE, montantFixe: formValue.franchise }
+      //   : undefined,
+      franchise: undefined, // Valeur par défaut temporaire (calcul de franchise désactivé)
       prerequisGarantieIds: formValue.prerequisGarantieIds?.length ? formValue.prerequisGarantieIds : undefined,
       parametresDynamiques: formValue.parametresDynamiques && Object.keys(formValue.parametresDynamiques).length > 0 ? formValue.parametresDynamiques : undefined,
       primePureBase: formValue.primePureBase || undefined,

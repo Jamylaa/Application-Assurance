@@ -200,7 +200,7 @@
 }
 
 // Dark mode
-.my-app-dark .ui-badge {
+:host-context(.my-app-dark) .ui-badge {
   &--primary {
     background: rgba(15, 76, 129, 0.2);
     color: $primary-400;

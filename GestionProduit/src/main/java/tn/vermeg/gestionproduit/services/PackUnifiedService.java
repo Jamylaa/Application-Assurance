@@ -17,6 +17,7 @@ import tn.vermeg.gestionproduit.repositories.GarantieRepository;
 import tn.vermeg.gestionproduit.repositories.PackGarantieRepository;
 import tn.vermeg.gestionproduit.repositories.PackUnifiedRepository;
 import tn.vermeg.gestionproduit.repositories.ProduitRepository;
+import tn.vermeg.gestionproduit.util.ValidationUtils;
 
 import jakarta.validation.Valid;
 import java.time.Instant;
@@ -44,7 +45,6 @@ public class PackUnifiedService {
         this.produitRepository = produitRepository;
         this.associationValidationService = associationValidationService;
     }
-
     // ==================== GESTION DES PACKS ====================
      // Récupère tous les packs
     public List<Pack> getAllPacks() {
@@ -69,25 +69,41 @@ public class PackUnifiedService {
 
         return packRepository.save(pack);
     }
-        //Met à jour un pack existant
-      public Pack updatePack(String idPack, @Valid Pack details) {
+        //Met à jour un pack existant (fusion partielle : seuls les champs fournis dans "details"
+        //sont appliqués, les autres champs existants sont conservés)
+      public Pack updatePack(String idPack, Pack details) {
         Pack existingPack = getPackById(idPack);
 
-        validatePack(details);
-
-        if (!existingPack.getNomPack().equals(details.getNomPack()) &&
-            packRepository.existsByNomPackIgnoreCase(details.getNomPack())) {
-            throw new IllegalArgumentException("Un pack avec ce nom existe déjà.");
+        if (details.getNomPack() != null && !details.getNomPack().isBlank()) {
+            if (!existingPack.getNomPack().equalsIgnoreCase(details.getNomPack()) &&
+                packRepository.existsByNomPackIgnoreCase(details.getNomPack())) {
+                throw new IllegalArgumentException("Un pack avec ce nom existe déjà.");
+            }
+            existingPack.setNomPack(details.getNomPack());
         }
-
-        // Mise à jour des champs
-        existingPack.setNomPack(details.getNomPack());
-        existingPack.setDescription(details.getDescription());
-        existingPack.setPrixMensuel(details.getPrixMensuel());
-        existingPack.setNiveauCouverture(details.getNiveauCouverture());
-        existingPack.setVersionPack(details.getVersionPack());
+        if (details.getCodePack() != null && !details.getCodePack().isBlank()) {
+            existingPack.setCodePack(details.getCodePack());
+        }
+        if (details.getNomCommercial() != null) existingPack.setNomCommercial(details.getNomCommercial());
+        if (details.getDescription() != null) existingPack.setDescription(details.getDescription());
+        if (details.getDescriptionCourte() != null) existingPack.setDescriptionCourte(details.getDescriptionCourte());
+        if (details.getPrixMensuel() > 0) existingPack.setPrixMensuel(details.getPrixMensuel());
+        if (details.getPrixAnnuel() > 0) existingPack.setPrixAnnuel(details.getPrixAnnuel());
+        if (details.getTauxRemiseAnnuelle() > 0) existingPack.setTauxRemiseAnnuelle(details.getTauxRemiseAnnuelle());
+        if (details.getDevisePrix() != null) existingPack.setDevisePrix(details.getDevisePrix());
+        if (details.getNiveauCouverture() != null) existingPack.setNiveauCouverture(details.getNiveauCouverture());
+        if (details.getStatutWorkflow() != null) existingPack.setStatutWorkflow(details.getStatutWorkflow());
+        if (details.getColorTheme() != null) existingPack.setColorTheme(details.getColorTheme());
+        if (details.getVersionPack() != null) existingPack.setVersionPack(details.getVersionPack());
+        if (details.getOptionsPackIds() != null) existingPack.setOptionsPackIds(details.getOptionsPackIds());
+        if (details.getPacksCompatibles() != null) existingPack.setPacksCompatibles(details.getPacksCompatibles());
+        if (details.getPacksIncompatibles() != null) existingPack.setPacksIncompatibles(details.getPacksIncompatibles());
+        if (details.getDateEffet() != null) existingPack.setDateEffet(details.getDateEffet());
+        if (details.getDateExpiration() != null) existingPack.setDateExpiration(details.getDateExpiration());
+        if (details.getModifiePar() != null) existingPack.setModifiePar(details.getModifiePar());
         existingPack.setDateModification(Instant.now());
 
+        validatePack(existingPack);
         return packRepository.save(existingPack);
     }
 //Supprime un pack
@@ -102,7 +118,23 @@ public class PackUnifiedService {
 
         packRepository.delete(pack);
     }
+    // Publie un pack (le rend actif/commercialisable et éligible aux associations de garanties)
+    public Pack publierPack(String idPack, String utilisateur) {
+        Pack pack = getPackById(idPack);
 
+        if (pack.getStatutWorkflow() == StatutWorkflow.PUBLIE) {
+            return pack;
+        }
+        if (pack.getStatutWorkflow() == StatutWorkflow.ARCHIVE || pack.getStatutWorkflow() == StatutWorkflow.REJETE) {
+            throw new IllegalStateException(
+                    "Un pack " + pack.getStatutWorkflow() + " ne peut pas être publié directement.");
+        }
+        pack.setStatutWorkflow(StatutWorkflow.PUBLIE);
+        pack.setModifiePar(utilisateur);
+        pack.setDateModification(Instant.now());
+
+        return packRepository.save(pack);
+    }
     // ==================== ASSOCIATION PACKS-PRODUITS ====================
 // Associe un pack à un produit
     public Pack associatePackToProduit(String packId, String produitId) {
@@ -111,37 +143,29 @@ public class PackUnifiedService {
             throw new ResourceNotFoundException("Produit", produitId,
                     "Produit non trouvé avec l'ID: " + produitId);
         }
-
         pack.setProduitId(produitId);
         pack.setDateModification(Instant.now());
-
         return packRepository.save(pack);
     }
 //Dissocie un pack d'un produit
     public Pack dissociatePackFromProduit(String packId) {
         Pack pack = getPackById(packId);
-
         pack.setProduitId(null);
         pack.setDateModification(Instant.now());
-
         return packRepository.save(pack);
     }
 //Récupère tous les packs associés à un produit
     public List<Pack> getPacksByProduitId(String produitId) {
         return packRepository.findByProduitId(produitId);
     }
-
     public List<Pack> searchPacksByNom(String nomPack) {
         if (nomPack == null || nomPack.isBlank()) {return List.of();}
         return packRepository.findByNomPackIgnoreCaseContaining(nomPack.trim());
     }
-
     public List<Pack> getPacksByNiveau(NiveauCouverture niveauCouverture) {
         return packRepository.findByNiveauCouverture(niveauCouverture);}
-
     public List<Pack> getPacksByPrixRange(double prixMin, double prixMax) {
         return packRepository.findByPrixMensuelBetween(prixMin, prixMax);}
-
     public List<Garantie> getGarantiesDisponiblesPourPack(String packId) {
         getPackById(packId);
         Set<String> linkedIds = packGarantieRepository.findByPackId(packId).stream()
@@ -150,7 +174,6 @@ public class PackUnifiedService {
         return garantieRepository.findAll().stream()
                 .filter(g -> g.getIdGarantie() != null && !linkedIds.contains(g.getIdGarantie()))
                 .collect(Collectors.toList());}
-
     public double calculerPrixTotalPack(String packId) {
         Pack pack = getPackById(packId);
         double supplements = packGarantieRepository.findByPackId(packId).stream()
@@ -158,7 +181,6 @@ public class PackUnifiedService {
                 .sum();
         return pack.getPrixMensuel() + supplements;
     }
-
     // ==================== GESTION DES GARANTIES DE PACKS ====================
 // Récupère toutes les associations pack-garantie
    public List<PackGarantie> getAllPackGaranties() {
@@ -179,7 +201,6 @@ public class PackUnifiedService {
     public List<PackGarantie> getPacksByGarantieId(String garantieId) {
         return packGarantieRepository.findByGarantieId(garantieId);
     }
-
    //Ajoute une garantie à un pack
     public PackGarantie ajouterGarantieAuPack(String packId, String garantieId, @Valid PackGarantie packGarantie) {
         Pack pack = getPackById(packId);
@@ -188,9 +209,7 @@ public class PackUnifiedService {
                     "Impossible d'associer une garantie : le pack '" + pack.getNomPack()
                             + "' n'est pas PUBLIE (statut actuel = " + pack.getStatutWorkflow() + ").");
         }
-
         Garantie garantie = associationValidationService.validateGarantieExisteEtActive(garantieId);
-
         // Vérifier duplication
         if (packGarantieRepository.existsByPackIdAndGarantieId(packId, garantieId)) {
             throw new IllegalArgumentException("Garantie déjà ajoutée à ce pack");
@@ -202,7 +221,6 @@ public class PackUnifiedService {
         packGarantie.setCodeGarantie(garantie.getCodeGarantie());
         packGarantie.setActif(true);
         packGarantie.setDateActivation(Instant.now());
-
         return packGarantieRepository.save(packGarantie);
     }
 // Met à jour une association pack-garantie
@@ -242,9 +260,7 @@ public class PackUnifiedService {
 
     // ==================== MÉTHODES DE VALIDATION ====================
     private void validatePack(Pack pack) {
-        if (pack.getNomPack() == null || pack.getNomPack().trim().isEmpty()) {
-            throw new IllegalArgumentException("Le nom du pack est obligatoire");
-        }
+        ValidationUtils.requireNonBlank(pack.getNomPack(), "Le nom du pack est obligatoire");
 
         if (pack.getPrixMensuel() < 0) {
             throw new IllegalArgumentException("Le prix mensuel ne peut pas être négatif");}

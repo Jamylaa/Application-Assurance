@@ -263,6 +263,17 @@
           </div>
         </div>
 
+        <!-- Garanties associées -->
+        <div class="form-field full-width">
+          <label class="field-label">
+            <i class="bi bi-shield-plus"></i> Garanties associées
+          </label>
+          <app-garantie-selector
+            [initialGaranties]="selectedGaranties"
+            (garantiesChange)="onGarantiesChange($event)">
+          </app-garantie-selector>
+        </div>
+
         <!-- Couleur du badge -->
         <div class="form-field">
           <label class="field-label" for="colorTheme">
