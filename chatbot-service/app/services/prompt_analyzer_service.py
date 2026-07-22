@@ -52,7 +52,40 @@ class PromptAnalyzerService:
         "créer", "create", "nouveau", "nouvelle", "ajouter", "ajoute",
         "enregistrer", "sauvegarder", "établir"
     ]
-    
+
+    # Mots-clés métier : leur présence exclut une classification GENERAL, même si le
+    # message contient par ailleurs une salutation ("Bonjour, créer un produit..." doit
+    # rester une tentative de création, pas du small-talk).
+    _BUSINESS_KEYWORDS_RE = re.compile(
+        r'garantie|produit|pack|cr[ée]er|modifier|supprimer|effacer|d[ée]sactiver|'
+        r'configur|associ|recommand|annul|mettre\s+à\s+jour'
+    )
+
+    # Salutations, remerciements, ou questions sur les capacités de l'assistant — jamais
+    # une tentative de création/configuration ratée.
+    _GENERAL_PATTERNS = [
+        r'^\s*bonjour\b', r'^\s*bonsoir\b', r'^\s*salut\b', r'^\s*coucou\b',
+        r'^\s*hello\b', r'^\s*hi\b',
+        r'\bmerci\b',
+        r'\baide\b', r'\bhelp\b',
+        r'que\s+(?:peux[\s-]tu|pouvez[\s-]vous)\s+faire',
+        r"qu\'?est[\s-]ce\s+que\s+tu\s+peux\s+faire",
+        r'\bcomment\s+(?:ça|cela)\s+marche\b',
+        r'\bque\s+sais[\s-]tu\s+faire\b',
+        r'\bà\s+quoi\s+(?:tu\s+sers|ça\s+sert)\b',
+    ]
+
+    def _is_general_prompt(self, prompt_lower: str) -> bool:
+        """Détecte une salutation/un remerciement/une question sur les fonctionnalités.
+        Exclut tout message mentionnant par ailleurs un mot-clé métier ou dépassant une
+        douzaine de mots, pour ne jamais absorber un vrai prompt de création/configuration
+        qui commencerait poliment par "Bonjour"."""
+        if self._BUSINESS_KEYWORDS_RE.search(prompt_lower):
+            return False
+        if len(prompt_lower.split()) > 12:
+            return False
+        return any(re.search(p, prompt_lower) for p in self._GENERAL_PATTERNS)
+
     def analyze_action(self, prompt: str) -> Optional[ChatbotAction]:
         """Analyze prompt and determine the action."""
         if not prompt:
@@ -66,6 +99,12 @@ class PromptAnalyzerService:
         # (e.g. a CREATE prompt naming an entity "... Undo Test ...").
         if len(prompt_lower.split()) <= 6 and re.search(r'\bannul(e|er|é)\b|\bundo\b', prompt_lower):
             return ChatbotAction.UNDO
+
+        # Priority 0.5: General/small-talk. Doit être vérifié avant toute tentative
+        # d'extraction d'entités — un "Bonjour" ou un "Merci" ne doit jamais tomber dans
+        # ACTION_INCONNUE et afficher une erreur générique.
+        if self._is_general_prompt(prompt_lower):
+            return ChatbotAction.GENERAL
 
         # Priority 1: Check for DELETE actions (highest priority for safety)
         if re.search(r'supprimer|effacer|désactiver|delete', prompt_lower):

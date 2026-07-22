@@ -283,14 +283,17 @@ Comment puis-je vous aider aujourd'hui ?`;
     return formatted ? '\n\n---\n' + formatted : '';
   }
 
-  executeAction(action: { type: 'CREATE' | 'UPDATE' | 'DELETE' | 'NAVIGATE' | 'LIST'; label: string; data?: unknown; route?: string[] }): void {
+  executeAction(action: { type: 'CREATE' | 'UPDATE' | 'DELETE' | 'NAVIGATE' | 'LIST'; label: string; data?: unknown; route?: string[]; queryParams?: { [key: string]: string } }): void {
     switch (action.type) {
       case 'CREATE':
         this.executeCreateAction(action as { type: 'CREATE'; label: string; data?: unknown });
         break;
       case 'NAVIGATE':
         if (action.route) {
-          this.router.navigate(action.route);
+          // queryParams transporte le repère de surbrillance (ex. highlight=<codeGarantie>)
+          // vers une route différente de celle de la conversation — voir
+          // garanties.component.ts pour la consommation (scroll + highlight au chargement).
+          this.router.navigate(action.route, action.queryParams ? { queryParams: action.queryParams } : undefined);
         }
         break;
       default:

@@ -209,8 +209,24 @@ class ChatbotOrchestratorService:
             return self._execute_recommendation(prompt, session_id, jwt_token)
         elif action == ChatbotAction.UNDO:
             return self._execute_undo(session_id, jwt_token)
+        elif action == ChatbotAction.GENERAL:
+            return self._execute_general(prompt)
         else:
             return {"success": False, "error": f"Action non implémentée: {action}"}
+
+    def _execute_general(self, prompt: str) -> Dict[str, Any]:
+        """Salutation, remerciement ou question sur les capacités de l'assistant : jamais
+        une erreur — toujours un rappel des fonctionnalités disponibles."""
+        return {
+            "success": True,
+            "action": "GENERAL",
+            "message": (
+                "Bonjour ! Je suis l'assistant IA de configuration des produits d'assurance. "
+                "Je peux vous aider à : créer des garanties, gérer des packs, configurer des "
+                "produits, et générer des recommandations personnalisées à partir d'un profil "
+                "client. Décrivez simplement ce que vous souhaitez faire, en langage naturel."
+            ),
+        }
 
     # ------------------------------------------------------------------
     # Slot-filling — complétion conversationnelle des champs manquants
@@ -1687,7 +1703,8 @@ class ChatbotOrchestratorService:
             "RECOMMANDATION": [],
             # L'action annulée peut être n'importe laquelle des 3 entités — on rafraîchit
             # les 3 listes plutôt que de complexifier ce mapping statique par entité annulée.
-            "UNDO": ["garanties", "packs", "produits"]
+            "UNDO": ["garanties", "packs", "produits"],
+            "GENERAL": []
         }
         return refresh_map.get(action, [])
 
@@ -1715,7 +1732,8 @@ class ChatbotOrchestratorService:
             "DELETE_PACK": "PACK",
             "ADD_GARANTIE_TO_PACK": "PACK",
             "CONFIGURATION_PACK": "PACK",
-            "RECOMMANDATION": "RECOMMANDATION"
+            "RECOMMANDATION": "RECOMMANDATION",
+            "GENERAL": "GENERAL"
         }.get(action, "UNKNOWN")
 
     # ------------------------------------------------------------------

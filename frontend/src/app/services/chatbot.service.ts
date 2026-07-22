@@ -79,6 +79,7 @@ export interface ChatbotResponse {
     label: string;
     data?: unknown;
     route?: string[];
+    queryParams?: { [key: string]: string };
   }>;
   choices?: ChatbotChoice[];
   error?: string;
@@ -388,10 +389,28 @@ export class ChatbotService {
       actions.push({ type: 'NAVIGATE', label: 'Voir le produit', route: ['/produits'] });
     }
     if (data.garantie?.idGarantie) {
-      actions.push({ type: 'NAVIGATE', label: 'Voir la garantie', route: ['/garanties'] });
+      // NAVIGATE_TO_GARANTIE : le code (à défaut l'id) sert de repère de surbrillance côté
+      // /garanties, qui scrolle jusqu'à la ligne correspondante et l'illumine 2-3s (voir
+      // garanties.component.ts, revealHighlightedGarantie).
+      actions.push({
+        type: 'NAVIGATE',
+        label: 'Voir la garantie',
+        route: ['/garanties'],
+        queryParams: { highlight: data.garantie.codeGarantie || data.garantie.idGarantie }
+      });
     }
     if (data.pack?.idPack) {
       actions.push({ type: 'NAVIGATE', label: 'Voir le pack', route: ['/packs'] });
+    }
+    if (data.packGarantie?.garantieId) {
+      // Garantie associée à un pack (configuration/ajout) : même navigation ciblée que
+      // ci-dessus, à partir de l'association plutôt que de la garantie directement créée.
+      actions.push({
+        type: 'NAVIGATE',
+        label: 'Voir la garantie associée',
+        route: ['/garanties'],
+        queryParams: { highlight: data.packGarantie.codeGarantie || data.packGarantie.garantieId }
+      });
     }
 
     return {

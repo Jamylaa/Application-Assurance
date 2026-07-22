@@ -18,7 +18,7 @@ audit-pfe-vermeg.html
 node_modules/
 dist/
 build/
-
+rapport/
 # IDE
 .idea/
 .vscode/
@@ -26,7 +26,7 @@ External Libraries
 
 # Logs
 *.log
-
+*.sh
 # Scripts locaux (non necessaires a la reproduction du build)
 *.ps1
 
@@ -44,3 +44,7 @@ architecture
 
 # Configuration locale Claude Code (specifique a chaque poste de dev)
 .claude/
+
+# Sauvegardes MongoDB generees par scripts/backup-mongodb.sh (donnees, jamais versionnees)
+backups/
+.md*

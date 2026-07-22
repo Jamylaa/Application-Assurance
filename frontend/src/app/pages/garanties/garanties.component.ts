@@ -96,11 +96,20 @@ export class GarantiesComponent implements OnInit {
   // Navigue vers la page du tableau contenant la garantie ciblée (queryParam highlight),
   // puis scrolle jusqu'à sa ligne et lui applique une classe .highlighted — sans filtrer
   // la liste, la garantie reste visible dans son contexte complet.
+  // Le paramètre "highlight" peut être soit l'idGarantie (lien existant depuis la fiche
+  // pack), soit le codeGarantie (lien NAVIGATE_TO_GARANTIE depuis le chatbot) — on
+  // recherche sur les deux, puis on normalise highlightedGarantieId sur l'idGarantie
+  // résolu pour que le binding [class.highlighted] du template (qui compare sur
+  // idGarantie) continue de fonctionner sans changement, quel que soit l'identifiant
+  // d'origine passé dans l'URL.
   private revealHighlightedGarantie(): void {
-    const index = this.filteredGaranties.findIndex(g => g.idGarantie === this.highlightedGarantieId);
+    const index = this.filteredGaranties.findIndex(
+      g => g.idGarantie === this.highlightedGarantieId || g.codeGarantie === this.highlightedGarantieId
+    );
     if (index === -1) {
       return;
     }
+    this.highlightedGarantieId = this.filteredGaranties[index].idGarantie;
     this.tableFirst = Math.floor(index / this.tableRows) * this.tableRows;
     setTimeout(() => {
       const row = document.querySelector(`[data-garantie-id="${CSS.escape(this.highlightedGarantieId!)}"]`);
