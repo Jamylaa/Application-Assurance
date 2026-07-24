@@ -33,11 +33,14 @@ jobs:
         trivy --version
 
     # 1) Vulnérabilités des dépendances + secrets — export SARIF
+    # --offline-scan : ne PAS aller chercher les POM parents sur Maven Central (sinon le
+    # runner se fait rate-limiter en 429 → FATAL). npm/pip restent couverts intégralement ;
+    # Java est scanné en best-effort (deps directes du pom, sans résolution transitive).
     - name: Trivy filesystem (SARIF)
-      run: trivy fs --scanners vuln,secret --format sarif --output trivy-fs.sarif --severity CRITICAL,HIGH --ignore-unfixed .
+      run: trivy fs --scanners vuln,secret --offline-scan --format sarif --output trivy-fs.sarif --severity CRITICAL,HIGH --ignore-unfixed .
 
     - name: Upload SARIF (filesystem)
-      if: always()
+      if: always() && hashFiles('trivy-fs.sarif') != ''
       uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: trivy-fs.sarif
@@ -48,7 +51,7 @@ jobs:
       run: trivy config --format sarif --output trivy-config.sarif --severity CRITICAL,HIGH,MEDIUM .
 
     - name: Upload SARIF (config)
-      if: always()
+      if: always() && hashFiles('trivy-config.sarif') != ''
       uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: trivy-config.sarif
@@ -56,4 +59,4 @@ jobs:
 
     # 3) Résumé lisible dans les logs (non bloquant)
     - name: Trivy résumé lisible (table)
-      run: trivy fs --scanners vuln --format table --severity CRITICAL,HIGH --ignore-unfixed .
+      run: trivy fs --scanners vuln --offline-scan --format table --severity CRITICAL,HIGH --ignore-unfixed .
