@@ -29,7 +29,9 @@ jobs:
 
     - name: Installer Trivy
       run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+        # Version épinglée : évite le lookup "latest tag" via l'API GitHub (rate-limitée sur
+        # les runners partagés -> échec intermittent "unable to find ''" au moment de l'install).
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.72.0
         trivy --version
 
     # 1) Vulnérabilités des dépendances + secrets — export SARIF
