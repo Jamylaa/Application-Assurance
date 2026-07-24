@@ -147,6 +147,7 @@ dossier `backups/` n'est jamais versionné (`.gitignore`).
 | Chatbot CI/CD | `chatbot-ci.yml` | `compileall` + pytest (si présent), image Docker, deploy |
 | CodeQL (SAST) | `codeql.yml` | analyse statique de sécurité (Java, TypeScript, Python) |
 | Security (Trivy) | `security.yml` | vulnérabilités des dépendances + mauvaises configs IaC |
+| CD (kind éphémère) | `cd-kind.yml` | provisionne un cluster kind dans le runner, déploie Eureka (health-check) + valide tous les manifests |
 
 Déclencheurs : push/PR sur `main`, `develop` et `feature/**`. Le projet vivant
 actuellement sur une branche `feature/**`, les pipelines tournent **dès le push, sans
@@ -157,6 +158,12 @@ déploiement ne s'exécutent que si la variable de dépôt `DEPLOY_ENABLED=true`
 `main`. Sinon ces étapes sont *ignorées* (pipeline vert) plutôt qu'en échec faute de
 secrets. Pour activer le CD, définir la variable `DEPLOY_ENABLED` et les secrets
 `DOCKER_USERNAME`, `DOCKER_PASSWORD`, `KUBE_CONFIG`.
+
+**CD auto-contenu (`cd-kind.yml`).** En complément — et sans aucun secret ni infra
+externe — ce workflow provisionne un cluster **kind éphémère dans le runner**, y build +
+déploie Eureka avec **vérification du rollout** (`/actuator/health`) et valide l'ensemble
+des manifests (server dry-run), à chaque push. C'est la preuve de déployabilité de bout en
+bout. Un déploiement full-stack (Mongo, GestionProduit, …) vise plutôt un cluster persistant.
 
 ## Sécurité (DevSecOps)
 

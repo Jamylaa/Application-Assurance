@@ -1,0 +1,58 @@
+name: CD — Déploiement sur cluster kind éphémère
+
+# Déploiement continu auto-contenu : chaque push provisionne un VRAI cluster Kubernetes
+# (kind) à l'intérieur du runner GitHub, y build + charge l'image, applique les manifests
+# et vérifie le rollout par health-check. Aucune infra externe, aucun secret requis —
+# c'est une preuve de déployabilité de bout en bout, rejouable à chaque push.
+#
+# Périmètre volontairement fiable : on déploie et on health-check Eureka (image construite,
+# sans dépendance externe), ET on valide la TOTALITÉ des manifests contre l'API (server
+# dry-run). Étendre à Mongo/GestionProduit/... suppose un cluster persistant (les images
+# externes + la BD sont moins déterministes dans un cluster jetable).
+on:
+  push:
+    branches: [ main, develop, 'feature/**' ]
+  workflow_dispatch: {}
+
+jobs:
+  deploy-kind:
+    name: Déploiement + vérification (kind)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Créer un cluster kind éphémère
+      uses: helm/kind-action@v1
+      with:
+        cluster_name: vermeg-ci
+
+    - name: Build de l'image Eureka
+      run: docker build -t vermeg-eureka:latest ./Eureka
+
+    - name: Charger l'image dans le cluster kind
+      run: kind load docker-image vermeg-eureka:latest --name vermeg-ci
+
+    - name: Valider TOUS les manifests contre l'API (server dry-run)
+      run: |
+        kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/ --dry-run=server
+
+    - name: Déployer le socle + Eureka
+      run: kubectl apply -f k8s/secret.yaml -f k8s/configmap.yaml -f k8s/eureka-deployment.yaml
+
+    - name: Vérifier le rollout (readiness = /actuator/health)
+      run: kubectl -n vermeg-assurance rollout status deployment/eureka --timeout=300s
+
+    - name: Preuve de santé + état du namespace
+      run: |
+        kubectl -n vermeg-assurance get deploy,svc,pods -o wide
+        echo "--- /actuator/health depuis le pod Eureka ---"
+        kubectl -n vermeg-assurance exec deploy/eureka -- curl -sf http://localhost:8761/actuator/health
+
+    - name: Diagnostic en cas d'échec
+      if: failure()
+      run: |
+        kubectl -n vermeg-assurance get pods
+        kubectl -n vermeg-assurance describe pods
+        kubectl -n vermeg-assurance logs -l app=eureka --tail=120 || true
