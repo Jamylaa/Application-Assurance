@@ -1,0 +1,59 @@
+name: Security Scan (Trivy)
+
+# Scan de sécurité par Trivy :
+#  1) vulnérabilités des dépendances (Maven/npm/pip) + secrets committés,
+#  2) mauvaises configurations IaC (Dockerfiles, manifests Kubernetes).
+# Les résultats SARIF remontent dans l'onglet Security > Code scanning (repo public).
+# La CI n'est PAS bloquée par les findings (exit-code informatif) : le but est la
+# visibilité, on durcira (exit-code 1) une fois les vulnérabilités triées.
+on:
+  push:
+    branches: [ main, develop, 'feature/**' ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 4 * * 1'   # tous les lundis à 04:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  trivy:
+    name: Trivy — dépendances + IaC
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Installer Trivy
+      run: |
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+        trivy --version
+
+    # 1) Vulnérabilités des dépendances + secrets — export SARIF
+    - name: Trivy filesystem (SARIF)
+      run: trivy fs --scanners vuln,secret --format sarif --output trivy-fs.sarif --severity CRITICAL,HIGH --ignore-unfixed .
+
+    - name: Upload SARIF (filesystem)
+      if: always()
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: trivy-fs.sarif
+        category: trivy-fs
+
+    # 2) Mauvaises configurations IaC (Dockerfiles + k8s/)
+    - name: Trivy config/IaC (SARIF)
+      run: trivy config --format sarif --output trivy-config.sarif --severity CRITICAL,HIGH,MEDIUM .
+
+    - name: Upload SARIF (config)
+      if: always()
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: trivy-config.sarif
+        category: trivy-config
+
+    # 3) Résumé lisible dans les logs (non bloquant)
+    - name: Trivy résumé lisible (table)
+      run: trivy fs --scanners vuln --format table --severity CRITICAL,HIGH --ignore-unfixed .

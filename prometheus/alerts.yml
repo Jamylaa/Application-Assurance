@@ -1,0 +1,70 @@
+# Règles d'alerte Prometheus pour la plateforme Vermeg.
+# Métriques Spring Boot Actuator/Micrometer (http_server_requests_*, jvm_*, process_cpu_usage)
+# + `up` (disponibilité des cibles scrapées). Visibles dans Prometheus > Alerts.
+# Routage/notifications : nécessite un Alertmanager (voir README, section Observabilité).
+groups:
+  - name: vermeg-availability
+    rules:
+      - alert: InstanceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} indisponible"
+          description: "La cible {{ $labels.instance }} (job {{ $labels.job }}) ne répond plus depuis 1 min."
+
+  - name: vermeg-http
+    rules:
+      - alert: HighHttpErrorRate
+        # Part des réponses 5xx > 5% sur 5 min (ne se déclenche que s'il y a du trafic).
+        expr: |
+          sum by (job) (rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
+            /
+          sum by (job) (rate(http_server_requests_seconds_count[5m]))
+            > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Taux d'erreurs 5xx élevé sur {{ $labels.job }}"
+          description: "Plus de 5% de réponses 5xx sur les 5 dernières minutes."
+
+      - alert: HighRequestLatencyP95
+        # Latence p95 des requêtes HTTP > 1s sur 5 min.
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le, job) (rate(http_server_requests_seconds_bucket[5m]))
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latence p95 élevée sur {{ $labels.job }}"
+          description: "Le 95e percentile de latence dépasse 1s depuis 5 min."
+
+  - name: vermeg-resources
+    rules:
+      - alert: HighJvmHeapUsage
+        # Heap JVM > 90% de la limite (services Java uniquement ; garde max > 0).
+        expr: |
+          sum by (job) (jvm_memory_used_bytes{area="heap"})
+            /
+          sum by (job) (jvm_memory_max_bytes{area="heap"} > 0)
+            > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Utilisation heap JVM élevée sur {{ $labels.job }}"
+          description: "Le heap JVM dépasse 90% de la limite depuis 5 min."
+
+      - alert: HighCpuUsage
+        # process_cpu_usage (Micrometer) est dans [0,1].
+        expr: process_cpu_usage > 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU process élevé sur {{ $labels.job }}"
+          description: "L'utilisation CPU du process dépasse 80% depuis 10 min."

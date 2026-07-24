@@ -1,8 +1,11 @@
 name: Backend CI/CD
 
 on:
+  # Le projet vit sur une branche feature/** (pas encore mergé sur main) : on inclut
+  # feature/** pour que le pipeline tourne dès maintenant sur push, sans attendre un
+  # merge sur main. main/develop restent couverts pour la suite.
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'feature/**' ]
   pull_request:
     branches: [ main, develop ]
   workflow_dispatch: {}
@@ -54,21 +57,21 @@ jobs:
     # ("denied: requested access to the resource is denied") pour tout compte
     # standard, même authentifié.
     - name: Build Docker image
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
       run: |
         IMAGE=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]')
         docker build -t ${{ secrets.DOCKER_USERNAME }}/vermeg-$IMAGE:${{ github.sha }} ./${{ matrix.service }}
         docker tag ${{ secrets.DOCKER_USERNAME }}/vermeg-$IMAGE:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/vermeg-$IMAGE:latest
 
     - name: Login to Docker Hub
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Push Docker image
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
       run: |
         IMAGE=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]')
         docker push ${{ secrets.DOCKER_USERNAME }}/vermeg-$IMAGE:${{ github.sha }}
@@ -77,7 +80,7 @@ jobs:
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
     strategy:
       matrix:
         include:

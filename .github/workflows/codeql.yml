@@ -1,0 +1,48 @@
+name: CodeQL (SAST)
+
+# Analyse statique de sécurité du code (Java, TypeScript, Python).
+# Résultats visibles dans l'onglet Security > Code scanning du dépôt (gratuit, repo public).
+on:
+  push:
+    branches: [ main, develop, 'feature/**' ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 3 * * 1'   # tous les lundis à 03:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  analyze:
+    name: Analyse ${{ matrix.language }}
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: java-kotlin
+            build-mode: none
+          - language: javascript-typescript
+            build-mode: none
+          - language: python
+            build-mode: none
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # build-mode: none => CodeQL analyse le code source sans build (robuste pour un
+    # repo multi-modules Maven + Angular + Python, sans étape de compilation dédiée).
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        build-mode: ${{ matrix.build-mode }}
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{ matrix.language }}"

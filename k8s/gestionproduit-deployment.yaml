@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
       - name: gestionproduit
-        image: vermeg-gestion-produit:latest
+        image: vermeg-gestionproduit:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9093
@@ -59,6 +59,13 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "1000m"
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 9093
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          failureThreshold: 30
         livenessProbe:
           httpGet:
             path: /actuator/health

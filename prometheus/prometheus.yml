@@ -4,6 +4,10 @@ global:
   external_labels:
     monitor: 'vermeg-monitor'
 
+# Règles d'alerte (chargées au démarrage, évaluées toutes les evaluation_interval).
+rule_files:
+  - alerts.yml
+
 scrape_configs:
   # Prometheus self-monitoring
   - job_name: 'prometheus'

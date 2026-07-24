@@ -1,0 +1,75 @@
+# Dependabot — mises à jour automatiques des dépendances (sécurité + versions).
+# Ouvre des PR hebdomadaires par écosystème. Voir docs GitHub : dependabot.yml.
+version: 2
+updates:
+  # --- Backend Java / Maven (un bloc par microservice) ---
+  - package-ecosystem: "maven"
+    directory: "/GestionProduit"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "backend"]
+
+  - package-ecosystem: "maven"
+    directory: "/Gateway"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "backend"]
+
+  - package-ecosystem: "maven"
+    directory: "/Eureka"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "backend"]
+
+  # --- Frontend Angular / npm ---
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "frontend"]
+
+  # --- chatbot-service Python / pip ---
+  - package-ecosystem: "pip"
+    directory: "/chatbot-service"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "chatbot"]
+
+  # --- Images de base Docker (un bloc par Dockerfile) ---
+  - package-ecosystem: "docker"
+    directory: "/GestionProduit"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "docker"]
+  - package-ecosystem: "docker"
+    directory: "/Gateway"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "docker"]
+  - package-ecosystem: "docker"
+    directory: "/Eureka"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "docker"]
+  - package-ecosystem: "docker"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "docker"]
+  - package-ecosystem: "docker"
+    directory: "/chatbot-service"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "docker"]
+
+  # --- GitHub Actions (versions des actions dans les workflows) ---
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "ci"]

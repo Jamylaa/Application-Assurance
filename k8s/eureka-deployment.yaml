@@ -51,6 +51,15 @@ spec:
           limits:
             memory: "768Mi"
             cpu: "500m"
+        # startupProbe : laisse à Spring Boot le temps de démarrer (jusqu'à ~160s) avant
+        # que liveness/readiness ne commencent — évite un kill prématuré au démarrage lent.
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8761
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          failureThreshold: 30
         livenessProbe:
           httpGet:
             path: /actuator/health

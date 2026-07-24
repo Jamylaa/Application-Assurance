@@ -1,5 +1,12 @@
 # Vermeg — Plateforme d'Assurance
 
+<!-- Badges pointés sur la branche de travail actuelle ; remplacer ?branch=... par ?branch=main après merge. -->
+[![Backend CI/CD](https://github.com/Jamylaa/Application-Assurance/actions/workflows/backend-ci.yml/badge.svg?branch=feature/python-chatbot-service)](https://github.com/Jamylaa/Application-Assurance/actions/workflows/backend-ci.yml)
+[![Frontend CI/CD](https://github.com/Jamylaa/Application-Assurance/actions/workflows/frontend-ci.yml/badge.svg?branch=feature/python-chatbot-service)](https://github.com/Jamylaa/Application-Assurance/actions/workflows/frontend-ci.yml)
+[![Chatbot CI/CD](https://github.com/Jamylaa/Application-Assurance/actions/workflows/chatbot-ci.yml/badge.svg?branch=feature/python-chatbot-service)](https://github.com/Jamylaa/Application-Assurance/actions/workflows/chatbot-ci.yml)
+[![CodeQL](https://github.com/Jamylaa/Application-Assurance/actions/workflows/codeql.yml/badge.svg?branch=feature/python-chatbot-service)](https://github.com/Jamylaa/Application-Assurance/actions/workflows/codeql.yml)
+[![Security (Trivy)](https://github.com/Jamylaa/Application-Assurance/actions/workflows/security.yml/badge.svg?branch=feature/python-chatbot-service)](https://github.com/Jamylaa/Application-Assurance/actions/workflows/security.yml)
+
 Plateforme de gestion de produits d'assurance (produits, packs, garanties) avec un
 assistant chatbot IA de configuration en langage naturel.
 
@@ -131,6 +138,77 @@ dossier `backups/` n'est jamais versionné (`.gitignore`).
 
 ## CI/CD
 
-3 pipelines GitHub Actions indépendants (`.github/workflows/backend-ci.yml`,
-`chatbot-ci.yml`, `frontend-ci.yml`), déclenchés sur push/PR et manuellement
-(`workflow_dispatch`) une fois mergés sur la branche par défaut.
+5 pipelines GitHub Actions dans `.github/workflows/` :
+
+| Pipeline | Fichier | Rôle |
+|---|---|---|
+| Backend CI/CD | `backend-ci.yml` | build + tests (matrice GestionProduit/Gateway/Eureka), image Docker, deploy k8s |
+| Frontend CI/CD | `frontend-ci.yml` | `npm ci`, tests Karma headless, build prod, image Docker, deploy |
+| Chatbot CI/CD | `chatbot-ci.yml` | `compileall` + pytest (si présent), image Docker, deploy |
+| CodeQL (SAST) | `codeql.yml` | analyse statique de sécurité (Java, TypeScript, Python) |
+| Security (Trivy) | `security.yml` | vulnérabilités des dépendances + mauvaises configs IaC |
+
+Déclencheurs : push/PR sur `main`, `develop` et `feature/**`. Le projet vivant
+actuellement sur une branche `feature/**`, les pipelines tournent **dès le push, sans
+merge préalable sur `main`**.
+
+**Déploiement (CD) désactivé par défaut.** Le push d'images Docker et le `kubectl` de
+déploiement ne s'exécutent que si la variable de dépôt `DEPLOY_ENABLED=true` **et** sur
+`main`. Sinon ces étapes sont *ignorées* (pipeline vert) plutôt qu'en échec faute de
+secrets. Pour activer le CD, définir la variable `DEPLOY_ENABLED` et les secrets
+`DOCKER_USERNAME`, `DOCKER_PASSWORD`, `KUBE_CONFIG`.
+
+## Sécurité (DevSecOps)
+
+- **Trivy** (`security.yml`) : scan des vulnérabilités des dépendances (Maven/npm/pip) +
+  secrets, et scan des mauvaises configurations IaC (Dockerfiles, manifests k8s). Résultats
+  SARIF dans *Security > Code scanning*. Scan local : `make trivy`.
+- **CodeQL** (`codeql.yml`) : analyse statique (SAST) Java / TypeScript / Python.
+- **Dependabot** (`.github/dependabot.yml`) : PR hebdomadaires de mise à jour des
+  dépendances Maven, npm, pip, images Docker et GitHub Actions.
+
+## Kubernetes
+
+Manifests dans `k8s/`. Chaque déploiement définit *resource requests/limits*,
+*liveness/readiness probes* et un *startupProbe* (démarrage lent Spring Boot).
+
+- Déploiement : `make k8s-deploy` (ou `kubectl apply -f k8s/`)
+- Validation sans cluster : `make k8s-validate` (server dry-run)
+- **Auto-scaling** (`k8s/hpa.yaml`) : HorizontalPodAutoscaler CPU/mémoire pour
+  gestionproduit, gateway, frontend, chatbot-service (nécessite metrics-server). Eureka
+  (registre) reste à réplicas fixes.
+- **Ingress** (`k8s/ingress.yaml`) : `vermeg.local/api` → gateway, `vermeg.local/` →
+  frontend (nécessite un Ingress Controller type ingress-nginx).
+
+### Test local avec kind
+
+```bash
+make kind-up          # crée un cluster kind local
+make build            # build les 5 images Docker
+make kind-load        # charge les images dans le cluster
+make k8s-deploy       # applique les manifests
+make k8s-status       # pods / services / hpa
+```
+
+> Note : le ConfigMap `vermeg-config` fixe `SPRING_PROFILES_ACTIVE=k8s`, profil non défini
+> dans les `application.yml` : les services s'appuient sur les variables injectées
+> explicitement (ex. `SPRING_DATA_MONGODB_URI`). Fonctionnel, mais à formaliser (ajouter un
+> vrai profil `k8s`) pour éviter tout repli implicite.
+
+## Observabilité
+
+- **Prometheus** scrape les métriques Micrometer (`/actuator/prometheus`) des services Java
+  et `/metrics` du chatbot (`prometheus/prometheus.yml`).
+- **Règles d'alerte** (`prometheus/alerts.yml`, validées par `promtool`) : InstanceDown,
+  taux d'erreurs 5xx, latence p95, heap JVM, CPU — chargées via `rule_files` (aussi
+  intégrées à la ConfigMap Prometheus k8s). Le routage des notifications nécessite un
+  Alertmanager (non déployé).
+- **Grafana** : dashboard par service `grafana/dashboards/microservices-overview.json`
+  (disponibilité, débit, erreurs 5xx, latence p95, heap, CPU). Le provisioning
+  (`grafana/provisioning/`) auto-charge datasource + dashboards en local ; en k8s il reste à
+  monter dans le déploiement Grafana via ConfigMaps (sinon importer le JSON manuellement).
+
+## Commandes (Makefile)
+
+`make help` liste les cibles : `up`/`down`/`logs` (compose), `test`/`test-backend`/`test-frontend`,
+`build`, `kind-up`/`kind-load`, `k8s-deploy`/`k8s-validate`/`k8s-status`, `trivy`.
